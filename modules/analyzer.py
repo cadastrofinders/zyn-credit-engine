@@ -15,7 +15,7 @@ import anthropic
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 5000
+MAX_TOKENS = 8000
 MAX_RETRIES = 2
 RETRY_WAIT = 10  # seconds
 MAX_INPUT_CHARS = 15000
@@ -101,18 +101,55 @@ def _list_docs(dados: dict[str, Any], available: bool) -> str:
     return ", ".join(t.replace("_", " ").title() for t in tipos) or "Nenhum"
 
 
+def _repair_json(text: str) -> str:
+    """Try to repair truncated JSON by closing open braces/brackets."""
+    # Remove trailing comma before closing
+    text = re.sub(r',\s*$', '', text.rstrip())
+    # Count open/close braces and brackets
+    open_braces = text.count('{') - text.count('}')
+    open_brackets = text.count('[') - text.count(']')
+    # Check if we're inside a string (odd number of unescaped quotes)
+    in_string = (text.count('"') - text.count('\\"')) % 2 == 1
+    if in_string:
+        text += '"'
+    # Close open brackets then braces
+    text += ']' * max(0, open_brackets)
+    text += '}' * max(0, open_braces)
+    return text
+
+
 def _parse_json(text: str) -> dict:
     text = text.strip()
-    for strategy in [
-        lambda t: json.loads(t),
-        lambda t: json.loads(re.search(r"```(?:json)?\s*\n?(.*?)\n?\s*```", t, re.DOTALL).group(1).strip()),
-        lambda t: json.loads(t[t.find("{"):t.rfind("}") + 1]),
-    ]:
-        try:
-            return strategy(text)
-        except Exception:
-            continue
-    raise ValueError(f"JSON inválido. Primeiros 300 chars: {text[:300]}")
+
+    # Remove markdown code block wrapper
+    match = re.search(r"```(?:json)?\s*\n?(.*?)(?:\n?\s*```|$)", text, re.DOTALL)
+    if match:
+        text = match.group(1).strip()
+
+    # Extract from first { to last }
+    first = text.find("{")
+    last = text.rfind("}")
+    if first != -1:
+        if last != -1 and last > first:
+            text = text[first:last + 1]
+        else:
+            # JSON was truncated — no closing brace
+            text = text[first:]
+
+    # Try direct parse
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Try repairing truncated JSON
+    try:
+        repaired = _repair_json(text)
+        return json.loads(repaired)
+    except json.JSONDecodeError:
+        pass
+
+    raise ValueError(f"JSON inválido. Primeiros 500 chars: {text[:500]}")
 
 
 def analyze_credit(
