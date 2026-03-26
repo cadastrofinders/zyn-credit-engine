@@ -17,10 +17,10 @@ import anthropic
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 12000
+MAX_TOKENS = 8000
 MAX_RETRIES = 3
 RETRY_WAIT_SECONDS = [15, 30, 60]
-MAX_INPUT_CHARS = 80000  # truncate extracted data to stay within token limits
+MAX_INPUT_CHARS = 40000  # truncate extracted data to stay within token limits
 
 SYSTEM_PROMPT = """\
 Você é um analista sênior de crédito estruturado na ZYN Capital, boutique de crédito \
@@ -293,8 +293,8 @@ def _format_dados_extraidos(dados_extraidos: dict[str, Any]) -> str:
         else:
             texto = str(conteudo)
         # Truncate individual document data if too large
-        if len(texto) > 15000:
-            texto = texto[:15000] + "\n... [dados truncados por limite de tokens]"
+        if len(texto) > 8000:
+            texto = texto[:8000] + "\n... [dados truncados por limite de tokens]"
         blocos.append(texto)
         blocos.append("")
 
