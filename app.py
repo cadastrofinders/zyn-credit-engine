@@ -163,9 +163,9 @@ DD_CHECKLIST_TEMPLATE: dict[str, list[str]] = {
 # ---------------------------------------------------------------------------
 CUSTOM_CSS = """
 <style>
-    /* Sidebar header */
+    /* ── Sidebar ─────────────────────────────────────────── */
     [data-testid="stSidebar"] {
-        background-color: #223040;
+        background: linear-gradient(180deg, #1a2633 0%, #223040 40%, #2a3d52 100%);
     }
     [data-testid="stSidebar"] .stMarkdown h1,
     [data-testid="stSidebar"] .stMarkdown h2,
@@ -176,53 +176,215 @@ CUSTOM_CSS = """
     [data-testid="stSidebar"] .stRadio label {
         color: #FFFFFF !important;
     }
-    /* Metric cards */
+    [data-testid="stSidebar"] .stRadio label {
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        transition: background-color 0.2s ease;
+    }
+    [data-testid="stSidebar"] .stRadio label:hover {
+        background-color: rgba(255,255,255,0.08) !important;
+    }
+    [data-testid="stSidebar"] hr {
+        border-color: rgba(255,255,255,0.12) !important;
+    }
+
+    /* ── Page title ──────────────────────────────────────── */
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #223040;
+        letter-spacing: -0.5px;
+        margin-bottom: 0;
+    }
+    .main-subtitle {
+        font-size: 1.1rem;
+        color: #8B9197;
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+
+    /* ── Metric cards ────────────────────────────────────── */
     [data-testid="stMetric"] {
-        background-color: #F2F4F6;
+        background: #FFFFFF;
+        border: 1px solid #E8ECF0;
         border-left: 4px solid #223040;
-        padding: 12px 16px;
-        border-radius: 6px;
+        padding: 16px 20px;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(34,48,64,0.06);
+        transition: box-shadow 0.2s ease;
+    }
+    [data-testid="stMetric"]:hover {
+        box-shadow: 0 4px 12px rgba(34,48,64,0.10);
     }
     [data-testid="stMetric"] label {
         color: #8B9197 !important;
+        font-size: 0.85rem !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    /* Rating badges */
+    [data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: #223040 !important;
+        font-weight: 700 !important;
+    }
+
+    /* ── KPI strip (Nova Análise > Análise tab) ──────────── */
+    .kpi-card {
+        background: #FFFFFF;
+        border: 1px solid #E8ECF0;
+        border-radius: 10px;
+        padding: 16px 12px;
+        text-align: center;
+        box-shadow: 0 1px 4px rgba(34,48,64,0.06);
+    }
+    .kpi-label {
+        font-size: 0.72rem;
+        color: #8B9197;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 4px;
+    }
+    .kpi-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #223040;
+    }
+
+    /* ── Rating badges ───────────────────────────────────── */
     .rating-badge {
         display: inline-block;
-        padding: 8px 24px;
-        border-radius: 8px;
-        font-size: 2.4rem;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-size: 2.8rem;
         font-weight: 800;
         color: #FFFFFF;
         text-align: center;
+        letter-spacing: 2px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
     }
-    .rating-A { background-color: #1E6B42; }
-    .rating-B { background-color: #223040; }
-    .rating-C { background-color: #7D6608; }
-    .rating-D { background-color: #E65100; }
-    .rating-E { background-color: #922B21; }
-    /* Parecer colors */
-    .parecer-favoravel { color: #1E6B42; font-weight: 700; }
-    .parecer-ressalvas { color: #7D6608; font-weight: 700; }
-    .parecer-desfavoravel { color: #922B21; font-weight: 700; }
-    /* Progress module bars */
-    .module-progress {
-        margin-bottom: 4px;
-    }
-    /* Section header */
+    .rating-A { background: linear-gradient(135deg, #1E6B42, #2E9B62); }
+    .rating-B { background: linear-gradient(135deg, #223040, #3A5570); }
+    .rating-C { background: linear-gradient(135deg, #7D6608, #B8960E); }
+    .rating-D { background: linear-gradient(135deg, #E65100, #FF7A22); }
+    .rating-E { background: linear-gradient(135deg, #922B21, #C0392B); }
+
+    /* ── Parecer colors ──────────────────────────────────── */
+    .parecer-favoravel { color: #1E6B42; font-weight: 700; font-size: 1.1rem; }
+    .parecer-ressalvas { color: #7D6608; font-weight: 700; font-size: 1.1rem; }
+    .parecer-desfavoravel { color: #922B21; font-weight: 700; font-size: 1.1rem; }
+
+    /* ── Section headers ─────────────────────────────────── */
     .section-header {
-        background-color: #223040;
+        background: linear-gradient(90deg, #223040, #2a3d52);
         color: #FFFFFF;
-        padding: 8px 16px;
-        border-radius: 4px;
-        margin-top: 16px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        margin-top: 18px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
     }
-    /* Footer */
-    .footer-text {
-        color: #8B9197;
+
+    /* ── Status badges (DD checklist) ────────────────────── */
+    .status-ok {
+        background-color: #EAF4EE;
+        color: #1E6B42;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: 600;
         font-size: 0.8rem;
+    }
+    .status-pendente {
+        background-color: #FDECEA;
+        color: #922B21;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+    .status-desatualizado {
+        background-color: #FEF9E7;
+        color: #7D6608;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    /* ── Tabs ─────────────────────────────────────────────── */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        font-weight: 600;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #223040 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* ── File uploader ───────────────────────────────────── */
+    [data-testid="stFileUploader"] {
+        border: 2px dashed #D0D5DA;
+        border-radius: 12px;
+        padding: 8px;
+        transition: border-color 0.2s ease;
+    }
+    [data-testid="stFileUploader"]:hover {
+        border-color: #223040;
+    }
+
+    /* ── Expander (analysis sections) ────────────────────── */
+    .streamlit-expanderHeader {
+        background-color: #F2F4F6 !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        color: #223040 !important;
+    }
+
+    /* ── Progress bars ───────────────────────────────────── */
+    .stProgress > div > div > div {
+        background-color: #1E6B42 !important;
+    }
+
+    /* ── Info / Warning / Error boxes ────────────────────── */
+    .stAlert {
+        border-radius: 10px !important;
+    }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    .footer-text {
+        color: rgba(255,255,255,0.5);
+        font-size: 0.75rem;
         text-align: center;
         padding-top: 24px;
+        letter-spacing: 0.5px;
+    }
+
+    /* ── General polish ──────────────────────────────────── */
+    .block-container {
+        padding-top: 2rem !important;
+    }
+    .stButton > button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(34,48,64,0.15);
+    }
+    .stDownloadButton > button {
+        background-color: #1E6B42 !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 8px 24px;
+    }
+    .stDownloadButton > button:hover {
+        background-color: #246E45 !important;
+        box-shadow: 0 4px 12px rgba(30,125,79,0.25);
     }
 </style>
 """
@@ -296,8 +458,8 @@ def _detected_doc_types() -> set[str]:
 # Pages
 # ---------------------------------------------------------------------------
 def page_dashboard():
-    st.markdown("# ZYN Credit Engine")
-    st.markdown("### Motor de Análise de Crédito")
+    st.markdown('<p class="main-title">ZYN Credit Engine</p>', unsafe_allow_html=True)
+    st.markdown('<p class="main-subtitle">Motor de Análise de Crédito Estruturado</p>', unsafe_allow_html=True)
     st.markdown("---")
 
     total = len(st.session_state.operacoes)
@@ -929,22 +1091,27 @@ def main():
 
         page = st.radio(
             "Navegação",
-            ["🏠 Dashboard", "📄 Nova Análise", "📋 Checklist DD"],
+            ["Dashboard", "Nova Análise", "Checklist DD"],
+            format_func=lambda x: {
+                "Dashboard": "Dashboard",
+                "Nova Análise": "Nova Análise",
+                "Checklist DD": "Checklist DD",
+            }[x],
             label_visibility="collapsed",
         )
 
         st.markdown("---")
         st.markdown(
-            '<p class="footer-text" style="color:#8B9197;">ZYN Credit Engine v1.0</p>',
+            '<p class="footer-text">ZYN Credit Engine v1.0</p>',
             unsafe_allow_html=True,
         )
 
     # Page routing
-    if page == "🏠 Dashboard":
+    if page == "Dashboard":
         page_dashboard()
-    elif page == "📄 Nova Análise":
+    elif page == "Nova Análise":
         page_nova_analise()
-    elif page == "📋 Checklist DD":
+    elif page == "Checklist DD":
         page_checklist_dd()
 
 
