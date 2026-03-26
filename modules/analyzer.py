@@ -15,12 +15,12 @@ import anthropic
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 8000
+MAX_TOKENS = 10000
 MAX_RETRIES = 2
 RETRY_WAIT = 10  # seconds
-MAX_INPUT_CHARS = 15000
-MAX_DOC_CHARS = 3000
-TIMEOUT = 120  # seconds
+MAX_INPUT_CHARS = 30000
+MAX_DOC_CHARS = 5000
+TIMEOUT = 180  # seconds
 
 # System prompt compacto — sem repetição, direto ao ponto
 SYSTEM_PROMPT = """\
