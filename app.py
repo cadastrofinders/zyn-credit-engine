@@ -1339,9 +1339,8 @@ def page_historico():
                         status_text.info(f"Extraindo {uploaded.name} ({idx+1}/{len(complement_files)})...")
                         progress_bar.progress((idx) / len(complement_files))
                         try:
-                            file_path = UPLOADS_DIR / uploaded.name
-                            file_path.write_bytes(uploaded.read())
-                            result = process_file(str(file_path))
+                            file_bytes = uploaded.read()
+                            result = process_file(file_bytes, uploaded.name)
                             new_extracted[uploaded.name] = result
                         except Exception as ex:
                             st.warning(f"Erro ao extrair {uploaded.name}: {ex}")
