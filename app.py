@@ -458,23 +458,70 @@ def _detected_doc_types() -> set[str]:
 # Pages
 # ---------------------------------------------------------------------------
 def page_dashboard():
-    st.markdown('<p class="main-title">ZYN Credit Engine</p>', unsafe_allow_html=True)
-    st.markdown('<p class="main-subtitle">Motor de Análise de Crédito Estruturado</p>', unsafe_allow_html=True)
-    st.markdown("---")
+    # ── Hero Section ──────────────────────────────────────────────────────
+    st.markdown(
+        """
+        <div style="
+            background: linear-gradient(135deg, #223040 0%, #2a3d52 60%, #1E6B42 100%);
+            border-radius: 16px;
+            padding: 40px 36px 32px 36px;
+            margin-bottom: 24px;
+        ">
+            <h1 style="color:#FFFFFF; font-size:2.4rem; font-weight:800; margin:0; letter-spacing:-0.5px;">
+                ZYN Credit Engine
+            </h1>
+            <p style="color:rgba(255,255,255,0.7); font-size:1.05rem; margin:6px 0 0 0;">
+                Motor de Análise de Crédito Estruturado &nbsp;·&nbsp; Powered by Claude AI
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
+    # ── KPI Cards ─────────────────────────────────────────────────────────
     total = len(st.session_state.operacoes)
     em_andamento = _count_ops_by_status("Em Andamento")
     concluidas = _count_ops_by_status("Concluída")
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Operações", total)
-    col2.metric("Em Andamento", em_andamento)
-    col3.metric("Concluídas", concluidas)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown(
+            f"""<div style="background:#FFFFFF; border:1px solid #E8ECF0; border-left:4px solid #223040;
+            border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(34,48,64,0.06);">
+            <p style="color:#8B9197; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.8px; margin:0 0 6px 0;">Total Operações</p>
+            <p style="color:#223040; font-size:2rem; font-weight:800; margin:0;">{total}</p>
+            </div>""", unsafe_allow_html=True)
+    with col2:
+        st.markdown(
+            f"""<div style="background:#FFFFFF; border:1px solid #E8ECF0; border-left:4px solid #7D6608;
+            border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(34,48,64,0.06);">
+            <p style="color:#8B9197; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.8px; margin:0 0 6px 0;">Em Andamento</p>
+            <p style="color:#7D6608; font-size:2rem; font-weight:800; margin:0;">{em_andamento}</p>
+            </div>""", unsafe_allow_html=True)
+    with col3:
+        st.markdown(
+            f"""<div style="background:#FFFFFF; border:1px solid #E8ECF0; border-left:4px solid #1E6B42;
+            border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(34,48,64,0.06);">
+            <p style="color:#8B9197; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.8px; margin:0 0 6px 0;">Concluídas</p>
+            <p style="color:#1E6B42; font-size:2rem; font-weight:800; margin:0;">{concluidas}</p>
+            </div>""", unsafe_allow_html=True)
+    with col4:
+        taxa_sucesso = f"{(concluidas / total * 100):.0f}%" if total > 0 else "—"
+        st.markdown(
+            f"""<div style="background:#FFFFFF; border:1px solid #E8ECF0; border-left:4px solid #922B21;
+            border-radius:10px; padding:20px; box-shadow:0 1px 4px rgba(34,48,64,0.06);">
+            <p style="color:#8B9197; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.8px; margin:0 0 6px 0;">Taxa de Conclusão</p>
+            <p style="color:#223040; font-size:2rem; font-weight:800; margin:0;">{taxa_sucesso}</p>
+            </div>""", unsafe_allow_html=True)
 
-    st.markdown("---")
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
+    # ── Operações Recentes ────────────────────────────────────────────────
     if st.session_state.operacoes:
-        st.markdown("### Operações Recentes")
+        st.markdown(
+            '<p style="font-size:1.1rem; font-weight:700; color:#223040; margin-bottom:8px;">Operações Recentes</p>',
+            unsafe_allow_html=True,
+        )
         rows = []
         for op in reversed(st.session_state.operacoes[-20:]):
             rows.append({
@@ -488,18 +535,65 @@ def page_dashboard():
             })
         st.dataframe(rows, use_container_width=True, hide_index=True)
     else:
-        st.info("Nenhuma operação registrada. Clique em **Nova Análise** para começar.")
+        st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div style="background:#F2F4F6; border-radius:12px; padding:40px; text-align:center;">
+                <p style="font-size:1.6rem; margin:0 0 8px 0;">Nenhuma operação registrada</p>
+                <p style="color:#8B9197; margin:0;">Clique em <b>Nova Análise</b> no menu lateral para iniciar sua primeira análise de crédito.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # ── Pipeline rápido ───────────────────────────────────────────────────
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style="background:linear-gradient(90deg, #223040, #2a3d52); border-radius:12px; padding:24px 28px;">
+            <p style="color:#FFFFFF; font-weight:700; font-size:1rem; margin:0 0 12px 0;">Como funciona</p>
+            <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:140px; background:rgba(255,255,255,0.08); border-radius:8px; padding:14px; text-align:center;">
+                    <p style="color:#A8B4C0; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 4px 0;">Passo 1</p>
+                    <p style="color:#FFFFFF; font-weight:600; font-size:0.9rem; margin:0;">Upload de Docs</p>
+                </div>
+                <div style="flex:1; min-width:140px; background:rgba(255,255,255,0.08); border-radius:8px; padding:14px; text-align:center;">
+                    <p style="color:#A8B4C0; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 4px 0;">Passo 2</p>
+                    <p style="color:#FFFFFF; font-weight:600; font-size:0.9rem; margin:0;">Extração via Sonnet</p>
+                </div>
+                <div style="flex:1; min-width:140px; background:rgba(255,255,255,0.08); border-radius:8px; padding:14px; text-align:center;">
+                    <p style="color:#A8B4C0; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 4px 0;">Passo 3</p>
+                    <p style="color:#FFFFFF; font-weight:600; font-size:0.9rem; margin:0;">Análise via Opus</p>
+                </div>
+                <div style="flex:1; min-width:140px; background:rgba(255,255,255,0.08); border-radius:8px; padding:14px; text-align:center;">
+                    <p style="color:#A8B4C0; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 4px 0;">Passo 4</p>
+                    <p style="color:#FFFFFF; font-weight:600; font-size:0.9rem; margin:0;">MAC .docx Pronto</p>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def page_nova_analise():
-    st.markdown("# Nova Análise de Crédito")
-    st.markdown("---")
+    st.markdown(
+        """
+        <div style="margin-bottom:20px;">
+            <h1 style="color:#223040; font-size:1.8rem; font-weight:800; margin:0;">Nova Análise de Crédito</h1>
+            <p style="color:#8B9197; font-size:0.95rem; margin:4px 0 0 0;">
+                Preencha os dados da operação, faça upload dos documentos e gere o MAC automaticamente.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     if not API_KEY_SET:
         st.warning(
             "**ANTHROPIC_API_KEY** não configurada. "
             "A extração e análise via Claude não funcionarão. "
-            "Defina a variável no arquivo `.env` e reinicie o app."
+            "Configure os Secrets no Streamlit Cloud."
         )
 
     if not MODULES_AVAILABLE:
@@ -507,17 +601,21 @@ def page_nova_analise():
         return
 
     tab_upload, tab_extracao, tab_analise, tab_mac = st.tabs([
-        "📤 Upload & Dados",
-        "🔍 Extração",
-        "📊 Análise",
-        "📥 MAC .docx",
+        "1 - Upload & Dados",
+        "2 - Extração",
+        "3 - Análise",
+        "4 - MAC .docx",
     ])
 
     # ------------------------------------------------------------------
     # TAB 1 — Upload & Dados
     # ------------------------------------------------------------------
     with tab_upload:
-        st.markdown("### Parâmetros da Operação")
+        st.markdown(
+            '<p style="font-size:1.1rem; font-weight:700; color:#223040; margin-bottom:4px;">Parâmetros da Operação</p>',
+            unsafe_allow_html=True,
+        )
+        st.caption("Preencha os campos abaixo com os dados do tomador e da operação.")
 
         with st.form("form_parametros", clear_on_submit=False):
             col_a, col_b = st.columns(2)
@@ -932,8 +1030,17 @@ def page_nova_analise():
 
 
 def page_checklist_dd():
-    st.markdown("# Checklist Due Diligence")
-    st.markdown("---")
+    st.markdown(
+        """
+        <div style="margin-bottom:20px;">
+            <h1 style="color:#223040; font-size:1.8rem; font-weight:800; margin:0;">Checklist Due Diligence</h1>
+            <p style="color:#8B9197; font-size:0.95rem; margin:4px 0 0 0;">
+                12 módulos &nbsp;·&nbsp; Acompanhamento documental da operação
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # Initialize DD status from session state
     if not st.session_state.dd_status:
@@ -1080,24 +1187,53 @@ def main():
     # Sidebar
     with st.sidebar:
         st.markdown(
-            '<h1 style="color:#FFFFFF; font-size:1.6rem; margin-bottom:0;">ZYN Capital</h1>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            '<p style="color:#8B9197; font-size:0.85rem; margin-top:0;">Crédito Estruturado & M&A</p>',
+            """
+            <div style="padding:8px 0 4px 0;">
+                <p style="color:#FFFFFF; font-size:1.5rem; font-weight:800; letter-spacing:-0.3px; margin:0;">
+                    ZYN Capital
+                </p>
+                <p style="color:rgba(255,255,255,0.45); font-size:0.78rem; margin:2px 0 0 0; letter-spacing:0.5px;">
+                    CRÉDITO ESTRUTURADO & M&A
+                </p>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
         st.markdown("---")
 
+        st.markdown(
+            '<p style="color:rgba(255,255,255,0.35); font-size:0.65rem; text-transform:uppercase; '
+            'letter-spacing:1.5px; margin:0 0 4px 4px;">Navegação</p>',
+            unsafe_allow_html=True,
+        )
+
         page = st.radio(
             "Navegação",
             ["Dashboard", "Nova Análise", "Checklist DD"],
-            format_func=lambda x: {
-                "Dashboard": "Dashboard",
-                "Nova Análise": "Nova Análise",
-                "Checklist DD": "Checklist DD",
-            }[x],
             label_visibility="collapsed",
+        )
+
+        st.markdown("---")
+
+        # Quick stats in sidebar
+        total = len(st.session_state.operacoes)
+        em_andamento = _count_ops_by_status("Em Andamento")
+        st.markdown(
+            f"""
+            <div style="padding:4px 8px;">
+                <p style="color:rgba(255,255,255,0.35); font-size:0.65rem; text-transform:uppercase;
+                letter-spacing:1.5px; margin:0 0 8px 0;">Resumo</p>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:rgba(255,255,255,0.6); font-size:0.8rem;">Operações</span>
+                    <span style="color:#FFFFFF; font-weight:700; font-size:0.8rem;">{total}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:rgba(255,255,255,0.6); font-size:0.8rem;">Em andamento</span>
+                    <span style="color:#FFFFFF; font-weight:700; font-size:0.8rem;">{em_andamento}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
         st.markdown("---")
