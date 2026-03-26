@@ -127,6 +127,16 @@ def _is_xlsx(filename: str) -> bool:
     return os.path.splitext(filename)[1].lower() in {".xlsx", ".xls"}
 
 
+def _is_docx(filename: str) -> bool:
+    """Verifica se o arquivo e um Word .docx."""
+    return os.path.splitext(filename)[1].lower() == ".docx"
+
+
+def _is_pptx(filename: str) -> bool:
+    """Verifica se o arquivo e um PowerPoint .pptx."""
+    return os.path.splitext(filename)[1].lower() == ".pptx"
+
+
 def _xlsx_to_text(file_bytes: bytes) -> str:
     """Converte arquivo Excel para representacao textual."""
     try:
@@ -152,10 +162,76 @@ def _xlsx_to_text(file_bytes: bytes) -> str:
     return "\n".join(parts)
 
 
+def _docx_to_text(file_bytes: bytes) -> str:
+    """Extrai texto de um arquivo .docx usando python-docx."""
+    try:
+        from docx import Document
+        doc = Document(BytesIO(file_bytes))
+        parts = []
+        for para in doc.paragraphs:
+            if para.text.strip():
+                parts.append(para.text)
+        # Também extrai texto de tabelas
+        for table in doc.tables:
+            for row in table.rows:
+                cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                if cells:
+                    parts.append(" | ".join(cells))
+        return "\n".join(parts)
+    except Exception as e:
+        logger.warning("Falha ao extrair texto do DOCX: %s", e)
+        return ""
+
+
+def _pptx_to_text(file_bytes: bytes) -> str:
+    """Extrai texto de um arquivo .pptx usando python-pptx."""
+    try:
+        from pptx import Presentation
+        prs = Presentation(BytesIO(file_bytes))
+        parts = []
+        for i, slide in enumerate(prs.slides):
+            slide_texts = []
+            for shape in slide.shapes:
+                if shape.has_text_frame:
+                    for para in shape.text_frame.paragraphs:
+                        if para.text.strip():
+                            slide_texts.append(para.text)
+                if shape.has_table:
+                    for row in shape.table.rows:
+                        cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                        if cells:
+                            slide_texts.append(" | ".join(cells))
+            if slide_texts:
+                parts.append(f"--- Slide {i + 1} ---\n" + "\n".join(slide_texts))
+        return "\n\n".join(parts)
+    except Exception as e:
+        logger.warning("Falha ao extrair texto do PPTX: %s", e)
+        return ""
+
+
+def _pdf_to_text(file_bytes: bytes) -> str:
+    """Extrai texto de um PDF usando PyPDF2."""
+    try:
+        from PyPDF2 import PdfReader
+        reader = PdfReader(BytesIO(file_bytes))
+        pages = []
+        for i, page in enumerate(reader.pages):
+            text = page.extract_text() or ""
+            if text.strip():
+                pages.append(f"--- Página {i + 1} ---\n{text}")
+        return "\n\n".join(pages) if pages else ""
+    except Exception as e:
+        logger.warning("Falha ao extrair texto do PDF via PyPDF2: %s", e)
+        return ""
+
+
 def _build_content_blocks(file_bytes: bytes, filename: str, text_prompt: str) -> list[dict[str, Any]]:
     """
     Monta os blocos de conteudo para a API do Claude,
     tratando PDFs, imagens e planilhas de forma adequada.
+
+    Para PDFs: extrai texto via PyPDF2 (compatível com todos os planos da API).
+    Se o texto for muito curto (scan/imagem), tenta enviar como document com beta header.
     """
     blocks: list[dict[str, Any]] = []
 
@@ -165,6 +241,24 @@ def _build_content_blocks(file_bytes: bytes, filename: str, text_prompt: str) ->
             "type": "text",
             "text": (
                 f"Conteudo extraido do arquivo '{filename}':\n\n"
+                f"{text_content}\n\n---\n\n{text_prompt}"
+            ),
+        })
+    elif _is_docx(filename):
+        text_content = _docx_to_text(file_bytes)
+        blocks.append({
+            "type": "text",
+            "text": (
+                f"Conteudo extraido do arquivo Word '{filename}':\n\n"
+                f"{text_content}\n\n---\n\n{text_prompt}"
+            ),
+        })
+    elif _is_pptx(filename):
+        text_content = _pptx_to_text(file_bytes)
+        blocks.append({
+            "type": "text",
+            "text": (
+                f"Conteudo extraido da apresentacao '{filename}':\n\n"
                 f"{text_content}\n\n---\n\n{text_prompt}"
             ),
         })
@@ -181,16 +275,29 @@ def _build_content_blocks(file_bytes: bytes, filename: str, text_prompt: str) ->
         })
         blocks.append({"type": "text", "text": text_prompt})
     elif _is_pdf(filename):
-        b64 = base64.standard_b64encode(file_bytes).decode("utf-8")
-        blocks.append({
-            "type": "document",
-            "source": {
-                "type": "base64",
-                "media_type": "application/pdf",
-                "data": b64,
-            },
-        })
-        blocks.append({"type": "text", "text": text_prompt})
+        # Extrair texto do PDF para enviar como texto puro (mais compatível)
+        pdf_text = _pdf_to_text(file_bytes)
+        if len(pdf_text.strip()) > 100:
+            # Texto suficiente — enviar como texto
+            blocks.append({
+                "type": "text",
+                "text": (
+                    f"Conteudo extraido do PDF '{filename}':\n\n"
+                    f"{pdf_text}\n\n---\n\n{text_prompt}"
+                ),
+            })
+        else:
+            # PDF é scan/imagem — tentar enviar como document (requer beta)
+            b64 = base64.standard_b64encode(file_bytes).decode("utf-8")
+            blocks.append({
+                "type": "document",
+                "source": {
+                    "type": "base64",
+                    "media_type": "application/pdf",
+                    "data": b64,
+                },
+            })
+            blocks.append({"type": "text", "text": text_prompt})
     else:
         # Fallback: tenta decodificar como texto
         try:
@@ -206,6 +313,25 @@ def _build_content_blocks(file_bytes: bytes, filename: str, text_prompt: str) ->
         })
 
     return blocks
+
+
+def _has_document_block(content: list[dict]) -> bool:
+    """Verifica se os blocos de conteúdo incluem um document block (PDF scan)."""
+    return any(block.get("type") == "document" for block in content)
+
+
+def _call_api(client: anthropic.Anthropic, content: list[dict], max_tokens: int = 512) -> str:
+    """Chama a API Claude, adicionando beta header se necessário para PDFs scan."""
+    kwargs = {
+        "model": MODEL,
+        "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": content}],
+    }
+    if _has_document_block(content):
+        kwargs["betas"] = ["pdfs-2024-09-25"]
+
+    response = client.messages.create(**kwargs)
+    return response.content[0].text
 
 
 def _parse_json_response(text: str) -> dict:
@@ -273,13 +399,9 @@ def classify_document(file_bytes: bytes, filename: str) -> dict:
 
         content = _build_content_blocks(file_bytes, filename, prompt)
 
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=512,
-            messages=[{"role": "user", "content": content}],
-        )
+        response_text = _call_api(client, content, max_tokens=512)
 
-        result = _parse_json_response(response.content[0].text)
+        result = _parse_json_response(response_text)
 
         # Validacao basica
         if result.get("tipo") not in TIPOS_DOCUMENTO:
@@ -412,13 +534,9 @@ def extract_data(file_bytes: bytes, filename: str, tipo_documento: str) -> dict:
         prompt = _get_extraction_prompt(tipo_documento)
         content = _build_content_blocks(file_bytes, filename, prompt)
 
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=4096,
-            messages=[{"role": "user", "content": content}],
-        )
+        response_text = _call_api(client, content, max_tokens=4096)
 
-        result = _parse_json_response(response.content[0].text)
+        result = _parse_json_response(response_text)
         result["_tipo_documento"] = tipo_documento
         return result
 

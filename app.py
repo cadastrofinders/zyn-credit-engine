@@ -686,7 +686,7 @@ def page_nova_analise():
         uploaded = st.file_uploader(
             "Arraste ou selecione os documentos",
             accept_multiple_files=True,
-            type=["pdf", "xlsx", "xls", "png", "jpg", "jpeg", "docx"],
+            type=["pdf", "xlsx", "xls", "png", "jpg", "jpeg", "docx", "pptx"],
         )
 
         if uploaded:
