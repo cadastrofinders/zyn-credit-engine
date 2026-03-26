@@ -942,16 +942,23 @@ def page_nova_analise():
             op = st.session_state.current_op
             st.markdown(f"**Tomador:** {op['tomador']}  |  **Tipo:** {op['tipo_operacao']}  |  **Volume:** {_fmt_brl(op['volume'])}")
 
-            # Build dados_extraidos dict keyed by doc type for the analyzer
+            # Build dados_extraidos — accumulate multiple docs of same type
             dados_para_analise: dict = {}
+            total_docs = 0
             for fname, result in st.session_state.extracted_data.items():
                 classificacao = result.get("classificacao", {})
                 dados = result.get("dados", {})
                 tipo = classificacao.get("tipo", "outro")
                 if "error" not in dados:
-                    dados_para_analise[tipo] = dados
+                    total_docs += 1
+                    if tipo in dados_para_analise:
+                        # Append with filename prefix to distinguish
+                        key = f"{tipo}_{total_docs}"
+                        dados_para_analise[key] = dados
+                    else:
+                        dados_para_analise[tipo] = dados
 
-            st.markdown(f"Dados disponíveis: **{len(dados_para_analise)}** tipo(s) documental(is).")
+            st.markdown(f"Dados disponíveis: **{total_docs}** documento(s) em **{len(dados_para_analise)}** entrada(s).")
 
             if st.button("Gerar Análise de Crédito", use_container_width=True, type="primary"):
                 if not API_KEY_SET:
