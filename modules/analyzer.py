@@ -46,7 +46,11 @@ DADOS:
 
 Disponíveis: {docs_disponiveis} | Faltantes: {docs_indisponiveis}
 
-Retorne JSON com: tomador(razao_social,cnpj,grupo_economico,historico,rating_secao,flags), \
+IMPORTANTE: gere as chaves NESTA ORDEM EXATA no JSON (rating e kpis PRIMEIRO):
+
+rating_final(nota,dscr_projetado,ltv_efetivo,parecer,justificativa,recomendacoes[]), \
+kpis(receita_liquida,ebitda,margem_ebitda,divida_liquida_ebitda,ltv,dscr), \
+tomador(razao_social,cnpj,grupo_economico,historico,rating_secao,flags), \
 patrimonio(ativos_reais,avaliacao,ltv,analise,rating_secao,flags), \
 producao(capacidade,historico_produtivo,analise,rating_secao,flags), \
 capital(estrutura_capital,endividamento,indicadores{{divida_liquida_ebitda,divida_pl,liquidez_corrente,roe}},analise,rating_secao,flags), \
@@ -56,11 +60,9 @@ onus(gravames[],certidoes,analise,rating_secao,flags), \
 riscos(mercado,credito,operacional,legal,matriz_riscos[{{risco,probabilidade,impacto,mitigante}}],rating_secao,flags), \
 covenants(clausulas[{{covenant,limite,atual,status}}],analise,rating_secao,flags), \
 cronograma(etapas[{{etapa,prazo,responsavel}}],analise,rating_secao,flags), \
-rating_final(nota,dscr_projetado,ltv_efetivo,parecer,justificativa,recomendacoes[]), \
-kpis(receita_liquida,ebitda,margem_ebitda,divida_liquida_ebitda,ltv,dscr), \
 checklist_lacunas(documentos_faltantes[{{item,criticidade,motivo}}],informacoes_pendentes[{{item,criticidade,motivo}}],total_pendencias,total_criticas)
 
-Seja conciso nas análises (2-3 frases por seção). JSON puro, sem markdown."""
+Seja conciso: 1-2 frases por analise de seção, max 3 flags por seção. JSON puro, sem markdown."""
 
 ALL_DOC_TYPES = [
     "balanco", "dre", "fluxo_caixa", "balancete", "matricula",
