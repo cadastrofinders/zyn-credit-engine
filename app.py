@@ -41,6 +41,8 @@ try:
     from modules.analyzer import analyze_credit, get_analysis_summary
     from modules.docx_generator import generate_mac
     from modules.teaser_generator import generate_teaser
+    from modules.excel_generator import generate_excel
+    from modules.kyc_enrichment import enrich_analysis_data
 
     MODULES_AVAILABLE = True
 except ImportError as _imp_err:
@@ -526,6 +528,20 @@ def _delete_from_history(filename: str):
 
 
 # ---------------------------------------------------------------------------
+# Session management
+# ---------------------------------------------------------------------------
+def _clear_session():
+    """Reset session state for a new analysis."""
+    st.session_state.extracted_data = {}
+    st.session_state.analysis = None
+    st.session_state.current_op = None
+    st.session_state.uploaded_files = []
+    # Clear disk cache too
+    if CACHE_FILE.exists():
+        CACHE_FILE.unlink()
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 def _fmt_brl(value: float) -> str:
@@ -722,7 +738,7 @@ def page_nova_analise():
         "1 - Upload & Dados",
         "2 - Extração",
         "3 - Análise",
-        "4 - MAC .docx",
+        "4 - Documentos",
     ])
 
     # ------------------------------------------------------------------
@@ -969,6 +985,12 @@ def page_nova_analise():
                         status_container.info(f"⏳ {msg}")
                     with st.spinner("Analisando com Claude Sonnet..."):
                         try:
+                            # KYC enrichment — busca dados públicos do CNPJ
+                            cnpj = op.get("cnpj", "")
+                            if cnpj and cnpj != "N/I":
+                                dados_para_analise = dict(dados_para_analise)  # copy
+                                enrich_analysis_data(cnpj, dados_para_analise, status_callback=_update_status)
+
                             analise = analyze_credit(dados_para_analise, op, status_callback=_update_status)
                             st.session_state.analysis = analise
 
@@ -982,6 +1004,10 @@ def page_nova_analise():
                             status_container.empty()
                             _save_to_history(op, analise, st.session_state.extracted_data)
                             st.success("Análise concluída e salva no histórico.")
+
+                            if st.button("Iniciar Nova Análise", use_container_width=True, key="clear_after_analysis"):
+                                _clear_session()
+                                st.rerun()
                         except Exception as e:
                             status_container.empty()
                             st.error(f"Erro durante a análise: {e}")
@@ -1109,13 +1135,13 @@ def page_nova_analise():
                         st.dataframe(df_info, use_container_width=True, hide_index=True)
 
     # ------------------------------------------------------------------
-    # TAB 4 — MAC .docx
+    # TAB 4 — Documentos
     # ------------------------------------------------------------------
     with tab_mac:
-        st.markdown("### Geração do MAC (.docx)")
+        st.markdown("### Geração de Documentos")
 
         if not st.session_state.analysis:
-            st.info("Execute a análise de crédito na aba **Análise** antes de gerar o MAC.")
+            st.info("Execute a análise de crédito na aba **Análise** antes de gerar documentos.")
         else:
             analise = st.session_state.analysis
             op = st.session_state.current_op
@@ -1124,43 +1150,60 @@ def page_nova_analise():
             summary = get_analysis_summary(analise)
             st.code(summary, language=None)
 
-            if st.button("Gerar MAC .docx", use_container_width=True, type="primary"):
-                try:
-                    tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"MAC_{tomador_clean}_{timestamp}.docx"
-                    output_path = str(OUTPUT_DIR / filename)
+            col_xl, col_mac_btn = st.columns(2)
 
-                    with st.spinner("Gerando documento MAC..."):
-                        generated_path = generate_mac(analise, op, output_path)
+            with col_xl:
+                if st.button("Análise Técnica (.xlsx)", use_container_width=True, type="primary"):
+                    try:
+                        tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        xl_name = f"AnaliseTecnica_{tomador_clean}_{timestamp}.xlsx"
+                        xl_path = str(OUTPUT_DIR / xl_name)
 
-                    st.success(f"MAC gerado com sucesso: **{filename}**")
+                        with st.spinner("Gerando Planilha de Análise Técnica..."):
+                            hist = _list_history()
+                            generate_excel(analise, op, xl_path, hist if hist else None)
 
-                    with open(generated_path, "rb") as f:
-                        docx_bytes = f.read()
+                        st.success(f"Planilha gerada: **{xl_name}**")
 
-                    st.download_button(
-                        label="📥 Baixar MAC .docx",
-                        data=docx_bytes,
-                        file_name=filename,
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        use_container_width=True,
-                    )
+                        with open(xl_path, "rb") as f:
+                            st.download_button(
+                                label="Baixar Análise Técnica (.xlsx)",
+                                data=f.read(),
+                                file_name=xl_name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                use_container_width=True,
+                            )
+                    except Exception as e:
+                        st.error(f"Erro ao gerar planilha: {e}")
 
-                    # Update operation as concluded
-                    op["status"] = "Concluída"
-                    st.session_state.current_op = op
+            with col_mac_btn:
+                if st.button("MAC (.docx)", use_container_width=True):
+                    try:
+                        tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        filename = f"MAC_{tomador_clean}_{timestamp}.docx"
+                        output_path = str(OUTPUT_DIR / filename)
 
-                    # Add to operations list if not already there
-                    already_registered = any(
-                        o.get("tomador") == op.get("tomador") and o.get("data_criacao") == op.get("data_criacao")
-                        for o in st.session_state.operacoes
-                    )
-                    if not already_registered:
-                        st.session_state.operacoes.append(op)
+                        with st.spinner("Gerando documento MAC..."):
+                            generated_path = generate_mac(analise, op, output_path)
 
-                except Exception as e:
-                    st.error(f"Erro ao gerar o MAC: {e}")
+                        st.success(f"MAC gerado: **{filename}**")
+
+                        with open(generated_path, "rb") as f:
+                            st.download_button(
+                                label="Baixar MAC (.docx)",
+                                data=f.read(),
+                                file_name=filename,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True,
+                            )
+
+                        op["status"] = "Concluída"
+                        st.session_state.current_op = op
+
+                    except Exception as e:
+                        st.error(f"Erro ao gerar o MAC: {e}")
 
             st.markdown("---")
 
@@ -1272,21 +1315,105 @@ def page_historico():
 
             st.markdown("---")
 
-            # Action buttons
-            col_load, col_mac, col_teaser, col_del = st.columns(4)
+            # Complementar Análise — upload additional docs, merge, re-analyze
+            with st.container():
+                st.markdown("**Complementar Análise**")
+                complement_files = st.file_uploader(
+                    "Upload de documentos complementares",
+                    accept_multiple_files=True,
+                    key=f"complement_{i}",
+                    type=["pdf", "png", "jpg", "jpeg", "xlsx", "xls", "csv", "docx"],
+                )
+                if complement_files and st.button(
+                    "Extrair e Re-analisar",
+                    key=f"reanalyze_{i}",
+                    use_container_width=True,
+                    type="primary",
+                ):
+                    existing_extracted = item.get("extracted_data", {})
+                    new_extracted = dict(existing_extracted)
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
 
-            with col_load:
-                if st.button("Carregar na sessao", key=f"load_{i}", use_container_width=True):
-                    st.session_state.analysis = analise
-                    st.session_state.current_op = op
-                    if item.get("extracted_data"):
-                        st.session_state.extracted_data = item["extracted_data"]
-                    _save_cache()
-                    st.success("Analise carregada. Va para **Nova Analise** > aba MAC para gerar o documento.")
-                    st.rerun()
+                    for idx, uploaded in enumerate(complement_files):
+                        status_text.info(f"Extraindo {uploaded.name} ({idx+1}/{len(complement_files)})...")
+                        progress_bar.progress((idx) / len(complement_files))
+                        try:
+                            file_path = UPLOADS_DIR / uploaded.name
+                            file_path.write_bytes(uploaded.read())
+                            result = process_file(str(file_path))
+                            new_extracted[uploaded.name] = result
+                        except Exception as ex:
+                            st.warning(f"Erro ao extrair {uploaded.name}: {ex}")
+
+                    progress_bar.progress(1.0)
+                    status_text.info("Documentos extraídos. Re-analisando...")
+
+                    # Build merged data for analysis
+                    dados_para_analise = {}
+                    total_docs = 0
+                    for fname, result in new_extracted.items():
+                        classificacao = result.get("classificacao", {})
+                        dados = result.get("dados", {})
+                        tipo = classificacao.get("tipo", "outro")
+                        if "error" not in dados:
+                            total_docs += 1
+                            if tipo in dados_para_analise:
+                                dados_para_analise[f"{tipo}_{total_docs}"] = dados
+                            else:
+                                dados_para_analise[tipo] = dados
+
+                    try:
+                        def _update_status(msg):
+                            status_text.info(f"⏳ {msg}")
+                        nova_analise = analyze_credit(dados_para_analise, op, status_callback=_update_status)
+
+                        # Update history file with new analysis
+                        updated_payload = {
+                            "operacao": op,
+                            "analise": nova_analise,
+                            "extracted_data": new_extracted,
+                            "data_analise": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        }
+                        (HISTORY_DIR / filename).write_text(
+                            json.dumps(updated_payload, ensure_ascii=False, indent=2)
+                        )
+                        status_text.empty()
+                        progress_bar.empty()
+                        st.success(f"Análise complementada com {len(complement_files)} documento(s). Re-análise salva.")
+                        st.rerun()
+                    except Exception as ex:
+                        status_text.empty()
+                        progress_bar.empty()
+                        st.error(f"Erro na re-análise: {ex}")
+
+            st.markdown("---")
+
+            # Action buttons
+            col_excel, col_mac, col_teaser, col_load, col_del = st.columns(5)
+
+            with col_excel:
+                if st.button("Análise Técnica (.xlsx)", key=f"excel_{i}", use_container_width=True, type="primary"):
+                    try:
+                        excel_path = OUTPUT_DIR / f"AnaliseTecnica_{tomador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+                        # Pass historico for cross-reference
+                        other_analyses = [h for h in historico if h.get("_filename") != filename]
+                        generate_excel(analise, op, str(excel_path), other_analyses if other_analyses else None)
+                        with open(excel_path, "rb") as f:
+                            st.download_button(
+                                label="Baixar Análise (.xlsx)",
+                                data=f.read(),
+                                file_name=excel_path.name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key=f"dl_excel_{i}",
+                                use_container_width=True,
+                            )
+                        st.success("Planilha de Análise Técnica gerada.")
+                    except Exception as e:
+                        st.error(f"Erro ao gerar Excel: {e}")
 
             with col_mac:
-                if st.button("Gerar MAC", key=f"mac_{i}", use_container_width=True, type="primary"):
+                if st.button("MAC (.docx)", key=f"mac_{i}", use_container_width=True):
                     try:
                         mac_path = OUTPUT_DIR / f"MAC_{tomador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.docx"
                         generate_mac(analise, op, str(mac_path))
@@ -1304,7 +1431,7 @@ def page_historico():
                         st.error(f"Erro ao gerar MAC: {e}")
 
             with col_teaser:
-                if st.button("Gerar Teaser", key=f"teaser_{i}", use_container_width=True):
+                if st.button("Teaser (.pptx)", key=f"teaser_{i}", use_container_width=True):
                     try:
                         teaser_path = OUTPUT_DIR / f"Teaser_{tomador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pptx"
                         generate_teaser(analise, op, str(teaser_path))
@@ -1320,6 +1447,16 @@ def page_historico():
                         st.success("Teaser gerado com sucesso.")
                     except Exception as e:
                         st.error(f"Erro ao gerar Teaser: {e}")
+
+            with col_load:
+                if st.button("Carregar", key=f"load_{i}", use_container_width=True):
+                    st.session_state.analysis = analise
+                    st.session_state.current_op = op
+                    if item.get("extracted_data"):
+                        st.session_state.extracted_data = item["extracted_data"]
+                    _save_cache()
+                    st.success("Análise carregada na sessão.")
+                    st.rerun()
 
             with col_del:
                 if st.button("Excluir", key=f"del_{i}", use_container_width=True):

@@ -33,6 +33,8 @@ Regras:
 - Ratings seção: Forte/Adequado/Atenção/Crítico
 - Rating final: A/B/C/D/E | Parecer: Favorável/Favorável com Ressalvas/Desfavorável
 - DSCR<1.2=atenção, <1.0=crítico | LTV>80%=atenção, >100%=crítico | Dív/EBITDA>3.5x=atenção, >5x=crítico
+- Se houver dados KYC públicos (seção kyc_publico), use para validar razão social, CNPJ, QSA, atividade econômica e capital social. Flagge divergências entre KYC e documentos.
+- Aplique inteligência de mercado: compare indicadores com benchmarks setoriais, analise posição competitiva, riscos macroeconômicos do setor (CDI, câmbio, safra, ciclo de commodities).
 - Dados não disponíveis: "Não disponível" (texto) ou 0 (numérico) + flag
 - Valores em R$. Responda SOMENTE JSON válido."""
 
