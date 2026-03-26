@@ -40,6 +40,7 @@ try:
     from modules.extractor import process_file
     from modules.analyzer import analyze_credit, get_analysis_summary
     from modules.docx_generator import generate_mac
+    from modules.teaser_generator import generate_teaser
 
     MODULES_AVAILABLE = True
 except ImportError as _imp_err:
@@ -1132,6 +1133,34 @@ def page_nova_analise():
                 except Exception as e:
                     st.error(f"Erro ao gerar o MAC: {e}")
 
+            st.markdown("---")
+
+            # Teaser button
+            if st.button("Gerar Teaser (.pptx) — 4 slides", use_container_width=True):
+                try:
+                    tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    teaser_name = f"Teaser_{tomador_clean}_{timestamp}.pptx"
+                    teaser_path = str(OUTPUT_DIR / teaser_name)
+
+                    with st.spinner("Gerando Teaser ZYN..."):
+                        generate_teaser(analise, op, teaser_path)
+
+                    st.success(f"Teaser gerado: **{teaser_name}**")
+
+                    with open(teaser_path, "rb") as f:
+                        pptx_bytes = f.read()
+
+                    st.download_button(
+                        label="Baixar Teaser .pptx",
+                        data=pptx_bytes,
+                        file_name=teaser_name,
+                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        use_container_width=True,
+                    )
+                except Exception as e:
+                    st.error(f"Erro ao gerar Teaser: {e}")
+
 
 def page_historico():
     st.markdown(
@@ -1215,7 +1244,7 @@ def page_historico():
             st.markdown("---")
 
             # Action buttons
-            col_load, col_mac, col_del = st.columns(3)
+            col_load, col_mac, col_teaser, col_del = st.columns(4)
 
             with col_load:
                 if st.button("Carregar na sessao", key=f"load_{i}", use_container_width=True):
@@ -1244,6 +1273,24 @@ def page_historico():
                         st.success("MAC gerado com sucesso.")
                     except Exception as e:
                         st.error(f"Erro ao gerar MAC: {e}")
+
+            with col_teaser:
+                if st.button("Gerar Teaser", key=f"teaser_{i}", use_container_width=True):
+                    try:
+                        teaser_path = OUTPUT_DIR / f"Teaser_{tomador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pptx"
+                        generate_teaser(analise, op, str(teaser_path))
+                        with open(teaser_path, "rb") as f:
+                            st.download_button(
+                                label="Baixar Teaser (.pptx)",
+                                data=f.read(),
+                                file_name=teaser_path.name,
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                key=f"dl_teaser_{i}",
+                                use_container_width=True,
+                            )
+                        st.success("Teaser gerado com sucesso.")
+                    except Exception as e:
+                        st.error(f"Erro ao gerar Teaser: {e}")
 
             with col_del:
                 if st.button("Excluir", key=f"del_{i}", use_container_width=True):
