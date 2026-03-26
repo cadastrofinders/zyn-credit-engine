@@ -13,20 +13,30 @@ import re
 from io import BytesIO
 from typing import Any
 
+import time
+
 import anthropic
 
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-4-6"
+API_DELAY_SECONDS = 3  # Delay entre chamadas para respeitar rate limit Tier 1
 
 TIPOS_DOCUMENTO = [
     "balanco",
     "dre",
     "balancete",
+    "demonstracoes_financeiras",
     "matricula",
     "contrato",
     "certidao",
     "ccir_car",
+    "laudo_avaliacao",
+    "irpf",
+    "faturamento",
+    "planejamento",
+    "cnpj",
+    "alteracao_contratual",
     "outro",
 ]
 
@@ -320,19 +330,45 @@ def _has_document_block(content: list[dict]) -> bool:
     return any(block.get("type") == "document" for block in content)
 
 
-def _call_api(client: anthropic.Anthropic, content: list[dict], max_tokens: int = 512) -> str:
-    """Chama a API Claude, adicionando beta header se necessário para PDFs scan."""
+def _call_api(client: anthropic.Anthropic, content: list[dict], max_tokens: int = 512, retries: int = 3) -> str:
+    """Chama a API Claude com retry e rate-limit handling."""
     kwargs = {
         "model": MODEL,
         "max_tokens": max_tokens,
         "messages": [{"role": "user", "content": content}],
     }
     if _has_document_block(content):
-        # Usa extra_headers para compatibilidade com todas as versões do SDK
         kwargs["extra_headers"] = {"anthropic-beta": "pdfs-2024-09-25"}
 
-    response = client.messages.create(**kwargs)
-    return response.content[0].text
+    for attempt in range(retries):
+        try:
+            response = client.messages.create(**kwargs)
+            return response.content[0].text
+        except anthropic.RateLimitError:
+            wait = (attempt + 1) * 10  # 10s, 20s, 30s
+            logger.warning("Rate limit atingido. Aguardando %ds antes de retry %d/%d", wait, attempt + 1, retries)
+            time.sleep(wait)
+        except anthropic.BadRequestError as e:
+            if "PDF" in str(e) and _has_document_block(content):
+                # PDF inválido como document — tenta extrair texto e reenviar
+                logger.warning("PDF inválido como document block. Tentando como texto...")
+                new_content = []
+                for block in content:
+                    if block.get("type") == "document":
+                        new_content.append({
+                            "type": "text",
+                            "text": "[PDF não processável — documento escaneado sem texto extraível]",
+                        })
+                    else:
+                        new_content.append(block)
+                kwargs["messages"] = [{"role": "user", "content": new_content}]
+                if "extra_headers" in kwargs:
+                    del kwargs["extra_headers"]
+                response = client.messages.create(**kwargs)
+                return response.content[0].text
+            raise
+
+    raise Exception("Rate limit excedido após todas as tentativas. Tente novamente em alguns minutos.")
 
 
 def _parse_json_response(text: str) -> dict:
@@ -383,19 +419,26 @@ def classify_document(file_bytes: bytes, filename: str) -> dict:
 
         prompt = (
             "Voce e um analista de credito estruturado da ZYN Capital. "
-            "Analise o documento fornecido e classifique-o em uma das categorias abaixo.\n\n"
+            "Analise o documento fornecido e classifique-o em UMA das categorias abaixo.\n\n"
             "Categorias possiveis:\n"
-            "- balanco: Balanco Patrimonial\n"
-            "- dre: Demonstracao de Resultado do Exercicio\n"
+            "- balanco: Balanco Patrimonial (isolado)\n"
+            "- dre: DRE isolada\n"
             "- balancete: Balancete contabil\n"
+            "- demonstracoes_financeiras: Demonstracoes Financeiras completas (BP + DRE + DMPL + DFC + Notas)\n"
             "- matricula: Matricula de imovel rural ou urbano\n"
             "- contrato: Contrato (emprestimo, arrendamento, compra e venda, etc.)\n"
             "- certidao: Certidao (negativa de debitos, protestos, distribuicao, etc.)\n"
             "- ccir_car: CCIR ou CAR (Cadastro Ambiental Rural)\n"
-            "- outro: Qualquer documento que nao se encaixe nas categorias acima\n\n"
-            "Responda EXCLUSIVAMENTE com um JSON no formato:\n"
-            '{"tipo": "<categoria>", "confianca": <0.0 a 1.0>, "descricao": "<breve descricao do documento>"}\n\n'
-            "Nao inclua texto adicional fora do JSON."
+            "- laudo_avaliacao: Laudo ou Relatorio Tecnico de Avaliacao de imoveis/ativos\n"
+            "- irpf: Declaracao de Imposto de Renda Pessoa Fisica (DIRPF)\n"
+            "- faturamento: Relatorio de faturamento, receita ou analise de receita\n"
+            "- planejamento: Planejamento de producao, orcamento ou projecao\n"
+            "- cnpj: Cartao CNPJ, comprovante de inscricao ou consulta CNPJ\n"
+            "- alteracao_contratual: Alteracao contratual, aditivo ou consolidacao societaria\n"
+            "- outro: Documento que nao se encaixe em nenhuma categoria acima\n\n"
+            "Se o documento contiver BP + DRE juntos, classifique como 'demonstracoes_financeiras'.\n\n"
+            "Responda APENAS com JSON, sem texto adicional:\n"
+            '{"tipo": "<categoria>", "confianca": <0.0 a 1.0>, "descricao": "<breve descricao>"}'
         )
 
         content = _build_content_blocks(file_bytes, filename, prompt)
@@ -505,14 +548,89 @@ def _get_extraction_prompt(tipo_documento: str) -> str:
         ),
     }
 
+    prompts["demonstracoes_financeiras"] = (
+        "Voce e um analista financeiro especializado. Este documento contem Demonstracoes Financeiras completas. "
+        "Extraia os dados do Balanco Patrimonial E da DRE em um unico JSON.\n\n"
+        "Retorne EXCLUSIVAMENTE um JSON com a seguinte estrutura:\n\n"
+        '{"data_base": "", "periodo_dre": "",\n'
+        ' "ativo_total": 0, "ativo_circulante": 0, "caixa_equivalentes": 0, "estoques": 0, "contas_receber": 0,\n'
+        ' "ativo_nao_circulante": 0, "imobilizado": 0,\n'
+        ' "passivo_circulante": 0, "emprestimos_cp": 0, "fornecedores": 0,\n'
+        ' "passivo_nao_circulante": 0, "emprestimos_lp": 0,\n'
+        ' "patrimonio_liquido": 0, "capital_social": 0,\n'
+        ' "receita_liquida": 0, "custo_mercadorias": 0, "lucro_bruto": 0,\n'
+        ' "despesas_operacionais": 0, "ebitda": 0, "resultado_financeiro": 0, "lucro_liquido": 0,\n'
+        ' "margem_bruta_pct": 0, "margem_ebitda_pct": 0, "margem_liquida_pct": 0}\n\n'
+        "Regras:\n"
+        "- Valores monetarios em numeros puros (sem R$, sem separador de milhar, ponto como decimal).\n"
+        "- Se houver dados de mais de um exercicio, use o mais recente.\n"
+        "- Margens em percentual (ex: 25.5 para 25,5%).\n"
+        "- Responda APENAS com o JSON."
+    )
+    prompts["laudo_avaliacao"] = (
+        "Voce e um analista de credito. Extraia os dados deste Laudo/Relatorio de Avaliacao.\n"
+        "Retorne EXCLUSIVAMENTE um JSON:\n\n"
+        '{"tipo_laudo": "", "elaborado_por": "", "data_laudo": "",\n'
+        ' "imovel_nome": "", "municipio": "", "uf": "", "area_ha": 0,\n'
+        ' "valor_mercado": 0, "valor_liquidacao": 0,\n'
+        ' "metodo_avaliacao": "", "finalidade": "",\n'
+        ' "observacoes": ""}\n\n'
+        "Valores monetarios em numeros puros. Responda APENAS com o JSON."
+    )
+    prompts["irpf"] = (
+        "Voce e um analista de credito. Extraia os dados desta Declaracao de IRPF.\n"
+        "Retorne EXCLUSIVAMENTE um JSON:\n\n"
+        '{"contribuinte": "", "cpf": "", "exercicio": "", "ano_calendario": "",\n'
+        ' "rendimentos_tributaveis": 0, "rendimentos_isentos": 0,\n'
+        ' "bens_direitos_total": 0, "bens_direitos": [{"descricao": "", "valor": 0}],\n'
+        ' "dividas_onus_total": 0, "dividas_onus": [{"descricao": "", "valor": 0}],\n'
+        ' "imposto_devido": 0, "atividade_rural_resultado": 0}\n\n'
+        "Valores monetarios em numeros puros. Responda APENAS com o JSON."
+    )
+    prompts["faturamento"] = (
+        "Voce e um analista financeiro. Extraia os dados deste relatorio de faturamento/receita.\n"
+        "Retorne EXCLUSIVAMENTE um JSON:\n\n"
+        '{"empresa": "", "periodo": "", "faturamento_total": 0,\n'
+        ' "detalhamento_mensal": [{"mes": "", "valor": 0}],\n'
+        ' "detalhamento_empresa": [{"empresa": "", "valor": 0}],\n'
+        ' "observacoes": ""}\n\n'
+        "Valores monetarios em numeros puros. Responda APENAS com o JSON."
+    )
+    prompts["planejamento"] = (
+        "Voce e um analista financeiro. Extraia os dados deste planejamento/projecao.\n"
+        "Retorne EXCLUSIVAMENTE um JSON:\n\n"
+        '{"descricao": "", "periodo": "", "dados_projetados": {},\n'
+        ' "premissas": [], "observacoes": ""}\n\n'
+        "Adapte os campos conforme o conteudo. Responda APENAS com o JSON."
+    )
+    prompts["cnpj"] = (
+        "Extraia os dados deste Cartao CNPJ ou consulta cadastral.\n"
+        "Retorne EXCLUSIVAMENTE um JSON:\n\n"
+        '{"razao_social": "", "cnpj": "", "nome_fantasia": "", "data_abertura": "",\n'
+        ' "natureza_juridica": "", "atividade_principal": "", "endereco": "",\n'
+        ' "municipio": "", "uf": "", "situacao_cadastral": "", "data_situacao": "",\n'
+        ' "socios": [{"nome": "", "qualificacao": ""}]}\n\n'
+        "Responda APENAS com o JSON."
+    )
+    prompts["alteracao_contratual"] = (
+        "Voce e um analista juridico. Extraia os dados desta alteracao contratual / aditivo.\n"
+        "Retorne EXCLUSIVAMENTE um JSON:\n\n"
+        '{"empresa": "", "cnpj": "", "tipo_alteracao": "", "data": "",\n'
+        ' "objeto_alteracao": "", "capital_social": 0,\n'
+        ' "socios": [{"nome": "", "participacao_pct": 0}],\n'
+        ' "clausulas_relevantes": []}\n\n'
+        "Valores monetarios em numeros puros. Responda APENAS com o JSON."
+    )
+
     return prompts.get(
         tipo_documento,
         (
-            "Voce e um analista de credito estruturado. Analise o documento fornecido e extraia "
-            "todas as informacoes relevantes de forma estruturada. "
-            "Retorne EXCLUSIVAMENTE um JSON com os dados extraidos. "
-            "Organize os campos de forma logica, utilizando nomes descritivos em portugues. "
-            "Nao inclua texto adicional fora do JSON."
+            "Voce e um analista de credito estruturado da ZYN Capital. "
+            "Analise o documento e extraia TODAS as informacoes relevantes para analise de credito.\n\n"
+            "Retorne EXCLUSIVAMENTE um JSON estruturado com os campos que fizerem sentido para este documento. "
+            "Use nomes de campos descritivos em portugues (snake_case). "
+            "Valores monetarios como numeros puros. Datas como YYYY-MM-DD.\n\n"
+            "Responda APENAS com o JSON, sem texto adicional."
         ),
     )
 
@@ -572,6 +690,9 @@ def process_file(file_bytes: bytes, filename: str) -> dict:
 
     if "error" in classificacao and tipo == "outro":
         return {"classificacao": classificacao, "dados": {"error": classificacao["error"]}}
+
+    # Delay para respeitar rate limit (Tier 1: 30K tokens/min)
+    time.sleep(API_DELAY_SECONDS)
 
     dados = extract_data(file_bytes, filename, tipo)
 
