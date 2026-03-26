@@ -415,6 +415,44 @@ for key, default in DEFAULTS.items():
     if key not in st.session_state:
         st.session_state[key] = default
 
+# ---------------------------------------------------------------------------
+# Persistence — save/load extraction + analysis + op to disk so they survive
+# reloads and redeploys on Streamlit Cloud
+# ---------------------------------------------------------------------------
+CACHE_FILE = OUTPUT_DIR / "session_cache.json"
+
+
+def _save_cache():
+    """Persist extracted_data, analysis, and current_op to disk."""
+    try:
+        payload = {
+            "extracted_data": st.session_state.extracted_data or {},
+            "analysis": st.session_state.analysis,
+            "current_op": st.session_state.current_op,
+        }
+        CACHE_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+    except Exception:
+        pass
+
+
+def _load_cache():
+    """Restore cached data if session_state is empty and cache file exists."""
+    if st.session_state.extracted_data or not CACHE_FILE.exists():
+        return
+    try:
+        payload = json.loads(CACHE_FILE.read_text())
+        if payload.get("extracted_data"):
+            st.session_state.extracted_data = payload["extracted_data"]
+        if payload.get("analysis"):
+            st.session_state.analysis = payload["analysis"]
+        if payload.get("current_op"):
+            st.session_state.current_op = payload["current_op"]
+    except Exception:
+        pass
+
+
+_load_cache()
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -678,6 +716,7 @@ def page_nova_analise():
                     "data_criacao": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 }
                 st.session_state.current_op = op
+                _save_cache()
                 st.success("Parâmetros salvos com sucesso.")
 
         st.markdown("---")
@@ -743,6 +782,7 @@ def page_nova_analise():
 
                     progress_bar.progress(1.0, text="Extração concluída.")
                     st.session_state.extracted_data = results
+                    _save_cache()
 
                     if errors:
                         for err in errors:
@@ -859,6 +899,7 @@ def page_nova_analise():
                             op["rating"] = rating_final.get("nota", "—")
                             op["parecer"] = rating_final.get("parecer", "—")
                             st.session_state.current_op = op
+                            _save_cache()
 
                             status_container.empty()
                             st.success("Análise concluída com sucesso.")
