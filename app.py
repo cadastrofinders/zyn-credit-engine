@@ -453,6 +453,54 @@ def _load_cache():
 
 _load_cache()
 
+# ---------------------------------------------------------------------------
+# History — save completed analyses for future reference
+# ---------------------------------------------------------------------------
+HISTORY_DIR = OUTPUT_DIR / "historico"
+HISTORY_DIR.mkdir(exist_ok=True)
+
+
+def _save_to_history(op: dict, analise: dict, extracted: dict):
+    """Save a completed analysis to the history directory."""
+    tomador = op.get("tomador", "desconhecido").replace(" ", "_").replace("/", "-")
+    ts = datetime.now().strftime("%Y%m%d_%H%M")
+    filename = f"{tomador}_{ts}.json"
+    payload = {
+        "operacao": op,
+        "analise": analise,
+        "extracted_data": extracted,
+        "data_analise": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    (HISTORY_DIR / filename).write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+def _list_history() -> list[dict]:
+    """List all saved analyses, newest first."""
+    items = []
+    for f in sorted(HISTORY_DIR.glob("*.json"), reverse=True):
+        try:
+            data = json.loads(f.read_text())
+            data["_filename"] = f.name
+            items.append(data)
+        except Exception:
+            continue
+    return items
+
+
+def _load_from_history(filename: str) -> dict | None:
+    """Load a specific analysis from history."""
+    path = HISTORY_DIR / filename
+    if path.exists():
+        return json.loads(path.read_text())
+    return None
+
+
+def _delete_from_history(filename: str):
+    """Delete a specific analysis from history."""
+    path = HISTORY_DIR / filename
+    if path.exists():
+        path.unlink()
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -902,7 +950,8 @@ def page_nova_analise():
                             _save_cache()
 
                             status_container.empty()
-                            st.success("Análise concluída com sucesso.")
+                            _save_to_history(op, analise, st.session_state.extracted_data)
+                            st.success("Análise concluída e salva no histórico.")
                         except Exception as e:
                             status_container.empty()
                             st.error(f"Erro durante a análise: {e}")
@@ -1082,6 +1131,125 @@ def page_nova_analise():
 
                 except Exception as e:
                     st.error(f"Erro ao gerar o MAC: {e}")
+
+
+def page_historico():
+    st.markdown(
+        """
+        <div style="margin-bottom:20px;">
+            <h2 style="color:#223040; margin:0;">Historico de Analises</h2>
+            <p style="color:#8B9197; margin:4px 0 0 0;">Analises concluidas salvas automaticamente</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    historico = _list_history()
+
+    if not historico:
+        st.info("Nenhuma analise salva ainda. Execute uma analise na aba **Nova Analise** para comecar.")
+        return
+
+    st.markdown(f"**{len(historico)}** analise(s) salva(s).")
+    st.markdown("---")
+
+    for i, item in enumerate(historico):
+        op = item.get("operacao", {})
+        analise = item.get("analise", {})
+        data = item.get("data_analise", "—")
+        rating = analise.get("rating_final", {})
+        nota = rating.get("nota", "—")
+        parecer = rating.get("parecer", "—")
+        tomador = op.get("tomador", "N/A")
+        tipo = op.get("tipo_operacao", "N/A")
+        volume = op.get("volume", 0)
+        filename = item.get("_filename", "")
+
+        # Color for rating badge
+        cor_nota = {"A": "#1E6B42", "B": "#2E7D4F", "C": "#7D6608", "D": "#922B21", "E": "#7B241C"}.get(nota, "#8B9197")
+
+        with st.expander(
+            f"**{tomador}** — {tipo} — {_fmt_brl(volume)} | Rating: {nota} | {data}",
+            expanded=False,
+        ):
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Rating", nota)
+            col2.metric("Parecer", parecer)
+            col3.metric("DSCR", f"{analise.get('kpis', {}).get('dscr', 0):.2f}x")
+            col4.metric("LTV", f"{analise.get('kpis', {}).get('ltv', 0):.1%}" if isinstance(analise.get('kpis', {}).get('ltv'), (int, float)) and analise.get('kpis', {}).get('ltv', 0) <= 1 else f"{analise.get('kpis', {}).get('ltv', 0):.1f}%")
+
+            st.markdown("---")
+
+            # Justificativa
+            justificativa = rating.get("justificativa", "—")
+            st.markdown(f"**Justificativa:** {justificativa}")
+
+            # Recomendacoes
+            recs = rating.get("recomendacoes", [])
+            if recs:
+                st.markdown("**Recomendacoes:**")
+                for r in recs:
+                    st.markdown(f"- {r}")
+
+            # Flags
+            todas_flags = []
+            for secao in ["tomador", "patrimonio", "producao", "capital", "operacao", "pagamento", "onus", "riscos", "covenants", "cronograma"]:
+                for flag in analise.get(secao, {}).get("flags", []):
+                    todas_flags.append(f"[{secao.title()}] {flag}")
+            if todas_flags:
+                st.markdown(f"**Flags de Atencao ({len(todas_flags)}):**")
+                for fl in todas_flags:
+                    st.markdown(f"- {fl}")
+
+            # Lacunas
+            lacunas = analise.get("checklist_lacunas", {})
+            docs_falt = lacunas.get("documentos_faltantes", [])
+            info_pend = lacunas.get("informacoes_pendentes", [])
+            if docs_falt or info_pend:
+                st.markdown(f"**Pendencias:** {lacunas.get('total_pendencias', 0)} | Criticas: {lacunas.get('total_criticas', 0)}")
+                for d in docs_falt:
+                    st.markdown(f"- [{d.get('criticidade', '—')}] {d.get('item', '—')}")
+                for p in info_pend:
+                    st.markdown(f"- [{p.get('criticidade', '—')}] {p.get('item', '—')}")
+
+            st.markdown("---")
+
+            # Action buttons
+            col_load, col_mac, col_del = st.columns(3)
+
+            with col_load:
+                if st.button("Carregar na sessao", key=f"load_{i}", use_container_width=True):
+                    st.session_state.analysis = analise
+                    st.session_state.current_op = op
+                    if item.get("extracted_data"):
+                        st.session_state.extracted_data = item["extracted_data"]
+                    _save_cache()
+                    st.success("Analise carregada. Va para **Nova Analise** > aba MAC para gerar o documento.")
+                    st.rerun()
+
+            with col_mac:
+                if st.button("Gerar MAC", key=f"mac_{i}", use_container_width=True, type="primary"):
+                    try:
+                        mac_path = OUTPUT_DIR / f"MAC_{tomador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.docx"
+                        generate_mac(analise, op, str(mac_path))
+                        with open(mac_path, "rb") as f:
+                            st.download_button(
+                                label="Baixar MAC (.docx)",
+                                data=f.read(),
+                                file_name=mac_path.name,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                key=f"dl_mac_{i}",
+                                use_container_width=True,
+                            )
+                        st.success("MAC gerado com sucesso.")
+                    except Exception as e:
+                        st.error(f"Erro ao gerar MAC: {e}")
+
+            with col_del:
+                if st.button("Excluir", key=f"del_{i}", use_container_width=True):
+                    _delete_from_history(filename)
+                    st.success("Analise excluida.")
+                    st.rerun()
 
 
 def page_checklist_dd():
@@ -1264,7 +1432,7 @@ def main():
 
         page = st.radio(
             "Navegação",
-            ["Dashboard", "Nova Análise", "Checklist DD"],
+            ["Dashboard", "Nova Análise", "Historico", "Checklist DD"],
             label_visibility="collapsed",
         )
 
@@ -1302,6 +1470,8 @@ def main():
         page_dashboard()
     elif page == "Nova Análise":
         page_nova_analise()
+    elif page == "Historico":
+        page_historico()
     elif page == "Checklist DD":
         page_checklist_dd()
 
