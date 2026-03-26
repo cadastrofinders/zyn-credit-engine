@@ -328,7 +328,8 @@ def _call_api(client: anthropic.Anthropic, content: list[dict], max_tokens: int 
         "messages": [{"role": "user", "content": content}],
     }
     if _has_document_block(content):
-        kwargs["betas"] = ["pdfs-2024-09-25"]
+        # Usa extra_headers para compatibilidade com todas as versões do SDK
+        kwargs["extra_headers"] = {"anthropic-beta": "pdfs-2024-09-25"}
 
     response = client.messages.create(**kwargs)
     return response.content[0].text
