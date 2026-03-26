@@ -15,6 +15,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ---------------------------------------------------------------------------
+# Streamlit Cloud: inject st.secrets into os.environ so modules can read them
+# ---------------------------------------------------------------------------
+try:
+    for key in ("ANTHROPIC_API_KEY", "NOTION_TOKEN"):
+        if key in st.secrets and not os.environ.get(key):
+            os.environ[key] = st.secrets[key]
+except Exception:
+    pass  # secrets not available (local dev)
+
+# ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
