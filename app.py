@@ -846,7 +846,7 @@ def page_nova_analise():
                 if not API_KEY_SET:
                     st.error("ANTHROPIC_API_KEY não configurada. Não é possível realizar a análise.")
                 else:
-                    with st.spinner("Analisando com Claude Opus..."):
+                    with st.spinner("Analisando com Claude Sonnet (aguarde, pode levar até 2 min)..."):
                         try:
                             analise = analyze_credit(dados_para_analise, op)
                             st.session_state.analysis = analise

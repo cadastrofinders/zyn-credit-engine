@@ -9,14 +9,18 @@ import json
 import logging
 import os
 import re
+import time
 from typing import Any
 
 import anthropic
 
 logger = logging.getLogger(__name__)
 
-MODEL = "claude-opus-4-6"
+MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 16384
+MAX_RETRIES = 3
+RETRY_WAIT_SECONDS = [15, 30, 60]
+MAX_INPUT_CHARS = 80000  # truncate extracted data to stay within token limits
 
 SYSTEM_PROMPT = """\
 Você é um analista sênior de crédito estruturado na ZYN Capital, boutique de crédito \
@@ -271,7 +275,10 @@ def _get_client() -> anthropic.Anthropic:
 
 
 def _format_dados_extraidos(dados_extraidos: dict[str, Any]) -> str:
-    """Formata os dados extraídos em texto estruturado para o prompt."""
+    """Formata os dados extraídos em texto estruturado para o prompt.
+
+    Trunca o resultado total para MAX_INPUT_CHARS para não estourar rate limits.
+    """
     if not dados_extraidos:
         return "Nenhum dado extraído disponível."
 
@@ -280,14 +287,21 @@ def _format_dados_extraidos(dados_extraidos: dict[str, Any]) -> str:
         label = doc_type.replace("_", " ").title()
         blocos.append(f"### {label}")
         if isinstance(conteudo, dict):
-            blocos.append(json.dumps(conteudo, ensure_ascii=False, indent=2))
+            texto = json.dumps(conteudo, ensure_ascii=False, indent=2)
         elif isinstance(conteudo, str):
-            blocos.append(conteudo)
+            texto = conteudo
         else:
-            blocos.append(str(conteudo))
+            texto = str(conteudo)
+        # Truncate individual document data if too large
+        if len(texto) > 15000:
+            texto = texto[:15000] + "\n... [dados truncados por limite de tokens]"
+        blocos.append(texto)
         blocos.append("")
 
-    return "\n".join(blocos)
+    resultado = "\n".join(blocos)
+    if len(resultado) > MAX_INPUT_CHARS:
+        resultado = resultado[:MAX_INPUT_CHARS] + "\n... [dados truncados por limite de tokens]"
+    return resultado
 
 
 def _list_docs(dados_extraidos: dict[str, Any], available: bool) -> str:
@@ -390,19 +404,43 @@ def analyze_credit(
     )
 
     logger.info(
-        "Iniciando análise de crédito para %s (%s) — %s R$ %s",
+        "Iniciando análise de crédito para %s (%s) — %s R$ %s | modelo=%s",
         parametros_operacao.get("tomador"),
         parametros_operacao.get("cnpj"),
         parametros_operacao.get("tipo_operacao"),
         f"{parametros_operacao.get('volume', 0):,.2f}",
+        MODEL,
     )
 
-    message = client.messages.create(
-        model=MODEL,
-        max_tokens=MAX_TOKENS,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
+    # API call with retry logic for rate limits (429)
+    message = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            message = client.messages.create(
+                model=MODEL,
+                max_tokens=MAX_TOKENS,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            break
+        except anthropic.RateLimitError as e:
+            wait = RETRY_WAIT_SECONDS[attempt] if attempt < len(RETRY_WAIT_SECONDS) else 60
+            logger.warning(
+                "Rate limit (429) na tentativa %d/%d. Aguardando %ds... (%s)",
+                attempt + 1, MAX_RETRIES, wait, e,
+            )
+            if attempt == MAX_RETRIES - 1:
+                raise
+            time.sleep(wait)
+        except anthropic.APIStatusError as e:
+            if e.status_code == 529:  # overloaded
+                wait = RETRY_WAIT_SECONDS[attempt] if attempt < len(RETRY_WAIT_SECONDS) else 60
+                logger.warning("API sobrecarregada (529), tentativa %d/%d. Aguardando %ds...", attempt + 1, MAX_RETRIES, wait)
+                if attempt == MAX_RETRIES - 1:
+                    raise
+                time.sleep(wait)
+            else:
+                raise
 
     response_text = message.content[0].text
     analise = _parse_json_response(response_text)
