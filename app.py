@@ -164,28 +164,37 @@ DD_CHECKLIST_TEMPLATE: dict[str, list[str]] = {
 CUSTOM_CSS = """
 <style>
     /* ── Sidebar ─────────────────────────────────────────── */
-    [data-testid="stSidebar"] {
+    section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1a2633 0%, #223040 40%, #2a3d52 100%);
     }
-    [data-testid="stSidebar"] .stMarkdown h1,
-    [data-testid="stSidebar"] .stMarkdown h2,
-    [data-testid="stSidebar"] .stMarkdown h3,
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown span,
-    [data-testid="stSidebar"] .stMarkdown label,
-    [data-testid="stSidebar"] .stRadio label {
+    section[data-testid="stSidebar"] * {
         color: #FFFFFF !important;
     }
-    [data-testid="stSidebar"] .stRadio label {
-        padding: 8px 12px !important;
-        border-radius: 8px !important;
-        transition: background-color 0.2s ease;
-    }
-    [data-testid="stSidebar"] .stRadio label:hover {
-        background-color: rgba(255,255,255,0.08) !important;
-    }
-    [data-testid="stSidebar"] hr {
+    section[data-testid="stSidebar"] hr {
         border-color: rgba(255,255,255,0.12) !important;
+    }
+    /* Radio buttons as nav items */
+    section[data-testid="stSidebar"] label[data-baseweb="radio"] {
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 8px !important;
+        padding: 10px 14px !important;
+        margin-bottom: 4px !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+    section[data-testid="stSidebar"] label[data-baseweb="radio"]:hover {
+        background: rgba(255,255,255,0.14) !important;
+        border-color: rgba(255,255,255,0.25) !important;
+    }
+    /* Selected radio */
+    section[data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) {
+        background: rgba(30,107,66,0.35) !important;
+        border-color: #1E6B42 !important;
+    }
+    /* Hide radio circle */
+    section[data-testid="stSidebar"] [data-testid="stRadio"] > div[role="radiogroup"] > label > div:first-child {
+        display: none !important;
     }
 
     /* ── Page title ──────────────────────────────────────── */
