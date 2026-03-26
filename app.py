@@ -846,9 +846,12 @@ def page_nova_analise():
                 if not API_KEY_SET:
                     st.error("ANTHROPIC_API_KEY não configurada. Não é possível realizar a análise.")
                 else:
-                    with st.spinner("Analisando com Claude Sonnet (aguarde, pode levar até 2 min)..."):
+                    status_container = st.empty()
+                    def _update_status(msg):
+                        status_container.info(f"⏳ {msg}")
+                    with st.spinner("Analisando com Claude Sonnet..."):
                         try:
-                            analise = analyze_credit(dados_para_analise, op)
+                            analise = analyze_credit(dados_para_analise, op, status_callback=_update_status)
                             st.session_state.analysis = analise
 
                             # Update operation record
@@ -857,8 +860,10 @@ def page_nova_analise():
                             op["parecer"] = rating_final.get("parecer", "—")
                             st.session_state.current_op = op
 
+                            status_container.empty()
                             st.success("Análise concluída com sucesso.")
                         except Exception as e:
+                            status_container.empty()
                             st.error(f"Erro durante a análise: {e}")
 
             # Display analysis results

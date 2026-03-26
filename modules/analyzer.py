@@ -17,7 +17,7 @@ import anthropic
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 16384
+MAX_TOKENS = 12000
 MAX_RETRIES = 3
 RETRY_WAIT_SECONDS = [15, 30, 60]
 MAX_INPUT_CHARS = 80000  # truncate extracted data to stay within token limits
@@ -362,6 +362,7 @@ def _parse_json_response(text: str) -> dict:
 def analyze_credit(
     dados_extraidos: dict[str, Any],
     parametros_operacao: dict[str, Any],
+    status_callback=None,
 ) -> dict:
     """
     Executa análise de crédito completa (MAC ZYN v3) via Claude Opus.
@@ -412,10 +413,19 @@ def analyze_credit(
         MODEL,
     )
 
+    def _status(msg: str):
+        if status_callback:
+            status_callback(msg)
+        logger.info(msg)
+
+    prompt_chars = len(user_prompt) + len(SYSTEM_PROMPT)
+    _status(f"Enviando {prompt_chars:,} caracteres para {MODEL}...")
+
     # API call with retry logic for rate limits (429)
     message = None
     for attempt in range(MAX_RETRIES):
         try:
+            _status(f"Chamando API (tentativa {attempt + 1}/{MAX_RETRIES})...")
             message = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
@@ -425,6 +435,7 @@ def analyze_credit(
             break
         except anthropic.RateLimitError as e:
             wait = RETRY_WAIT_SECONDS[attempt] if attempt < len(RETRY_WAIT_SECONDS) else 60
+            _status(f"Rate limit atingido. Aguardando {wait}s antes de tentar novamente...")
             logger.warning(
                 "Rate limit (429) na tentativa %d/%d. Aguardando %ds... (%s)",
                 attempt + 1, MAX_RETRIES, wait, e,
@@ -435,12 +446,14 @@ def analyze_credit(
         except anthropic.APIStatusError as e:
             if e.status_code == 529:  # overloaded
                 wait = RETRY_WAIT_SECONDS[attempt] if attempt < len(RETRY_WAIT_SECONDS) else 60
-                logger.warning("API sobrecarregada (529), tentativa %d/%d. Aguardando %ds...", attempt + 1, MAX_RETRIES, wait)
+                _status(f"API sobrecarregada. Aguardando {wait}s...")
                 if attempt == MAX_RETRIES - 1:
                     raise
                 time.sleep(wait)
             else:
                 raise
+
+    _status("Resposta recebida. Processando JSON...")
 
     response_text = message.content[0].text
     analise = _parse_json_response(response_text)
