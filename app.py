@@ -30,8 +30,10 @@ except Exception:
 BASE_DIR = Path(__file__).resolve().parent
 UPLOADS_DIR = BASE_DIR / "uploads"
 OUTPUT_DIR = BASE_DIR / "output"
+CHECKLISTS_DIR = OUTPUT_DIR / "checklists"
 UPLOADS_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
+CHECKLISTS_DIR.mkdir(exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Module imports (lazy to allow app to load even if deps missing)
@@ -497,6 +499,10 @@ def _save_to_history(op: dict, analise: dict, extracted: dict):
         "data_analise": datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
     (HISTORY_DIR / filename).write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+    # Auto-save checklist for this client
+    tomador_orig = op.get("tomador", "desconhecido")
+    if st.session_state.dd_status:
+        _save_checklist(tomador_orig, st.session_state.dd_status, list(_detected_doc_types()))
 
 
 def _list_history() -> list[dict]:
@@ -525,6 +531,339 @@ def _delete_from_history(filename: str):
     path = HISTORY_DIR / filename
     if path.exists():
         path.unlink()
+
+
+# ---------------------------------------------------------------------------
+# Checklist persistence — one checklist per client
+# ---------------------------------------------------------------------------
+# Expanded mapping: extracted doc tipo → checklist module + item(s)
+TIPO_TO_CHECKLIST: dict[str, list[tuple[str, str]]] = {
+    # Cadastral
+    "cnpj": [("1. Cadastral", "Cartão CNPJ atualizado")],
+    "procuracao": [("1. Cadastral", "Procurações vigentes dos representantes legais")],
+    "kyc": [("1. Cadastral", "Ficha cadastral completa (KYC)")],
+    # Societário
+    "contrato": [
+        ("2. Societário", "Contrato Social consolidado ou Estatuto Social"),
+        ("2. Societário", "Última alteração contratual"),
+    ],
+    "ata": [("2. Societário", "Ata de eleição da diretoria vigente")],
+    "organograma": [("2. Societário", "Organograma societário do grupo")],
+    "certidao_junta": [("2. Societário", "Certidão simplificada da Junta Comercial")],
+    # Financeiro
+    "balanco": [
+        ("3. Financeiro", "Balanço Patrimonial (último exercício auditado)"),
+        ("3. Financeiro", "Balanço Patrimonial (penúltimo exercício)"),
+    ],
+    "dre": [
+        ("3. Financeiro", "DRE (último exercício)"),
+        ("3. Financeiro", "DRE (penúltimo exercício)"),
+    ],
+    "balancete": [("3. Financeiro", "Balancete acumulado do exercício corrente")],
+    "fluxo_caixa": [("3. Financeiro", "Fluxo de Caixa projetado (12 meses)")],
+    "auditoria": [
+        ("3. Financeiro", "Relatório de auditoria independente"),
+        ("3. Financeiro", "Notas explicativas"),
+    ],
+    # Faturamento
+    "faturamento": [
+        ("4. Faturamento", "Relatório de faturamento mensal (últimos 12 meses)"),
+        ("4. Faturamento", "Principais clientes (top 10 por receita)"),
+    ],
+    "contrato_cliente": [("4. Faturamento", "Contratos com clientes relevantes")],
+    # Endividamento
+    "endividamento": [("5. Endividamento", "Relação completa de endividamento bancário")],
+    "scr": [("5. Endividamento", "SCR / Registrato atualizado")],
+    "contrato_emprestimo": [("5. Endividamento", "Contratos de empréstimo vigentes")],
+    # FIDC
+    "regulamento_fundo": [("6. FIDC/Fundo", "Regulamento do Fundo (se aplicável)")],
+    "politica_credito": [("6. FIDC/Fundo", "Política de crédito e elegibilidade de lastro")],
+    "carteira_recebiveis": [("6. FIDC/Fundo", "Composição da carteira de recebíveis")],
+    "rating_fundo": [("6. FIDC/Fundo", "Rating do fundo (se houver)")],
+    # Crédito
+    "serasa": [("7. Crédito", "Histórico de crédito do tomador (Serasa/SPC)")],
+    "score": [("7. Crédito", "Score de crédito (bureau)")],
+    "parecer_juridico": [("7. Crédito", "Parecer jurídico sobre a operação")],
+    # Sócios PF
+    "doc_socio": [("8. Sócios PF", "Documentos pessoais (RG/CPF) dos sócios")],
+    "irpf": [("8. Sócios PF", "Declaração de IR dos sócios (último exercício)")],
+    # Certidões
+    "certidao": [
+        ("9. Certidões", "CND Federal (Receita Federal / PGFN)"),
+        ("9. Certidões", "CND Estadual (SEFAZ)"),
+        ("9. Certidões", "CND Municipal (ISS / IPTU)"),
+        ("9. Certidões", "CND Trabalhista (TST)"),
+        ("9. Certidões", "CND FGTS (CEF)"),
+    ],
+    "certidao_protesto": [("9. Certidões", "Certidão de protestos")],
+    "certidao_civel": [("9. Certidões", "Certidão de distribuição cível")],
+    # Garantias
+    "matricula": [
+        ("10. Garantias", "Matrícula atualizada do imóvel (< 30 dias)"),
+        ("10. Garantias", "Certidão de ônus reais"),
+    ],
+    "laudo_avaliacao": [("10. Garantias", "Laudo de avaliação do imóvel")],
+    "ccir_car": [
+        ("10. Garantias", "CCIR quitado (imóvel rural)"),
+        ("10. Garantias", "CAR — Cadastro Ambiental Rural"),
+    ],
+    "seguro": [("10. Garantias", "Apólice de seguro do bem")],
+    "itr": [("10. Garantias", "ITR quitado (imóvel rural)")],
+    "alienacao": [("10. Garantias", "Contrato de penhor / alienação fiduciária")],
+    # Jurídico
+    "processos": [("11. Jurídico", "Pesquisa de processos judiciais (PJ)")],
+    "contingencias": [("11. Jurídico", "Contingências relevantes provisionadas")],
+    "licencas": [("11. Jurídico", "Licenças e alvarás operacionais")],
+    # Institucional
+    "apresentacao": [("12. Institucional", "Apresentação institucional da empresa")],
+    "esg": [("12. Institucional", "Relatório de sustentabilidade / ESG")],
+    # Genéricos — nome do arquivo contém pistas
+    "planejamento": [("4. Faturamento", "Relatório de faturamento mensal (últimos 12 meses)")],
+    "producao": [("4. Faturamento", "Relatório de faturamento mensal (últimos 12 meses)")],
+}
+
+
+def _checklist_filename(tomador: str) -> str:
+    """Generate a filename for a client's checklist."""
+    safe = tomador.strip().replace(" ", "_").replace("/", "-")
+    return f"checklist_{safe}.json"
+
+
+def _save_checklist(tomador: str, dd_status: dict, extracted_types: list[str] | None = None):
+    """Save checklist status for a specific client."""
+    payload = {
+        "tomador": tomador,
+        "dd_status": dd_status,
+        "extracted_types": extracted_types or [],
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+    fname = _checklist_filename(tomador)
+    (CHECKLISTS_DIR / fname).write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+
+
+def _load_checklist(tomador: str) -> dict | None:
+    """Load a saved checklist for a specific client."""
+    fname = _checklist_filename(tomador)
+    path = CHECKLISTS_DIR / fname
+    if path.exists():
+        try:
+            return json.loads(path.read_text())
+        except Exception:
+            return None
+    return None
+
+
+def _list_checklists() -> list[dict]:
+    """List all saved checklists."""
+    items = []
+    for f in sorted(CHECKLISTS_DIR.glob("*.json"), reverse=True):
+        try:
+            data = json.loads(f.read_text())
+            data["_filename"] = f.name
+            items.append(data)
+        except Exception:
+            pass
+    return items
+
+
+def _auto_populate_checklist(dd_status: dict, extracted_data: dict) -> tuple[dict, list[str]]:
+    """Auto-populate checklist from extracted documents. Returns (updated_status, matched_types)."""
+    matched_types: list[str] = []
+
+    # Collect all detected types
+    tipos_detectados: set[str] = set()
+    filenames_lower: list[str] = []
+    for fname, item in extracted_data.items():
+        classificacao = item.get("classificacao", {})
+        tipo = classificacao.get("tipo")
+        if tipo:
+            tipos_detectados.add(tipo)
+        filenames_lower.append(fname.lower())
+
+    # Map tipos to checklist items
+    for tipo in tipos_detectados:
+        mappings = TIPO_TO_CHECKLIST.get(tipo, [])
+        for modulo, item_name in mappings:
+            if modulo in dd_status and item_name in dd_status[modulo]:
+                if dd_status[modulo][item_name] != "OK":
+                    dd_status[modulo][item_name] = "OK"
+                    matched_types.append(f"{modulo} → {item_name}")
+
+    # Heuristic: try to match filenames to checklist items
+    filename_hints = {
+        "scr": [("5. Endividamento", "SCR / Registrato atualizado")],
+        "registrato": [("5. Endividamento", "SCR / Registrato atualizado")],
+        "serasa": [("7. Crédito", "Histórico de crédito do tomador (Serasa/SPC)")],
+        "spc": [("7. Crédito", "Histórico de crédito do tomador (Serasa/SPC)")],
+        "fgts": [("9. Certidões", "CND FGTS (CEF)")],
+        "trabalhist": [("9. Certidões", "CND Trabalhista (TST)")],
+        "irpf": [("8. Sócios PF", "Declaração de IR dos sócios (último exercício)")],
+        "procuracao": [("1. Cadastral", "Procurações vigentes dos representantes legais")],
+        "itr": [("10. Garantias", "ITR quitado (imóvel rural)")],
+        "ccir": [("10. Garantias", "CCIR quitado (imóvel rural)")],
+        "car": [("10. Garantias", "CAR — Cadastro Ambiental Rural")],
+        "seguro": [("10. Garantias", "Apólice de seguro do bem")],
+        "avaliacao": [("10. Garantias", "Laudo de avaliação do imóvel")],
+        "laudo": [("10. Garantias", "Laudo de avaliação do imóvel")],
+        "auditoria": [("3. Financeiro", "Relatório de auditoria independente")],
+        "faturamento": [("4. Faturamento", "Relatório de faturamento mensal (últimos 12 meses)")],
+        "producao": [("4. Faturamento", "Relatório de faturamento mensal (últimos 12 meses)")],
+        "planejamento": [("4. Faturamento", "Relatório de faturamento mensal (últimos 12 meses)")],
+        "endividamento": [("5. Endividamento", "Relação completa de endividamento bancário")],
+        "organograma": [("2. Societário", "Organograma societário do grupo")],
+    }
+
+    for fn in filenames_lower:
+        for hint, mappings in filename_hints.items():
+            if hint in fn:
+                for modulo, item_name in mappings:
+                    if modulo in dd_status and item_name in dd_status[modulo]:
+                        if dd_status[modulo][item_name] != "OK":
+                            dd_status[modulo][item_name] = "OK"
+                            matched_types.append(f"{modulo} → {item_name} (arquivo: {fn})")
+
+    return dd_status, matched_types
+
+
+def _generate_checklist_excel(tomador: str, dd_status: dict) -> bytes:
+    """Generate a branded ZYN checklist Excel file."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Checklist DD"
+
+    # ZYN Colors
+    navy_fill = PatternFill(start_color="223040", end_color="223040", fill_type="solid")
+    green_fill = PatternFill(start_color="2E7D4F", end_color="2E7D4F", fill_type="solid")
+    ok_fill = PatternFill(start_color="E8F5E9", end_color="E8F5E9", fill_type="solid")
+    pend_fill = PatternFill(start_color="FFF8E1", end_color="FFF8E1", fill_type="solid")
+    desat_fill = PatternFill(start_color="FBE9E7", end_color="FBE9E7", fill_type="solid")
+    header_fill = PatternFill(start_color="F5F5F5", end_color="F5F5F5", fill_type="solid")
+    white_font = Font(name="Calibri", bold=True, color="FFFFFF", size=12)
+    bold_font = Font(name="Calibri", bold=True, size=11)
+    normal_font = Font(name="Calibri", size=10)
+    module_font = Font(name="Calibri", bold=True, size=11, color="223040")
+    thin_border = Border(
+        left=Side(style="thin", color="CCCCCC"),
+        right=Side(style="thin", color="CCCCCC"),
+        top=Side(style="thin", color="CCCCCC"),
+        bottom=Side(style="thin", color="CCCCCC"),
+    )
+
+    # Column widths
+    ws.column_dimensions["A"].width = 6
+    ws.column_dimensions["B"].width = 55
+    ws.column_dimensions["C"].width = 18
+    ws.column_dimensions["D"].width = 20
+
+    # Title row
+    ws.merge_cells("A1:D1")
+    cell = ws["A1"]
+    cell.value = f"CHECKLIST DUE DILIGENCE — {tomador}"
+    cell.font = white_font
+    cell.fill = navy_fill
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 40
+
+    # Subtitle row
+    ws.merge_cells("A2:D2")
+    cell = ws["A2"]
+    cell.value = f"ZYN Capital · {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    cell.font = Font(name="Calibri", size=10, color="FFFFFF")
+    cell.fill = green_fill
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 25
+
+    # Summary row
+    total_items = sum(len(itens) for itens in dd_status.values())
+    total_ok = sum(1 for itens in dd_status.values() for s in itens.values() if s == "OK")
+    total_pend = sum(1 for itens in dd_status.values() for s in itens.values() if s == "PENDENTE")
+    total_desat = sum(1 for itens in dd_status.values() for s in itens.values() if s == "DESATUALIZADO")
+    pct = f"{total_ok / total_items * 100:.0f}%" if total_items > 0 else "0%"
+
+    ws.merge_cells("A3:D3")
+    cell = ws["A3"]
+    cell.value = f"Progresso: {pct} ({total_ok}/{total_items})  |  ✅ OK: {total_ok}  |  ⏳ Pendente: {total_pend}  |  ⚠️ Desatualizado: {total_desat}"
+    cell.font = Font(name="Calibri", size=10, bold=True)
+    cell.fill = header_fill
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[3].height = 28
+
+    # Headers
+    row = 5
+    for col_idx, (header, width) in enumerate([("#", 6), ("Documento", 55), ("Status", 18), ("Observação", 20)], 1):
+        cell = ws.cell(row=row, column=col_idx, value=header)
+        cell.font = bold_font
+        cell.fill = navy_fill
+        cell.font = white_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = thin_border
+    ws.row_dimensions[row].height = 25
+
+    row = 6
+    item_num = 0
+    for modulo, itens in DD_CHECKLIST_TEMPLATE.items():
+        # Module header row
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=4)
+        cell = ws.cell(row=row, column=1, value=modulo)
+        cell.font = module_font
+        cell.fill = PatternFill(start_color="E3EBF1", end_color="E3EBF1", fill_type="solid")
+        cell.alignment = Alignment(horizontal="left", vertical="center")
+        cell.border = thin_border
+        ws.row_dimensions[row].height = 22
+        row += 1
+
+        for item_name in itens:
+            item_num += 1
+            status = dd_status.get(modulo, {}).get(item_name, "PENDENTE")
+
+            # Number
+            cell = ws.cell(row=row, column=1, value=item_num)
+            cell.font = normal_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = thin_border
+
+            # Document name
+            cell = ws.cell(row=row, column=2, value=item_name)
+            cell.font = normal_font
+            cell.alignment = Alignment(vertical="center")
+            cell.border = thin_border
+
+            # Status with color
+            cell = ws.cell(row=row, column=3, value=status)
+            cell.font = Font(name="Calibri", size=10, bold=True)
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            cell.border = thin_border
+            if status == "OK":
+                cell.fill = ok_fill
+                cell.font = Font(name="Calibri", size=10, bold=True, color="2E7D4F")
+            elif status == "PENDENTE":
+                cell.fill = pend_fill
+                cell.font = Font(name="Calibri", size=10, bold=True, color="F57C00")
+            elif status == "DESATUALIZADO":
+                cell.fill = desat_fill
+                cell.font = Font(name="Calibri", size=10, bold=True, color="D32F2F")
+
+            # Observation (empty for user to fill)
+            cell = ws.cell(row=row, column=4, value="")
+            cell.font = normal_font
+            cell.border = thin_border
+
+            row += 1
+
+    # Freeze panes
+    ws.freeze_panes = "A6"
+
+    # Print settings
+    ws.print_title_rows = "1:5"
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+
+    from io import BytesIO
+    buf = BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
@@ -1474,140 +1813,205 @@ def page_checklist_dd():
         <div style="margin-bottom:20px;">
             <h1 style="color:#223040; font-size:1.8rem; font-weight:800; margin:0;">Checklist Due Diligence</h1>
             <p style="color:#8B9197; font-size:0.95rem; margin:4px 0 0 0;">
-                12 módulos &nbsp;·&nbsp; Acompanhamento documental da operação
+                12 módulos &nbsp;·&nbsp; Cruzamento automático com documentos extraídos
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # Initialize DD status from session state
-    if not st.session_state.dd_status:
-        for modulo, itens in DD_CHECKLIST_TEMPLATE.items():
-            st.session_state.dd_status[modulo] = {}
-            for item in itens:
-                st.session_state.dd_status[modulo][item] = "PENDENTE"
+    # ── Tab layout: current checklist vs saved checklists ──
+    tab_atual, tab_salvos = st.tabs(["Checklist Atual", "Checklists Salvos"])
 
-    # Auto-populate based on extracted data
-    tipos_detectados = _detected_doc_types()
-    tipo_to_module_items: dict[str, list[tuple[str, str]]] = {
-        "balanco": [("3. Financeiro", "Balanço Patrimonial (último exercício auditado)")],
-        "dre": [("3. Financeiro", "DRE (último exercício)")],
-        "balancete": [("3. Financeiro", "Balancete acumulado do exercício corrente")],
-        "matricula": [("10. Garantias", "Matrícula atualizada do imóvel (< 30 dias)")],
-        "contrato": [("2. Societário", "Contrato Social consolidado ou Estatuto Social")],
-        "certidao": [
-            ("9. Certidões", "CND Federal (Receita Federal / PGFN)"),
-        ],
-        "ccir_car": [
-            ("10. Garantias", "CCIR quitado (imóvel rural)"),
-            ("10. Garantias", "CAR — Cadastro Ambiental Rural"),
-        ],
-    }
-    for tipo in tipos_detectados:
-        mappings = tipo_to_module_items.get(tipo, [])
-        for modulo, item in mappings:
-            if modulo in st.session_state.dd_status and item in st.session_state.dd_status[modulo]:
-                st.session_state.dd_status[modulo][item] = "OK"
+    with tab_atual:
+        # Initialize DD status from session state
+        if not st.session_state.dd_status:
+            for modulo, itens in DD_CHECKLIST_TEMPLATE.items():
+                st.session_state.dd_status[modulo] = {}
+                for item in itens:
+                    st.session_state.dd_status[modulo][item] = "PENDENTE"
 
-    # Dashboard summary
-    total_items = 0
-    total_ok = 0
-    total_pendente = 0
-    total_desatualizado = 0
+        # Try to load saved checklist for current client
+        tomador = st.session_state.current_op.get("tomador", "") if st.session_state.current_op else ""
+        if tomador and not st.session_state.get("_checklist_loaded_for") == tomador:
+            saved = _load_checklist(tomador)
+            if saved and saved.get("dd_status"):
+                st.session_state.dd_status = saved["dd_status"]
+                st.session_state["_checklist_loaded_for"] = tomador
 
-    for modulo, itens in st.session_state.dd_status.items():
-        for item, status in itens.items():
-            total_items += 1
-            if status == "OK":
-                total_ok += 1
-            elif status == "PENDENTE":
-                total_pendente += 1
-            elif status == "DESATUALIZADO":
-                total_desatualizado += 1
+        # Auto-populate from extracted data
+        auto_matches: list[str] = []
+        if st.session_state.extracted_data:
+            st.session_state.dd_status, auto_matches = _auto_populate_checklist(
+                st.session_state.dd_status, st.session_state.extracted_data
+            )
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total Itens", total_items)
-    col2.metric("OK", total_ok)
-    col3.metric("Pendente", total_pendente)
-    col4.metric("Desatualizado", total_desatualizado)
+        if auto_matches:
+            with st.expander(f"🔄 **{len(auto_matches)} documentos cruzados automaticamente**", expanded=False):
+                for m in auto_matches:
+                    st.markdown(f"- ✅ {m}")
 
-    if total_items > 0:
-        overall_pct = total_ok / total_items
-        st.markdown("**Progresso Geral**")
-        st.progress(overall_pct, text=f"{overall_pct:.0%} concluído ({total_ok}/{total_items})")
+        # Dashboard summary
+        total_items = 0
+        total_ok = 0
+        total_pendente = 0
+        total_desatualizado = 0
 
-    st.markdown("---")
+        for modulo, itens in st.session_state.dd_status.items():
+            for item, status in itens.items():
+                total_items += 1
+                if status == "OK":
+                    total_ok += 1
+                elif status == "PENDENTE":
+                    total_pendente += 1
+                elif status == "DESATUALIZADO":
+                    total_desatualizado += 1
 
-    # Current operation context
-    if st.session_state.current_op:
-        st.markdown(f"**Operação:** {st.session_state.current_op.get('tomador', 'N/A')} — {st.session_state.current_op.get('tipo_operacao', 'N/A')}")
+        # KPI cards
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("Total Itens", total_items)
+        col2.metric("OK", total_ok)
+        col3.metric("Pendente", total_pendente)
+        col4.metric("Desatualizado", total_desatualizado)
+
+        if total_items > 0:
+            overall_pct = total_ok / total_items
+            st.markdown("**Progresso Geral**")
+            st.progress(overall_pct, text=f"{overall_pct:.0%} concluído ({total_ok}/{total_items})")
+
         st.markdown("---")
 
-    # Module-by-module display
-    status_options = ["OK", "PENDENTE", "DESATUALIZADO"]
-    status_icons = {"OK": "✅", "PENDENTE": "⏳", "DESATUALIZADO": "⚠️"}
-
-    for modulo, itens in DD_CHECKLIST_TEMPLATE.items():
-        modulo_status = st.session_state.dd_status.get(modulo, {})
-        ok_count = sum(1 for s in modulo_status.values() if s == "OK")
-        total_mod = len(itens)
-        pct = ok_count / total_mod if total_mod > 0 else 0
-
-        with st.expander(f"**{modulo}** — {ok_count}/{total_mod} ({pct:.0%})", expanded=False):
-            st.progress(pct)
-
-            for item in itens:
-                current_status = st.session_state.dd_status.get(modulo, {}).get(item, "PENDENTE")
-                col_item, col_status = st.columns([3, 1])
-
-                with col_item:
-                    icon = status_icons.get(current_status, "⏳")
-                    st.markdown(f"{icon} {item}")
-
-                with col_status:
-                    new_status = st.selectbox(
-                        "Status",
-                        status_options,
-                        index=status_options.index(current_status),
-                        key=f"dd_{modulo}_{item}",
-                        label_visibility="collapsed",
-                    )
-                    if new_status != current_status:
-                        st.session_state.dd_status[modulo][item] = new_status
-                        st.rerun()
-
-    # Export
-    st.markdown("---")
-    if st.button("Exportar Checklist", use_container_width=True):
-        linhas = [
-            "CHECKLIST DUE DILIGENCE — ZYN Capital",
-            f"Data: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
-        ]
+        # Current operation context
         if st.session_state.current_op:
-            linhas.append(f"Operação: {st.session_state.current_op.get('tomador', 'N/A')}")
-        linhas.append("")
-        linhas.append(f"Total: {total_items} | OK: {total_ok} | Pendente: {total_pendente} | Desatualizado: {total_desatualizado}")
-        linhas.append(f"Progresso: {total_ok}/{total_items} ({total_ok/total_items*100:.0f}%)" if total_items > 0 else "Progresso: 0/0")
-        linhas.append("=" * 60)
+            st.markdown(f"**Operação:** {tomador} — {st.session_state.current_op.get('tipo_operacao', 'N/A')}")
+            st.markdown("---")
+
+        # Module-by-module display
+        status_options = ["OK", "PENDENTE", "DESATUALIZADO"]
+        status_icons = {"OK": "✅", "PENDENTE": "⏳", "DESATUALIZADO": "⚠️"}
 
         for modulo, itens in DD_CHECKLIST_TEMPLATE.items():
-            linhas.append("")
-            linhas.append(f"--- {modulo} ---")
-            for item in itens:
-                status = st.session_state.dd_status.get(modulo, {}).get(item, "PENDENTE")
-                icon = {"OK": "[OK]", "PENDENTE": "[PEND]", "DESATUALIZADO": "[DESAT]"}.get(status, "[PEND]")
-                linhas.append(f"  {icon} {item}")
+            modulo_status = st.session_state.dd_status.get(modulo, {})
+            ok_count = sum(1 for s in modulo_status.values() if s == "OK")
+            total_mod = len(itens)
+            pct = ok_count / total_mod if total_mod > 0 else 0
 
-        export_text = "\n".join(linhas)
-        st.download_button(
-            label="📥 Baixar Checklist (.txt)",
-            data=export_text.encode("utf-8"),
-            file_name=f"checklist_dd_{datetime.now().strftime('%Y%m%d')}.txt",
-            mime="text/plain",
-            use_container_width=True,
-        )
-        st.success("Checklist gerado para download.")
+            with st.expander(f"**{modulo}** — {ok_count}/{total_mod} ({pct:.0%})", expanded=False):
+                st.progress(pct)
+
+                for item in itens:
+                    current_status = st.session_state.dd_status.get(modulo, {}).get(item, "PENDENTE")
+                    col_item, col_status = st.columns([3, 1])
+
+                    with col_item:
+                        icon = status_icons.get(current_status, "⏳")
+                        st.markdown(f"{icon} {item}")
+
+                    with col_status:
+                        new_status = st.selectbox(
+                            "Status",
+                            status_options,
+                            index=status_options.index(current_status),
+                            key=f"dd_{modulo}_{item}",
+                            label_visibility="collapsed",
+                        )
+                        if new_status != current_status:
+                            st.session_state.dd_status[modulo][item] = new_status
+                            # Auto-save on change
+                            if tomador:
+                                _save_checklist(tomador, st.session_state.dd_status, list(_detected_doc_types()))
+                            st.rerun()
+
+        # ── Action buttons ──
+        st.markdown("---")
+        col_save, col_excel = st.columns(2)
+
+        with col_save:
+            if st.button("💾 Salvar Checklist", use_container_width=True, key="save_checklist"):
+                if tomador:
+                    _save_checklist(tomador, st.session_state.dd_status, list(_detected_doc_types()))
+                    st.success(f"Checklist salvo para **{tomador}**.")
+                else:
+                    st.warning("Preencha os dados da operação primeiro (aba Nova Análise).")
+
+        with col_excel:
+            if st.button("📊 Gerar Checklist Excel", use_container_width=True, key="gen_checklist_xlsx"):
+                try:
+                    label = tomador or "geral"
+                    excel_bytes = _generate_checklist_excel(label, st.session_state.dd_status)
+                    safe_name = label.replace(" ", "_").replace("/", "-")
+                    st.download_button(
+                        label="📥 Baixar Checklist (.xlsx)",
+                        data=excel_bytes,
+                        file_name=f"Checklist_DD_{safe_name}_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                    )
+                    # Also save to disk
+                    if tomador:
+                        _save_checklist(tomador, st.session_state.dd_status, list(_detected_doc_types()))
+                except Exception as e:
+                    st.error(f"Erro ao gerar Excel: {e}")
+
+    # ── Tab: Saved checklists ──
+    with tab_salvos:
+        st.markdown("### Checklists Salvos por Cliente")
+        checklists = _list_checklists()
+
+        if not checklists:
+            st.info("Nenhum checklist salvo ainda. Realize uma análise e salve o checklist.")
+        else:
+            for i, ck in enumerate(checklists):
+                ck_tomador = ck.get("tomador", "Desconhecido")
+                ck_updated = ck.get("updated_at", "—")
+                ck_status = ck.get("dd_status", {})
+
+                # Count stats
+                ck_total = sum(len(v) for v in ck_status.values())
+                ck_ok = sum(1 for itens in ck_status.values() for s in itens.values() if s == "OK")
+                ck_pct = f"{ck_ok / ck_total * 100:.0f}%" if ck_total > 0 else "0%"
+
+                with st.expander(f"**{ck_tomador}** — {ck_pct} concluído ({ck_ok}/{ck_total}) · Atualizado: {ck_updated}"):
+                    # Summary per module
+                    for modulo in DD_CHECKLIST_TEMPLATE:
+                        mod_items = ck_status.get(modulo, {})
+                        mod_ok = sum(1 for s in mod_items.values() if s == "OK")
+                        mod_total = len(mod_items)
+                        mod_pct = mod_ok / mod_total if mod_total > 0 else 0
+                        bar_color = "🟢" if mod_pct >= 0.8 else ("🟡" if mod_pct >= 0.4 else "🔴")
+                        st.markdown(f"{bar_color} **{modulo}** — {mod_ok}/{mod_total}")
+
+                    col_load, col_xlsx, col_del = st.columns(3)
+                    with col_load:
+                        if st.button("Carregar", key=f"load_ck_{i}", use_container_width=True):
+                            st.session_state.dd_status = ck_status
+                            st.session_state["_checklist_loaded_for"] = ck_tomador
+                            st.success(f"Checklist de **{ck_tomador}** carregado.")
+                            st.rerun()
+
+                    with col_xlsx:
+                        if st.button("Excel", key=f"xlsx_ck_{i}", use_container_width=True):
+                            try:
+                                excel_bytes = _generate_checklist_excel(ck_tomador, ck_status)
+                                safe_name = ck_tomador.replace(" ", "_").replace("/", "-")
+                                st.download_button(
+                                    label="📥 Baixar",
+                                    data=excel_bytes,
+                                    file_name=f"Checklist_DD_{safe_name}.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True,
+                                    key=f"dl_ck_{i}",
+                                )
+                            except Exception as e:
+                                st.error(f"Erro: {e}")
+
+                    with col_del:
+                        if st.button("Excluir", key=f"del_ck_{i}", use_container_width=True):
+                            path = CHECKLISTS_DIR / ck.get("_filename", "")
+                            if path.exists():
+                                path.unlink()
+                            st.success(f"Checklist de **{ck_tomador}** excluído.")
+                            st.rerun()
 
 
 # ---------------------------------------------------------------------------
