@@ -536,6 +536,9 @@ def _clear_session():
     st.session_state.analysis = None
     st.session_state.current_op = None
     st.session_state.uploaded_files = []
+    st.session_state.step = 0
+    # Increment form counter to force Streamlit to recreate widgets with fresh values
+    st.session_state.form_counter = st.session_state.get("form_counter", 0) + 1
     # Clear disk cache too
     if CACHE_FILE.exists():
         CACHE_FILE.unlink()
@@ -751,7 +754,8 @@ def page_nova_analise():
         )
         st.caption("Preencha os campos abaixo com os dados do tomador e da operação.")
 
-        with st.form("form_parametros", clear_on_submit=False):
+        _fc = st.session_state.get("form_counter", 0)
+        with st.form(f"form_parametros_{_fc}", clear_on_submit=False):
             col_a, col_b = st.columns(2)
 
             with col_a:
@@ -1670,6 +1674,13 @@ def main():
             """,
             unsafe_allow_html=True,
         )
+
+        st.markdown("---")
+
+        if st.session_state.current_op:
+            if st.button("🔄 Limpar e Nova Análise", use_container_width=True, key="sidebar_clear"):
+                _clear_session()
+                st.rerun()
 
         st.markdown("---")
         st.markdown(
