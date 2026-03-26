@@ -1,6 +1,6 @@
 """
 ZYN Capital — Módulo de Análise de Crédito (MAC ZYN v3)
-Usa Claude Sonnet com streaming para resposta rápida.
+Usa Claude Opus com streaming para análise profunda e assertiva.
 """
 
 import json
@@ -14,36 +14,82 @@ import anthropic
 
 logger = logging.getLogger(__name__)
 
-MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 10000
+MODEL = "claude-opus-4-6"
+MAX_TOKENS = 16000
 MAX_RETRIES = 2
 RETRY_WAIT = 10  # seconds
-MAX_INPUT_CHARS = 30000
-MAX_DOC_CHARS = 5000
-TIMEOUT = 180  # seconds
+MAX_INPUT_CHARS = 180000  # Opus suporta 200K — usar a maior parte
+MAX_DOC_CHARS = 15000  # Permitir demonstrativos financeiros completos
+TIMEOUT = 300  # seconds — Opus pode demorar mais para análises profundas
 
-# System prompt compacto — sem repetição, direto ao ponto
+# Prioridade de documentos para análise de crédito
+DOC_PRIORITY = {
+    # CRITICAL — núcleo financeiro (processar primeiro, dados completos)
+    "balanco": 1, "dre": 1, "demonstracoes_financeiras": 1, "balancete": 1,
+    # HIGH — garantias e endividamento
+    "matricula": 2, "laudo_avaliacao": 2, "endividamento": 2,
+    # MEDIUM — legal, receita, SCR
+    "contrato": 3, "contrato_social": 3, "certidao": 3, "certidoes": 3,
+    "faturamento": 3, "scr": 3,
+    # LOW — cadastro e complementares
+    "cnpj": 4, "kyc_publico": 4, "planejamento": 4,
+    "alteracao_contratual": 4, "ccir_car": 4, "ccir": 4, "car": 4,
+    "outro": 4, "ita": 4, "procuracoes": 4, "escritura": 4,
+    "relatorio_producao": 4, "fluxo_caixa": 4,
+}
+
+# System prompt otimizado para Opus — instruções sofisticadas de análise
 SYSTEM_PROMPT = """\
 Analista sênior de crédito estruturado, ZYN Capital (SP). Produza MAC ZYN v3 em JSON.
 
-Regras:
+Regras fundamentais:
 - Perspectiva de analista apresentando ao comitê, NÃO decisor
 - Dedução 30% sobre garantias, cobertura mínima 130% LTV
-- Stress tests obrigatórios (juros, câmbio, commodities)
 - Ratings seção: Forte/Adequado/Atenção/Crítico
 - Rating final: A/B/C/D/E | Parecer: Favorável/Favorável com Ressalvas/Desfavorável
 - DSCR<1.2=atenção, <1.0=crítico | LTV>80%=atenção, >100%=crítico | Dív/EBITDA>3.5x=atenção, >5x=crítico
-- Se houver dados KYC públicos (seção kyc_publico), use para validar razão social, CNPJ, QSA, atividade econômica e capital social. Flagge divergências entre KYC e documentos.
-- Aplique inteligência de mercado: compare indicadores com benchmarks setoriais, analise posição competitiva, riscos macroeconômicos do setor (CDI, câmbio, safra, ciclo de commodities).
 - Dados não disponíveis: "Não disponível" (texto) ou 0 (numérico) + flag
-- Valores em R$. Responda SOMENTE JSON válido."""
+- Valores em R$. Responda SOMENTE JSON válido.
+
+Cross-referencing obrigatório:
+- Cruze PL do Balanço com lucro líquido acumulado da DRE — flagge divergências >5%.
+- Cruze receita do DRE com faturamento declarado — flagge divergências >10%.
+- Cruze endividamento declarado com passivos do Balanço — identifique dívidas omitidas.
+- Cruze dados do SCR (Banco Central) com endividamento declarado — flagge discrepâncias.
+- Verifique se garantias reais (matrícula/laudo) são compatíveis com valor da operação.
+- Se houver dados KYC públicos, valide razão social, CNPJ, QSA, atividade econômica e capital social. Flagge divergências.
+
+Benchmarking setorial:
+- Compare margem EBITDA, Dív/EBITDA, DSCR e ROE com médias do setor do tomador.
+- Classifique posição relativa: acima da média / na média / abaixo da média.
+- Considere ciclo macroeconômico: CDI vigente, câmbio, safra, ciclo de commodities.
+- Para agro: considere sazonalidade, preços de commodities (soja, milho, boi), custo de insumos.
+- Para indústria/serviços: considere utilização de capacidade, inadimplência do setor, demanda.
+
+Qualidade e confiabilidade dos documentos:
+- Classifique cada documento como: Auditado / Não-auditado / Gerencial / Autodeclarado.
+- Flagge documentos desatualizados (>12 meses), incompletos ou com formatação suspeita.
+- Atribua peso maior a dados auditados e menor a autodeclarados na análise.
+- Identifique explicitamente quais conclusões dependem de dados de baixa confiabilidade.
+
+Identificação de inconsistências:
+- Liste TODAS as inconsistências encontradas entre documentos, com gravidade (Alta/Média/Baixa).
+- Para cada inconsistência, indique os documentos conflitantes e os valores divergentes.
+- Avalie se inconsistências sugerem manipulação, erro contábil ou defasagem temporal.
+
+Stress tests obrigatórios (com premissas explícitas):
+- Cenário base: premissas atuais.
+- Cenário estresse 1 (juros): CDI +300bps — recalcule DSCR e capacidade de pagamento.
+- Cenário estresse 2 (receita): queda de 20% na receita — recalcule DSCR e covenants.
+- Cenário estresse 3 (combinado): CDI +200bps + queda 15% receita + desvalorização 20% garantias.
+- Para cada cenário: indique se a operação permanece viável e quais covenants seriam rompidos."""
 
 # Template compacto — JSON schema inline sem comentários verbosos
 ANALYSIS_PROMPT = """\
 MAC ZYN v3 para: {tomador} | CNPJ: {cnpj} | {tipo_operacao} | R$ {volume:,.0f} | {prazo_meses}m | {taxa} | {amortizacao}
 Garantias: {garantias} | Sócio: {socio_responsavel}
 
-DADOS:
+DADOS (ordenados por relevância — financeiros primeiro):
 {dados_formatados}
 
 Disponíveis: {docs_disponiveis} | Faltantes: {docs_indisponiveis}
@@ -57,14 +103,16 @@ patrimonio(ativos_reais,avaliacao,ltv,analise,rating_secao,flags), \
 producao(capacidade,historico_produtivo,analise,rating_secao,flags), \
 capital(estrutura_capital,endividamento,indicadores{{divida_liquida_ebitda,divida_pl,liquidez_corrente,roe}},analise,rating_secao,flags), \
 operacao(tipo,volume,prazo,taxa,estrutura,analise,rating_secao,flags), \
-pagamento(fluxo_amortizacao,dscr,cobertura,analise,rating_secao,flags), \
+pagamento(fluxo_amortizacao,dscr,cobertura,stress_tests{{cenario_base,estresse_juros,estresse_receita,estresse_combinado}},analise,rating_secao,flags), \
 onus(gravames[],certidoes,analise,rating_secao,flags), \
 riscos(mercado,credito,operacional,legal,matriz_riscos[{{risco,probabilidade,impacto,mitigante}}],rating_secao,flags), \
 covenants(clausulas[{{covenant,limite,atual,status}}],analise,rating_secao,flags), \
 cronograma(etapas[{{etapa,prazo,responsavel}}],analise,rating_secao,flags), \
+cross_referencing(inconsistencias[{{documentos,campo,valores,gravidade,comentario}}],qualidade_docs[{{documento,classificacao,observacao}}]), \
+benchmarking(setor,metricas_vs_setor[{{metrica,valor_empresa,media_setor,posicao}}],contexto_macro), \
 checklist_lacunas(documentos_faltantes[{{item,criticidade,motivo}}],informacoes_pendentes[{{item,criticidade,motivo}}],total_pendencias,total_criticas)
 
-Seja conciso: 1-2 frases por analise de seção, max 3 flags por seção. JSON puro, sem markdown."""
+Seja analítico e preciso. Cruze dados entre documentos. JSON puro, sem markdown."""
 
 ALL_DOC_TYPES = [
     "balanco", "dre", "fluxo_caixa", "balancete", "matricula",
@@ -81,21 +129,40 @@ def _get_client() -> anthropic.Anthropic:
 
 
 def _format_dados(dados: dict[str, Any]) -> str:
+    """Formata dados priorizando documentos críticos para análise de crédito."""
     if not dados:
         return "Nenhum dado disponível."
+
+    # Ordenar por prioridade (CRITICAL=1 primeiro, LOW=4 por último)
+    sorted_docs = sorted(
+        dados.items(),
+        key=lambda x: DOC_PRIORITY.get(x[0], 4),
+    )
+
     blocos = []
-    for doc_type, conteudo in dados.items():
+    for doc_type, conteudo in sorted_docs:
+        priority = DOC_PRIORITY.get(doc_type, 4)
+        priority_labels = {1: "CRITICAL", 2: "HIGH", 3: "MEDIUM", 4: "LOW"}
         label = doc_type.replace("_", " ").title()
+        tag = priority_labels.get(priority, "LOW")
+
         if isinstance(conteudo, dict):
             texto = json.dumps(conteudo, ensure_ascii=False, separators=(",", ":"))
         else:
             texto = str(conteudo)
+
+        # Truncar documentos individuais apenas se excederem MAX_DOC_CHARS
         if len(texto) > MAX_DOC_CHARS:
             texto = texto[:MAX_DOC_CHARS] + "...[truncado]"
-        blocos.append(f"[{label}] {texto}")
+
+        blocos.append(f"[{tag}:{label}] {texto}")
+
     resultado = "\n".join(blocos)
+
+    # Truncar total apenas se exceder MAX_INPUT_CHARS (improvável com 180K)
     if len(resultado) > MAX_INPUT_CHARS:
         resultado = resultado[:MAX_INPUT_CHARS] + "\n...[truncado]"
+
     return resultado
 
 
@@ -161,7 +228,7 @@ def analyze_credit(
     parametros_operacao: dict[str, Any],
     status_callback=None,
 ) -> dict:
-    """Executa análise MAC ZYN v3 via Claude Sonnet com streaming."""
+    """Executa análise MAC ZYN v3 via Claude Opus com streaming."""
     client = _get_client()
 
     def _status(msg):

@@ -39,7 +39,7 @@ CHECKLISTS_DIR.mkdir(exist_ok=True)
 # Module imports (lazy to allow app to load even if deps missing)
 # ---------------------------------------------------------------------------
 try:
-    from modules.extractor import process_file
+    from modules.extractor import process_file, process_files_parallel, validate_cnpj
     from modules.analyzer import analyze_credit, get_analysis_summary
     from modules.docx_generator import generate_mac
     from modules.teaser_generator import generate_teaser
@@ -876,6 +876,8 @@ def _clear_session():
     st.session_state.current_op = None
     st.session_state.uploaded_files = []
     st.session_state.step = 0
+    st.session_state.dd_status = {}
+    st.session_state.pop("_checklist_loaded_for", None)
     # Increment form counter to force Streamlit to recreate widgets with fresh values
     st.session_state.form_counter = st.session_state.get("form_counter", 0) + 1
     # Clear disk cache too
@@ -1125,6 +1127,29 @@ def page_nova_analise():
         if submitted:
             if not tomador.strip():
                 st.error("O campo **Tomador** é obrigatório.")
+            elif cnpj.strip() and MODULES_AVAILABLE and not validate_cnpj(cnpj.strip()):
+                st.warning("CNPJ inválido — verifique os dígitos. Parâmetros salvos mesmo assim.")
+                # Still allow saving with invalid CNPJ (might be placeholder)
+                garantias_list = [g.strip() for g in garantias_text.strip().split("\n") if g.strip()]
+                op = {
+                    "tomador": tomador.strip(),
+                    "cnpj": cnpj.strip(),
+                    "tipo_operacao": tipo_operacao,
+                    "volume": volume,
+                    "prazo_meses": prazo_meses,
+                    "taxa": taxa.strip(),
+                    "amortizacao": amortizacao,
+                    "garantias": garantias_list,
+                    "garantias_text": garantias_text,
+                    "tipo_captacao": tipo_captacao,
+                    "instrumento": instrumento.strip(),
+                    "socio_responsavel": socio_responsavel,
+                    "status": "Em Andamento",
+                    "rating": "—",
+                    "data_criacao": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                }
+                st.session_state.current_op = op
+                _save_cache()
             else:
                 garantias_list = [g.strip() for g in garantias_text.strip().split("\n") if g.strip()]
 
@@ -1190,29 +1215,42 @@ def page_nova_analise():
                 if not API_KEY_SET:
                     st.error("ANTHROPIC_API_KEY não configurada. Não é possível realizar a extração.")
                 else:
-                    progress_bar = st.progress(0, text="Iniciando extração...")
+                    progress_bar = st.progress(0, text="Iniciando extração paralela...")
+                    status_text = st.empty()
                     total_files = len(st.session_state.uploaded_files)
-                    results: dict = {}
                     errors: list[str] = []
 
-                    for idx, uf in enumerate(st.session_state.uploaded_files):
-                        progress_bar.progress(
-                            (idx) / total_files,
-                            text=f"Processando {uf['name']}... ({idx + 1}/{total_files})",
-                        )
-                        try:
-                            result = process_file(uf["bytes"], uf["name"])
-                            results[uf["name"]] = result
-                        except Exception as e:
-                            errors.append(f"{uf['name']}: {e}")
-                            results[uf["name"]] = {
-                                "classificacao": {"tipo": "erro", "confianca": 0.0, "descricao": str(e)},
-                                "dados": {"error": str(e)},
-                            }
+                    # Preparar lista de arquivos para processamento paralelo
+                    files_list = [(uf["bytes"], uf["name"]) for uf in st.session_state.uploaded_files]
 
-                    progress_bar.progress(1.0, text="Extração concluída.")
+                    def _extraction_progress(filename, idx, total, result):
+                        progress_bar.progress(
+                            idx / total,
+                            text=f"Extraindo {filename}... ({idx}/{total})",
+                        )
+                        has_err = "error" in result.get("dados", {})
+                        cached = result.get("_from_cache", False)
+                        tag = "📦 cache" if cached else ("❌ erro" if has_err else "✅ ok")
+                        status_text.info(f"{tag} — {filename} ({idx}/{total})")
+                        if has_err:
+                            errors.append(f"{filename}: {result['dados']['error']}")
+
+                    results = process_files_parallel(
+                        files_list,
+                        max_workers=3,
+                        progress_callback=_extraction_progress,
+                    )
+
+                    progress_bar.progress(1.0, text=f"Extração concluída — {total_files} arquivo(s).")
+                    status_text.empty()
                     st.session_state.extracted_data = results
                     _save_cache()
+
+                    # Resumo
+                    cached_count = sum(1 for r in results.values() if r.get("_from_cache"))
+                    error_count = sum(1 for r in results.values() if "error" in r.get("dados", {}))
+                    ok_count = len(results) - error_count
+                    st.success(f"**{ok_count}** extraído(s) · **{cached_count}** do cache · **{error_count}** erro(s)")
 
                     if errors:
                         for err in errors:
@@ -1326,7 +1364,7 @@ def page_nova_analise():
                     status_container = st.empty()
                     def _update_status(msg):
                         status_container.info(f"⏳ {msg}")
-                    with st.spinner("Analisando com Claude Sonnet..."):
+                    with st.spinner("Analisando com Claude Opus..."):
                         try:
                             # KYC enrichment — busca dados públicos do CNPJ
                             cnpj = op.get("cnpj", "")
@@ -1347,10 +1385,6 @@ def page_nova_analise():
                             status_container.empty()
                             _save_to_history(op, analise, st.session_state.extracted_data)
                             st.success("Análise concluída e salva no histórico.")
-
-                            if st.button("Iniciar Nova Análise", use_container_width=True, key="clear_after_analysis"):
-                                _clear_session()
-                                st.rerun()
                         except Exception as e:
                             status_container.empty()
                             st.error(f"Erro durante a análise: {e}")
@@ -1476,6 +1510,12 @@ def page_nova_analise():
                                 "Motivo": info.get("motivo", ""),
                             })
                         st.dataframe(df_info, use_container_width=True, hide_index=True)
+
+                # Botão Nova Análise — fora do bloco de geração
+                st.markdown("---")
+                if st.button("Iniciar Nova Análise", use_container_width=True, key="clear_after_analysis"):
+                    _clear_session()
+                    st.rerun()
 
     # ------------------------------------------------------------------
     # TAB 4 — Documentos
@@ -1678,15 +1718,15 @@ def page_historico():
                     progress_bar = st.progress(0)
                     status_text = st.empty()
 
-                    for idx, uploaded in enumerate(complement_files):
-                        status_text.info(f"Extraindo {uploaded.name} ({idx+1}/{len(complement_files)})...")
-                        progress_bar.progress((idx) / len(complement_files))
-                        try:
-                            file_bytes = uploaded.read()
-                            result = process_file(file_bytes, uploaded.name)
-                            new_extracted[uploaded.name] = result
-                        except Exception as ex:
-                            st.warning(f"Erro ao extrair {uploaded.name}: {ex}")
+                    # Parallel extraction for complement files
+                    comp_files = [(uploaded.read(), uploaded.name) for uploaded in complement_files]
+
+                    def _comp_progress(filename, idx, total, result):
+                        progress_bar.progress(idx / total, text=f"Extraindo {filename}... ({idx}/{total})")
+                        status_text.info(f"Processando {filename} ({idx}/{total})")
+
+                    comp_results = process_files_parallel(comp_files, max_workers=3, progress_callback=_comp_progress)
+                    new_extracted.update(comp_results)
 
                     progress_bar.progress(1.0)
                     status_text.info("Documentos extraídos. Re-analisando...")
