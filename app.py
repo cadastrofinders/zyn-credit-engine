@@ -174,24 +174,46 @@ CUSTOM_CSS = """
     section[data-testid="stSidebar"] hr {
         border-color: rgba(255,255,255,0.12) !important;
     }
-    /* Radio buttons as nav items */
+    /* ── Nav buttons premium ──────────────────────────── */
+    section[data-testid="stSidebar"] [data-testid="stRadio"] > div[role="radiogroup"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
     section[data-testid="stSidebar"] label[data-baseweb="radio"] {
-        background: rgba(255,255,255,0.06) !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        border-radius: 8px !important;
-        padding: 10px 14px !important;
-        margin-bottom: 4px !important;
-        transition: all 0.2s ease !important;
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-left: 3px solid transparent !important;
+        border-radius: 6px !important;
+        padding: 12px 16px !important;
+        margin: 0 !important;
+        transition: all 0.25s ease !important;
         cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    section[data-testid="stSidebar"] label[data-baseweb="radio"] p,
+    section[data-testid="stSidebar"] label[data-baseweb="radio"] span {
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.3px !important;
     }
     section[data-testid="stSidebar"] label[data-baseweb="radio"]:hover {
-        background: rgba(255,255,255,0.14) !important;
-        border-color: rgba(255,255,255,0.25) !important;
+        background: rgba(255,255,255,0.12) !important;
+        border-color: rgba(255,255,255,0.20) !important;
+        border-left-color: rgba(46,125,79,0.5) !important;
+        transform: translateX(2px);
     }
-    /* Selected radio */
+    /* Selected nav item */
     section[data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) {
-        background: rgba(30,107,66,0.35) !important;
-        border-color: #1E6B42 !important;
+        background: rgba(46,125,79,0.20) !important;
+        border-color: rgba(46,125,79,0.30) !important;
+        border-left: 3px solid #2E7D4F !important;
+        box-shadow: 0 2px 8px rgba(46,125,79,0.15) !important;
+    }
+    section[data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) p,
+    section[data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) span {
+        font-weight: 700 !important;
     }
     /* Hide radio circle */
     section[data-testid="stSidebar"] [data-testid="stRadio"] > div[role="radiogroup"] > label > div:first-child {
