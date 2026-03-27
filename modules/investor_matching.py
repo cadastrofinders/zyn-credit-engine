@@ -24,7 +24,10 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # Caminhos dos dados do Sales Intelligence
-SALES_INTEL_DIR = Path(__file__).resolve().parent.parent.parent / "zyn-sales-intelligence" / "data"
+# Try multiple paths for CVM data (local dev vs Streamlit Cloud)
+_local_intel = Path(__file__).resolve().parent.parent.parent / "zyn-sales-intelligence" / "data"
+_repo_intel = Path(__file__).resolve().parent.parent / "data"
+SALES_INTEL_DIR = _local_intel if _local_intel.exists() else _repo_intel
 CVM_PROFILES_PATH = SALES_INTEL_DIR / "investor_profiles.csv"
 FO_PATH = SALES_INTEL_DIR / "family_offices.json"
 

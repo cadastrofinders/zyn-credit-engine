@@ -133,12 +133,23 @@ def _login_gate() -> bool:
 # Paths
 # ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
-UPLOADS_DIR = BASE_DIR / "uploads"
-OUTPUT_DIR = BASE_DIR / "output"
+# Use /tmp on Streamlit Cloud (read-only filesystem), local dir otherwise
+_tmp = Path("/tmp/zyn-credit-engine")
+UPLOADS_DIR = _tmp / "uploads"
+OUTPUT_DIR = _tmp / "output"
 CHECKLISTS_DIR = OUTPUT_DIR / "checklists"
-UPLOADS_DIR.mkdir(exist_ok=True)
-OUTPUT_DIR.mkdir(exist_ok=True)
-CHECKLISTS_DIR.mkdir(exist_ok=True)
+try:
+    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    CHECKLISTS_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    # Fallback to local dir (dev environment)
+    UPLOADS_DIR = BASE_DIR / "uploads"
+    OUTPUT_DIR = BASE_DIR / "output"
+    CHECKLISTS_DIR = OUTPUT_DIR / "checklists"
+    UPLOADS_DIR.mkdir(exist_ok=True)
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    CHECKLISTS_DIR.mkdir(exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Module imports (lazy to allow app to load even if deps missing)
@@ -1080,6 +1091,17 @@ def _count_ops_by_status(status: str) -> int:
     return sum(1 for op in st.session_state.operacoes if op.get("status") == status)
 
 
+def _upsert_operacao(op: dict):
+    """Add or update operation in the list (dedup by tomador+cnpj)."""
+    tomador = op.get("tomador", "").strip().lower()
+    cnpj = op.get("cnpj", "").strip()
+    for i, existing in enumerate(st.session_state.operacoes):
+        if existing.get("tomador", "").strip().lower() == tomador and existing.get("cnpj", "").strip() == cnpj:
+            st.session_state.operacoes[i] = op
+            return
+    st.session_state.operacoes.append(op)
+
+
 def _detected_doc_types() -> set[str]:
     """Retorna conjunto de tipos de documento detectados na extração."""
     tipos = set()
@@ -1313,7 +1335,7 @@ def page_nova_analise():
                     "data_criacao": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 }
                 st.session_state.current_op = op
-                st.session_state.operacoes.append(op)
+                _upsert_operacao(op)
                 _save_cache()
             else:
                 garantias_list = [g.strip() for g in garantias_text.strip().split("\n") if g.strip()]
@@ -1336,7 +1358,7 @@ def page_nova_analise():
                     "data_criacao": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 }
                 st.session_state.current_op = op
-                st.session_state.operacoes.append(op)
+                _upsert_operacao(op)
                 _save_cache()
                 st.success("Parâmetros salvos com sucesso.")
 
@@ -1585,7 +1607,7 @@ def page_nova_analise():
                         "Recebendo resposta": 0.40,
                         "Resposta completa": 0.75,
                         "Gerando matching": 0.85,
-                        "Enriquecendo": 0.05,
+                        "Enriquecendo": 0.90,
                     }
                     def _update_status(msg):
                         # Detect phase from message and update progress

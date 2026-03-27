@@ -38,8 +38,12 @@ if not logger.handlers:
 MODEL = "claude-sonnet-4-6"
 API_DELAY_SECONDS = 1.5  # Delay entre chamadas — reduzido de 2s para melhor throughput
 
-CACHE_DIR = Path(__file__).resolve().parent.parent / "output" / "extraction_cache"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    CACHE_DIR = Path("/tmp/zyn-credit-engine/output/extraction_cache")
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    CACHE_DIR = Path(__file__).resolve().parent.parent / "output" / "extraction_cache"
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 # Lock para serializar delays entre chamadas API em threads diferentes
 _api_lock = threading.Lock()
