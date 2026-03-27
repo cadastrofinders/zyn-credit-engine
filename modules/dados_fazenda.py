@@ -276,14 +276,20 @@ class DadosFazendaClient:
                     veg_pct.get("dense_vegetation", 0)
                     + veg_pct.get("moderate_vegetation", 0)
                 ) * 100 if isinstance(veg_pct, dict) else 0
+
+                # ── Distribuição de áreas (%) ──
+                if isinstance(veg_pct, dict):
+                    resultado["ndvi"]["distribuicao"] = veg_pct
         except Exception as e:
             logger.warning(f"[DadosFazenda] NDVI falhou: {e}")
             resultado["ndvi"] = {}
 
         # Embargos
+        _emb_data_cache = {}
         try:
             emb_raw = endpoints["embargos"].result(timeout=15)
             emb_data = emb_raw.get("data", emb_raw)
+            _emb_data_cache = emb_data  # cache for area extraction
             tem_embargo = False
             detalhes = ""
             if isinstance(emb_data, dict):
@@ -306,6 +312,45 @@ class DadosFazendaClient:
         except Exception as e:
             logger.warning(f"[DadosFazenda] Embargos falhou: {e}")
             resultado["embargos"] = {}
+
+        # ── Área da propriedade (ha) ──
+        area_ha = 0
+        try:
+            if isinstance(_emb_data_cache, dict):
+                mb_area = _emb_data_cache.get("mapbiomas", _emb_data_cache)
+                if isinstance(mb_area, dict):
+                    area_ha = float(mb_area.get("area_ha", 0))
+        except Exception:
+            pass
+
+        # Calcular breakdown de áreas via distribuição NDVI
+        distribuicao = resultado.get("ndvi", {}).get("distribuicao", {})
+        area_breakdown = {
+            "area_total_ha": round(area_ha, 2),
+            "area_agricultavel_ha": 0,
+            "area_pastagem_ha": 0,
+            "area_consolidada_ha": 0,
+            "area_solo_exposto_ha": 0,
+            "area_agua_urbano_ha": 0,
+        }
+        if area_ha > 0 and distribuicao:
+            pct_dense = distribuicao.get("dense_healthy_vegetation", 0) / 100
+            pct_sparse = distribuicao.get("sparse_vegetation", 0) / 100
+            pct_bare = distribuicao.get("bare_soil", 0) / 100
+            pct_bare_urban = distribuicao.get("bare_soil_urban", 0) / 100
+            pct_water = distribuicao.get("water_clouds_urban", 0) / 100
+
+            area_breakdown["area_agricultavel_ha"] = round(pct_dense * area_ha, 2)
+            area_breakdown["area_pastagem_ha"] = round(pct_sparse * area_ha, 2)
+            area_breakdown["area_consolidada_ha"] = round(
+                (pct_dense + pct_sparse) * area_ha, 2
+            )
+            area_breakdown["area_solo_exposto_ha"] = round(
+                (pct_bare + pct_bare_urban) * area_ha, 2
+            )
+            area_breakdown["area_agua_urbano_ha"] = round(pct_water * area_ha, 2)
+
+        resultado["areas"] = area_breakdown
 
         # Sobreposições
         sobrep = {}
@@ -900,6 +945,49 @@ class DadosFazendaClient:
         }
         resultado["incra"] = incra_raw
 
+        # ── Área breakdown ──
+        area_ha = 0
+        try:
+            emb_inner = embargo_raw.get("data", embargo_raw) if isinstance(embargo_raw, dict) else {}
+            if isinstance(emb_inner, dict):
+                mb_area = emb_inner.get("mapbiomas", emb_inner)
+                if isinstance(mb_area, dict):
+                    area_ha = float(mb_area.get("area_ha", 0))
+        except Exception:
+            pass
+
+        distribuicao = {}
+        try:
+            nd = ndvi_raw.get("data", ndvi_raw) if isinstance(ndvi_raw, dict) else {}
+            ts = nd.get("timeseries", []) if isinstance(nd, dict) else []
+            if ts and isinstance(ts[-1], dict):
+                distribuicao = ts[-1].get("distribution", {})
+        except Exception:
+            pass
+
+        area_breakdown = {
+            "area_total_ha": round(area_ha, 2),
+            "area_agricultavel_ha": 0,
+            "area_pastagem_ha": 0,
+            "area_consolidada_ha": 0,
+            "area_solo_exposto_ha": 0,
+            "area_agua_urbano_ha": 0,
+        }
+        if area_ha > 0 and isinstance(distribuicao, dict) and distribuicao:
+            pct_dense = distribuicao.get("dense_healthy_vegetation", 0) / 100
+            pct_sparse = distribuicao.get("sparse_vegetation", 0) / 100
+            pct_bare = distribuicao.get("bare_soil", 0) / 100
+            pct_bare_urban = distribuicao.get("bare_soil_urban", 0) / 100
+            pct_water = distribuicao.get("water_clouds_urban", 0) / 100
+
+            area_breakdown["area_agricultavel_ha"] = round(pct_dense * area_ha, 2)
+            area_breakdown["area_pastagem_ha"] = round(pct_sparse * area_ha, 2)
+            area_breakdown["area_consolidada_ha"] = round((pct_dense + pct_sparse) * area_ha, 2)
+            area_breakdown["area_solo_exposto_ha"] = round((pct_bare + pct_bare_urban) * area_ha, 2)
+            area_breakdown["area_agua_urbano_ha"] = round(pct_water * area_ha, 2)
+
+        resultado["areas"] = area_breakdown
+
         # Score e alertas
         resultado["score_ambiental"] = self._calcular_score(
             analise_ndvi, analise_embargos, analise_sobreposicoes
@@ -976,18 +1064,20 @@ class DadosFazendaClient:
         else:
             score_grupo = "Amarelo"
 
-        # Área total (se disponível nos dados INCRA)
+        # Área total — prioriza areas.area_total_ha (NDVI+embargos), fallback INCRA
         area_total = 0.0
         for p in propriedades:
-            incra = p.get("incra", {})
-            area = (
-                incra.get("area_ha")
-                or incra.get("area")
-                or incra.get("areaHa")
-                or 0
-            )
+            area_prop = p.get("areas", {}).get("area_total_ha", 0) or 0
+            if area_prop <= 0:
+                incra = p.get("incra", {})
+                area_prop = (
+                    incra.get("area_ha")
+                    or incra.get("area")
+                    or incra.get("areaHa")
+                    or 0
+                )
             try:
-                area_total += float(area)
+                area_total += float(area_prop)
             except (ValueError, TypeError):
                 pass
 

@@ -158,6 +158,30 @@ def _build_resumo(wb, consulta: dict):
     ws.cell(row=row, column=2, value=f"{area:,.1f}".replace(",", ".")).font = NORMAL_FONT
     row += 1
 
+    # Area breakdown (sum across all properties)
+    propriedades = resultado.get("propriedades", [])
+    area_consolidada = sum(p.get("areas", {}).get("area_consolidada_ha", 0) or 0 for p in propriedades)
+    area_agricultavel = sum(p.get("areas", {}).get("area_agricultavel_ha", 0) or 0 for p in propriedades)
+    area_pastagem = sum(p.get("areas", {}).get("area_pastagem_ha", 0) or 0 for p in propriedades)
+    area_solo = sum(p.get("areas", {}).get("area_solo_exposto_ha", 0) or 0 for p in propriedades)
+
+    if area_consolidada > 0 or area_agricultavel > 0:
+        ws.cell(row=row, column=1, value="Area Consolidada (ha)").font = BOLD_FONT
+        ws.cell(row=row, column=2, value=f"{area_consolidada:,.1f}".replace(",", ".")).font = NORMAL_FONT
+        row += 1
+
+        ws.cell(row=row, column=1, value="Area Agricultavel (ha)").font = BOLD_FONT
+        ws.cell(row=row, column=2, value=f"{area_agricultavel:,.1f}".replace(",", ".")).font = NORMAL_FONT
+        row += 1
+
+        ws.cell(row=row, column=1, value="Area Pastagem (ha)").font = BOLD_FONT
+        ws.cell(row=row, column=2, value=f"{area_pastagem:,.1f}".replace(",", ".")).font = NORMAL_FONT
+        row += 1
+
+        ws.cell(row=row, column=1, value="Solo Exposto (ha)").font = BOLD_FONT
+        ws.cell(row=row, column=2, value=f"{area_solo:,.1f}".replace(",", ".")).font = NORMAL_FONT
+        row += 1
+
     # Consolidated alerts
     alertas = resultado.get("alertas_consolidados", [])
     if alertas:
@@ -178,7 +202,10 @@ def _build_propriedades(wb, consulta: dict):
     ws = wb.create_sheet("Propriedades")
 
     headers = [
-        "CAR Code", "Score", "NDVI Medio", "NDVI Tendencia",
+        "CAR Code", "Score",
+        "Area Total (ha)", "Area Consolidada (ha)", "Area Agricultavel (ha)",
+        "Area Pastagem (ha)", "Solo Exposto (ha)",
+        "NDVI Medio", "NDVI Tendencia",
         "Embargo", "Quilombola", "Terra Indigena", "UC",
         "Assentamento", "Alertas",
     ]
@@ -195,10 +222,16 @@ def _build_propriedades(wb, consulta: dict):
         embargos = prop.get("embargos", {})
         sobrep = prop.get("sobreposicoes", {})
         alertas_prop = prop.get("alertas", [])
+        areas = prop.get("areas", {})
 
         values = [
             prop.get("car_code", "N/D"),
             score,
+            areas.get("area_total_ha", 0) or 0,
+            areas.get("area_consolidada_ha", 0) or 0,
+            areas.get("area_agricultavel_ha", 0) or 0,
+            areas.get("area_pastagem_ha", 0) or 0,
+            areas.get("area_solo_exposto_ha", 0) or 0,
             f"{ndvi.get('ndvi_mean', 0):.3f}" if ndvi.get("ndvi_mean") else "N/D",
             ndvi.get("tendencia", "N/D"),
             _bool_to_text(embargos.get("tem_embargo", False)),

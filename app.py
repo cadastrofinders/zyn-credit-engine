@@ -2793,9 +2793,10 @@ def page_consulta_agro():
                 car_code = valor.upper().strip()
                 progress.progress(0.25, text=f"🌱 Consultando CAR na base nacional: {car_code[:40]}...")
                 prop_result = df_client.consulta_car_aberta(car_code)
+                area_total = prop_result.get("areas", {}).get("area_total_ha", 0)
                 resultado = {
                     "total_propriedades": 1,
-                    "area_total_ha": 0,
+                    "area_total_ha": area_total,
                     "propriedades": [prop_result],
                     "alertas_consolidados": prop_result.get("alertas", []),
                     "score_ambiental_grupo": prop_result.get("score_ambiental", "N/D"),
@@ -2835,7 +2836,7 @@ def page_consulta_agro():
                     score_grupo = "Verde"
 
                 area_total = sum(
-                    p.get("ndvi", {}).get("area_ha", 0) for p in propriedades
+                    p.get("areas", {}).get("area_total_ha", 0) or 0 for p in propriedades
                 )
 
                 resultado = {
@@ -2920,6 +2921,18 @@ def page_consulta_agro():
                         f"**{car[:50]}** — {score_prop}",
                         expanded=(i == 0),
                     ):
+                        # Áreas
+                        areas = prop.get("areas", {})
+                        area_total_prop = areas.get("area_total_ha", 0) or 0
+                        if area_total_prop > 0:
+                            st.markdown("**📐 Áreas da Propriedade**")
+                            ca1, ca2, ca3, ca4, ca5 = st.columns(5)
+                            ca1.metric("Área Total", f"{area_total_prop:,.1f} ha")
+                            ca2.metric("Consolidada", f"{areas.get('area_consolidada_ha', 0):,.1f} ha")
+                            ca3.metric("Agricultável", f"{areas.get('area_agricultavel_ha', 0):,.1f} ha")
+                            ca4.metric("Pastagem", f"{areas.get('area_pastagem_ha', 0):,.1f} ha")
+                            ca5.metric("Solo Exposto", f"{areas.get('area_solo_exposto_ha', 0):,.1f} ha")
+
                         # NDVI
                         ndvi = prop.get("ndvi", {})
                         if ndvi:
