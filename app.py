@@ -168,6 +168,7 @@ try:
     from modules.analyzer import extract_car_codes, extract_grupo_economico
     from modules.dados_fazenda import DadosFazendaClient, get_client as get_df_client
     from modules.agro_excel_generator import generate_agro_excel
+    from modules.excel_template_filler import generate_comite_excel
 
     MODULES_AVAILABLE = True
 except ImportError as _imp_err:
@@ -1347,6 +1348,15 @@ def _gen_single_doc(doc_type: str, analise: dict, op: dict):
                 st.download_button("📑 Baixar Teaser", data=f.read(), file_name=name,
                     mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
                     use_container_width=True, key=f"qdl_single_teaser_{timestamp}")
+        elif doc_type == "comite":
+            name = f"Comite_{tomador_clean}_{timestamp}.xlsx"
+            path = str(OUTPUT_DIR / name)
+            with st.spinner("Gerando Planilha Comitê..."):
+                generate_comite_excel(analise, op, path)
+            with open(path, "rb") as f:
+                st.download_button("🏛️ Baixar Comitê", data=f.read(), file_name=name,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True, key=f"qdl_single_comite_{timestamp}")
     except Exception as e:
         st.error(f"Erro ao gerar {doc_type}: {e}")
 
@@ -2101,13 +2111,15 @@ def page_nova_analise():
                 xl_name = f"AnaliseTecnica_{tomador_clean}_{timestamp}.xlsx"
                 mac_name = f"MAC_{tomador_clean}_{timestamp}.docx"
                 teaser_name = f"Teaser_{tomador_clean}_{timestamp}.pptx"
+                comite_name = f"Comite_{tomador_clean}_{timestamp}.xlsx"
                 xl_path = str(OUTPUT_DIR / xl_name)
                 mac_path = str(OUTPUT_DIR / mac_name)
                 teaser_path = str(OUTPUT_DIR / teaser_name)
+                comite_path = str(OUTPUT_DIR / comite_name)
 
                 hist = _list_history()
                 results = {}
-                progress_bar = st.progress(0, text="Gerando 3 documentos em paralelo...")
+                progress_bar = st.progress(0, text="Gerando 4 documentos em paralelo...")
 
                 def _gen_excel():
                     generate_excel(analise, op, xl_path, hist if hist else None)
@@ -2120,45 +2132,58 @@ def page_nova_analise():
                     generate_teaser(analise, op, teaser_path)
                     return teaser_path
 
-                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                def _gen_comite():
+                    generate_comite_excel(analise, op, comite_path)
+                    return comite_path
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                     futures = {
                         executor.submit(_gen_excel): "excel",
                         executor.submit(_gen_mac): "mac",
                         executor.submit(_gen_teaser): "teaser",
+                        executor.submit(_gen_comite): "comite",
                     }
                     done_count = 0
+                    total_docs = len(futures)
                     for future in concurrent.futures.as_completed(futures):
                         name = futures[future]
                         done_count += 1
                         try:
                             results[name] = future.result(timeout=120)
-                            progress_bar.progress(done_count / 3, text=f"✅ {name.upper()} concluído ({done_count}/3)")
+                            progress_bar.progress(done_count / total_docs, text=f"✅ {name.upper()} ({done_count}/{total_docs})")
                         except Exception as e:
                             results[name] = None
                             st.error(f"Erro ao gerar {name.upper()}: {e}")
-                            progress_bar.progress(done_count / 3, text=f"❌ {name.upper()} erro ({done_count}/3)")
+                            progress_bar.progress(done_count / total_docs, text=f"❌ {name.upper()} ({done_count}/{total_docs})")
 
                 progress_bar.progress(1.0, text="✅ Documentos prontos!")
 
                 # Download buttons
-                col_dl1, col_dl2, col_dl3 = st.columns(3)
+                col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
 
                 if results.get("excel"):
                     with col_dl1:
                         with open(xl_path, "rb") as f:
-                            st.download_button("📊 Baixar Excel", data=f.read(), file_name=xl_name,
+                            st.download_button("📊 Análise Técnica", data=f.read(), file_name=xl_name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                use_container_width=True)
+
+                if results.get("comite"):
+                    with col_dl2:
+                        with open(comite_path, "rb") as f:
+                            st.download_button("🏛️ Comitê Crédito", data=f.read(), file_name=comite_name,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                                 use_container_width=True)
 
                 if results.get("mac"):
-                    with col_dl2:
+                    with col_dl3:
                         with open(mac_path, "rb") as f:
                             st.download_button("📄 Baixar MAC", data=f.read(), file_name=mac_name,
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                                 use_container_width=True)
 
                 if results.get("teaser"):
-                    with col_dl3:
+                    with col_dl4:
                         with open(teaser_path, "rb") as f:
                             st.download_button("📑 Baixar Teaser", data=f.read(), file_name=teaser_name,
                                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -2169,7 +2194,7 @@ def page_nova_analise():
 
             # --- Botões individuais ---
             st.markdown("---")
-            col_xl, col_mac_btn, col_teaser_btn = st.columns(3)
+            col_xl, col_comite_btn, col_mac_btn, col_teaser_btn = st.columns(4)
 
             with col_xl:
                 if st.button("Análise Técnica (.xlsx)", use_container_width=True):
@@ -2189,6 +2214,24 @@ def page_nova_analise():
                                 use_container_width=True)
                     except Exception as e:
                         st.error(f"Erro ao gerar planilha: {e}")
+
+            with col_comite_btn:
+                if st.button("🏛️ Comitê Crédito (.xlsx)", use_container_width=True):
+                    try:
+                        tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        comite_name = f"Comite_{tomador_clean}_{timestamp}.xlsx"
+                        comite_path = str(OUTPUT_DIR / comite_name)
+
+                        with st.spinner("Gerando Planilha Comitê..."):
+                            generate_comite_excel(analise, op, comite_path)
+
+                        with open(comite_path, "rb") as f:
+                            st.download_button("🏛️ Baixar Comitê", data=f.read(), file_name=comite_name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Erro ao gerar planilha comitê: {e}")
 
             with col_mac_btn:
                 if st.button("MAC (.docx)", use_container_width=True):
@@ -2402,7 +2445,7 @@ def page_historico():
             st.markdown("---")
 
             # Action buttons
-            col_excel, col_mac, col_teaser, col_load, col_del = st.columns(5)
+            col_excel, col_comite_h, col_mac, col_teaser, col_load, col_del = st.columns(6)
 
             with col_excel:
                 if st.button("Análise Técnica (.xlsx)", key=f"excel_{i}", use_container_width=True, type="primary"):
@@ -2423,6 +2466,24 @@ def page_historico():
                         st.success("Planilha de Análise Técnica gerada.")
                     except Exception as e:
                         st.error(f"Erro ao gerar Excel: {e}")
+
+            with col_comite_h:
+                if st.button("🏛️ Comitê", key=f"comite_{i}", use_container_width=True):
+                    try:
+                        comite_path = OUTPUT_DIR / f"Comite_{tomador.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx"
+                        generate_comite_excel(analise, op, str(comite_path))
+                        with open(comite_path, "rb") as f:
+                            st.download_button(
+                                label="Baixar Comitê (.xlsx)",
+                                data=f.read(),
+                                file_name=comite_path.name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key=f"dl_comite_{i}",
+                                use_container_width=True,
+                            )
+                        st.success("Planilha Comitê gerada.")
+                    except Exception as e:
+                        st.error(f"Erro ao gerar Comitê: {e}")
 
             with col_mac:
                 if st.button("MAC (.docx)", key=f"mac_{i}", use_container_width=True):
