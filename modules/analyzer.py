@@ -107,14 +107,50 @@ Stress tests obrigatórios (com premissas explícitas):
 
 # Instruções setoriais específicas
 SETOR_INSTRUCOES = {
-    "agro": """Análise setorial — AGRONEGÓCIO:
-- Avalie capacidade produtiva: área plantada, produtividade histórica (3 safras), mix de culturas.
-- Considere preços de commodities (soja, milho, algodão, boi) e tendência de mercado.
-- Avalie riscos climáticos: região, histórico de sinistros, cobertura de seguro agrícola/PROAGRO.
-- Analise estrutura de comercialização: % pré-vendido, contratos com tradings, hedge.
-- Para SLB: avalie valor de mercado do(s) imóvel(is) vs valor contratual, prazo do arrendamento.
-- Custo de produção: insumos, arrendamento, mão de obra, logística.
-- Sazonalidade do fluxo de caixa: safra vs entressafra.""",
+    "agro": """Análise setorial — AGRONEGÓCIO (inclui Grupo PF):
+
+PRODUÇÃO & CAPACIDADE:
+- Área total vs. área produtiva vs. área plantada (ha). Separar própria vs. arrendada vs. condomínio.
+- Produtividade histórica por cultura (sc/ha) — comparar com média regional CONAB.
+- Mix de culturas: soja, milho, algodão, sorgo, pecuária. Diversificação reduz risco.
+- Custo de produção por hectare (insumos, arrendamento, logística, mão de obra).
+- Resultado por safra: Receita = Área x Produtividade x Preço - Área x Custo.
+
+GRUPO PF (PESSOA FÍSICA):
+- Em operações agro PF, o "grupo econômico" é familiar — vários CPFs compartilham patrimônio e dívidas.
+- Consolidar endividamento de TODOS os integrantes: SCR-SISBACEN + CPRs + IRPF (dívidas e ônus).
+- Bureau de crédito por CPF: Boa Vista, Quod, SPC (score + anotações negativas). Score baixo em agro PF não é necessariamente impeditivo — contextualizar com patrimônio fundiário.
+- Processos judiciais por CPF: total, polo passivo, valor no polo passivo. Checar natureza (trabalhista, cível, execução fiscal, ambiental).
+- Protestos por CPF: total e valor financeiro. Protestos de fornecedores de insumos = red flag operacional.
+- ESG Social: situação fiscal (RFB), trabalhista, criminal, PEP por integrante.
+- ESG Ambiental: embargos IBAMA, débitos IBAMA. Embargo em área de garantia = impeditivo.
+- Propriedades em CONDOMÍNIO: verificar se há acordo de partilha formal ou fração ideal registrada.
+
+ENDIVIDAMENTO AGRO:
+- Estruturar por safra de referência (ex: Safra 25/26).
+- Financiamento de Capital de Giro (SCR + CPRs + IRPF dívidas + faturas).
+- Financiamento de Curto Prazo (vencimentos dentro da safra).
+- Outros Financiamentos de Longo Prazo (vencimentos após safra).
+- KPI: Dívida/Área Produtiva (benchmark: < R$ 15.000/ha).
+- KPI: Dívida/Receita Safra (benchmark: < 4x).
+
+PATRIMÔNIO FUNDIÁRIO & GARANTIAS:
+- Valor de mercado das terras: ha x VTN regional (INCRA) ou laudo de avaliação.
+- Cobertura Fundiária: valor terras / dívida total (benchmark: > 1.5x).
+- Alienação fiduciária de imóvel rural, CPR-F, penhor de safra, CDA/WA, cessão de recebíveis.
+- Para SLB: valor de mercado do(s) imóvel(is) vs valor contratual, prazo do arrendamento.
+- Verificar ônus nas matrículas: hipotecas, penhoras, indisponibilidades.
+
+COMERCIALIZAÇÃO & MERCADO:
+- % da safra pré-vendida, contratos com tradings, hedge em bolsa.
+- Preços de commodities (soja, milho, algodão, boi) e tendência de mercado.
+- Sazonalidade do fluxo de caixa: safra vs entressafra.
+
+RISCOS ESPECÍFICOS:
+- Climático: região, histórico de sinistros, cobertura de seguro agrícola/PROAGRO.
+- Ambiental: CAR regular, CCIR válido, sem embargo IBAMA.
+- Fundiário: matrícula limpa, georreferenciamento SIGEF, sem litígio possessório.
+- Concentração: dependência de uma única cultura ou região.""",
 
     "imobiliario": """Análise setorial — IMOBILIÁRIO:
 - Avalie o empreendimento: VSO (velocidade sobre oferta), VGV, percentual de obras concluído.
@@ -151,7 +187,9 @@ SETOR_INSTRUCOES = {
 
 # Stress tests adicionais por setor
 STRESS_SETOR = {
-    "agro": "- Cenário estresse 4 (safra): quebra de 30% na safra + queda 15% no preço da commodity — recalcule DSCR.",
+    "agro": """- Cenário estresse 4 (safra): quebra de 30% na produtividade + queda 15% no preço da commodity — recalcule DSCR e cobertura.
+- Cenário estresse 5 (endividamento PF): aumento de 20% no custo de insumos + seca prolongada — avalie capacidade de servir dívida consolidada do grupo.
+- Cenário estresse 6 (fundiário): embargo ambiental em 30% da área produtiva — recalcule garantias disponíveis.""",
     "imobiliario": "- Cenário estresse 4 (vendas): queda de 40% no VSO + aumento de 10% no custo de obra — recalcule viabilidade.",
     "industria": "- Cenário estresse 4 (demanda): queda de 25% no volume + perda do principal cliente — recalcule DSCR.",
     "fidc": "- Cenário estresse 4 (carteira): inadimplência sobe para 2x a média histórica + 30% de diluição — recalcule subordinação.",
