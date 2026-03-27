@@ -1,0 +1,2119 @@
+{
+  "operacao": {
+    "tomador": "Macromaq",
+    "cnpj": "",
+    "tipo_operacao": "NC/CCB",
+    "volume": 100000000.0,
+    "prazo_meses": 60,
+    "taxa": "CDI+5%",
+    "amortizacao": "SAC",
+    "garantias": [
+      "a definir"
+    ],
+    "garantias_text": "a definir",
+    "tipo_captacao": "Captação PJ",
+    "instrumento": "NC",
+    "socio_responsavel": "Luiz Roberto Evangelista",
+    "status": "Concluída",
+    "rating": "BB",
+    "data_criacao": "2026-03-27 14:04",
+    "parecer": "Favorável com Ressalvas"
+  },
+  "analise": {
+    "rating_final": {
+      "nota": "BB",
+      "dscr_projetado": 1.08,
+      "ltv_efetivo": 0,
+      "parecer": "Favorável com Ressalvas",
+      "justificativa": "A Macromaq é uma empresa consolidada (45+ anos) com receita crescente (CAGR 14% 2022-2025), margem EBITDA acima do benchmark setorial e backlog contratual robusto de R$ 614M. Contudo, a operação de R$ 100M apresenta riscos relevantes: (1) endividamento total já elevado em R$ 316M com dívida líquida/EBITDA de 2.7x em 2024, que com a nova operação pode atingir ~2.8x; (2) resultado financeiro negativo crescente (de -R$ 37.8M em 2022 para -R$ 85.9M em 2025), consumindo parcela expressiva do EBITDA; (3) DSCR projetado de apenas 1.08x no cenário base, abaixo do limiar de atenção de 1.2x; (4) garantias ainda a definir formalmente — a cessão fiduciária de recebíveis de locação mitiga parcialmente, mas o LTV efetivo não pôde ser calculado sem laudo de avaliação; (5) múltiplas inconsistências entre documentos financeiros (PL, EBITDA) com divergências relevantes; (6) ausência de documentos críticos como contrato social, certidões, matrículas e laudos de avaliação. A finalidade de liability management é positiva (redução de credores e alongamento), mas a capacidade de serviço da dívida em cenários de estresse é frágil. Recomenda-se aprovação condicionada a reforço de garantias reais, formalização de covenants restritivos e obtenção de documentação pendente.",
+      "recomendacoes": [
+        "Exigir formalização da cessão fiduciária de recebíveis com trava bancária e valor mínimo de 130% do saldo devedor (atualmente proposto 110%, insuficiente pela política ZYN)",
+        "Solicitar alienação fiduciária de imóveis e/ou máquinas como garantia real adicional, com laudo de avaliação atualizado, visando LTV efetivo ≤ 70%",
+        "Obter contrato social consolidado e validar QSA, capital social e poderes de representação",
+        "Exigir certidões negativas (FGTS, INSS, federais, estaduais, municipais, trabalhistas) atualizadas",
+        "Incluir covenants financeiros: Dív. Líquida/EBITDA ≤ 3.0x, DSCR ≥ 1.20x, Liquidez Corrente ≥ 1.0x",
+        "Solicitar demonstrações financeiras auditadas por firma independente (big four ou equivalente)",
+        "Exigir relatório SCR/BACEN atualizado para cross-reference com endividamento declarado",
+        "Avaliar inclusão de cláusula de vencimento antecipado caso backlog de locação caia abaixo de R$ 400M",
+        "Monitorar trimestralmente o resultado financeiro líquido, dado crescimento acelerado das despesas financeiras",
+        "Considerar redução do prazo de carência de 12 para 6 meses, dado DSCR apertado"
+      ]
+    },
+    "kpis": {
+      "receita_liquida": 573671633,
+      "ebitda": 149646996,
+      "margem_ebitda": 26.1,
+      "divida_liquida_ebitda": 2.7,
+      "ltv": 0,
+      "dscr": 1.08
+    },
+    "tomador": {
+      "razao_social": "Macromaq Equipamentos Ltda.",
+      "cnpj": "83.675.413/0001-01",
+      "grupo_economico": "Não identificado — empresa familiar com sócios administradores Fábio Hoffmann Pegoraro e Fernando Hoffmann Pegoraro",
+      "historico": "Fundada em 1978 em Chapecó-SC, atua há mais de 45 anos no setor de vendas e locação de máquinas, peças e serviços. Opera com ~3.000 equipamentos locados, ~1.000 colaboradores, 11 unidades e 30 postos avançados em múltiplos estados. Distribuidora oficial da Hangcha (desde 2022) e XCMG (desde 2019). Trajetória de crescimento acelerado: receita saltou de R$ 143.6M (2019) para R$ 573.7M (2025), CAGR de ~26% em 6 anos. Backlog contratual de R$ 614M em contratos de locação com clientes de primeira linha (Ambev, Heineken, JBS, Suzano, BRF, Odebrecht). A empresa demonstra capacidade comercial robusta, porém o crescimento foi majoritariamente financiado por dívida bancária, resultando em endividamento significativo com 71 instituições financeiras no curto prazo e 52 no longo prazo.",
+      "setor": "Indústria — Locação e Venda de Máquinas e Equipamentos (Empilhadeiras, Linha Amarela, Equipamentos Industriais)",
+      "rating_secao": "Adequado",
+      "flags": [
+        "CNPJ fornecido no cabeçalho da solicitação está em branco — necessário validar 83.675.413/0001-01 conforme documento de faturamento",
+        "Contrato social não disponível — impossível validar QSA, capital social vigente e poderes de representação",
+        "Sócio indicado na solicitação como 'Luiz Roberto Evangelista' é membro da equipe ZYN Capital (assessora financeira), NÃO sócio da Macromaq — os sócios administradores são Fábio Hoffmann Pegoraro e Fernando Hoffmann Pegoraro",
+        "Ausência de certidões negativas impede verificação de passivos ocultos, ações judiciais e regularidade fiscal",
+        "Concentração familiar na gestão — risco de pessoa-chave"
+      ]
+    },
+    "patrimonio": {
+      "ativos_reais": {
+        "ativo_total_2025": 756923379,
+        "imobilizado_2025": 307534828,
+        "estoques_2025": 183075717,
+        "contas_receber_2025": 122168179,
+        "caixa_2025": 14137489,
+        "patrimonio_liquido_2025": 135807659
+      },
+      "avaliacao": "A empresa possui base patrimonial relevante com imobilizado de R$ 307.5M (2025), representando predominantemente a frota de equipamentos locados (~3.000 unidades). Estoques de R$ 183.1M e contas a receber de R$ 122.2M completam o ativo circulante. O PL de R$ 135.8M cresceu consistentemente (de R$ 22.9M em 2019 para R$ 135.8M em 2025), porém permanece baixo em relação ao ativo total (17.9%), indicando alta alavancagem. Sem laudo de avaliação disponível, não é possível confirmar o valor justo dos ativos. A frota de equipamentos locados tem valor de mercado potencialmente superior ao contábil dada a natureza dos contratos de locação de longo prazo.",
+      "ltv": 0,
+      "analise": "LTV efetivo não calculável — garantias formais ainda não definidas e nenhum laudo de avaliação foi apresentado. A estrutura proposta prevê cessão fiduciária de recebíveis de locação (mínimo 110% do saldo devedor), o que seria insuficiente pela política ZYN (mínimo 130%). O backlog contratual de R$ 614M com clientes investment grade é o principal ativo subjacente. Com dedução de 30% sobre o valor de face dos recebíveis, teríamos R$ 429.9M de valor ajustado, o que cobriria o saldo devedor de R$ 100M com margem. Contudo, a cessão depende da manutenção dos contratos de locação e da qualidade creditícia dos locatários.",
+      "garantias_detalhadas": [
+        {
+          "tipo_garantia": "Cessão Fiduciária de Direitos Creditórios",
+          "descricao": "Cessão fiduciária de recebíveis oriundos de contratos de locação de equipamentos, mínimo 110% do saldo devedor, com fluxo mensal equivalente a 2 PMTs vincendas",
+          "valor_estimado": 614375777,
+          "ltv_individual": 16.28,
+          "classificacao": "Fiduciária"
+        },
+        {
+          "tipo_garantia": "Aval PJ",
+          "descricao": "Aval da Macromaq Equipamentos Ltda. (coobrigação da pessoa jurídica tomadora)",
+          "valor_estimado": 0,
+          "ltv_individual": 0,
+          "classificacao": "Aval"
+        },
+        {
+          "tipo_garantia": "Aval PF",
+          "descricao": "Aval de Fábio Hoffmann Pegoraro (sócio administrador)",
+          "valor_estimado": 0,
+          "ltv_individual": 0,
+          "classificacao": "Aval"
+        },
+        {
+          "tipo_garantia": "Aval PF",
+          "descricao": "Aval de Fernando Hoffmann Pegoraro (sócio)",
+          "valor_estimado": 0,
+          "ltv_individual": 0,
+          "classificacao": "Aval"
+        }
+      ],
+      "rating_secao": "Atenção",
+      "flags": [
+        "Ausência de laudo de avaliação para qualquer ativo — valor de mercado dos equipamentos não confirmado",
+        "Ausência de matrícula de imóveis — não é possível verificar ônus ou gravames",
+        "Nível de cobertura proposto (110%) abaixo do mínimo exigido pela política ZYN (130%)",
+        "Garantias pessoais (avais PF) sem declaração de bens dos avalistas — patrimônio pessoal desconhecido",
+        "Imobilizado de R$ 307.5M pode estar sujeito a alienação fiduciária prévia em favor de outros credores (71 instituições financeiras no CP)",
+        "Sem trava bancária formalizada para os recebíveis de locação"
+      ]
+    },
+    "producao": {
+      "capacidade": "A Macromaq opera com ~3.000 equipamentos locados, 11 unidades e 30 postos avançados. O faturamento mensal recorrente de locação é de ~R$ 22M (dez/2025), com 312 contratos ativos. A empresa atua tanto em locação quanto em venda de equipamentos novos/seminovos, serviços pós-venda e terceirização de mão de obra. Não há informação explícita sobre taxa de utilização da frota.",
+      "historico_produtivo": "Crescimento expressivo da operação: receita líquida evoluiu de R$ 143.6M (2019) para R$ 573.7M (2025), representando CAGR de ~26%. O EBITDA acompanhou com CAGR de 18% (2022-2025), saltando de R$ 90.9M para R$ 149.6M. O backlog contratual de R$ 614M garante visibilidade de receita futura significativa. A margem EBITDA melhorou consistentemente de 12.8% (2019) para 26.1% (2025), indicando ganhos de escala operacional.",
+      "analise": "A capacidade produtiva (frota + serviços) demonstra escala relevante no mercado brasileiro de locação de equipamentos industriais. O backlog de R$ 614M representa aproximadamente 1.07x a receita anual, proporcionando boa previsibilidade de caixa. A diversificação de clientes inclui nomes de primeira linha (Ambev, Heineken, Suzano, JBS, Odebrecht), embora haja concentração relevante nos top 5 clientes. A parceria com fabricantes globais (Hangcha — top 3 mundial, XCMG — top 3 mundial em equipamentos pesados) garante acesso a equipamentos competitivos. Risco de obsolescência tecnológica é moderado dado o perfil dos equipamentos (empilhadeiras, linha amarela). Não foi fornecido relatório de produção ou métricas de utilização da frota.",
+      "rating_secao": "Forte",
+      "flags": [
+        "Relatório de produção/utilização de frota não disponível — impossível calcular taxa de ociosidade",
+        "Ausência de dados sobre pipeline de novos contratos e taxa de renovação",
+        "Concentração de 83.8% dos equipamentos JTI em Santa Cruz do Sul — risco geográfico pontual neste contrato"
+      ]
+    },
+    "capital": {
+      "estrutura_capital": "A Macromaq apresenta estrutura de capital altamente alavancada. Em dez/2025: dívida total de R$ 316.3M (CP R$ 170.0M + LP R$ 146.3M) contra PL de R$ 135.8M, resultando em Dívida/PL de 2.33x. A dívida é pulverizada entre 71 instituições no CP e 52 no LP, com maior concentração em Banco XCMG Brasil (R$ 53.5M total), seguido por Leasing (R$ 27.5M), CEF (R$ 22.6M), Finimp (R$ 21.7M) e Unicred (R$ 19.9M). O capital social é de R$ 55M. A nova operação de R$ 100M visa liability management (alongamento e redução de credores), o que é estruturalmente positivo, mas elevaria a dívida bruta para ~R$ 416.3M antes de amortizações.",
+      "endividamento": {
+        "divida_bruta_2025": 316315939,
+        "divida_bruta_pos_operacao_estimada": 416315939,
+        "caixa_2025": 14137489,
+        "divida_liquida_2025": 302178450,
+        "divida_liquida_pos_operacao_estimada": 402178450,
+        "emprestimos_cp_2025": 170022791,
+        "emprestimos_lp_2025": 146293148,
+        "numero_credores_cp": 71,
+        "numero_credores_lp": 52
+      },
+      "indicadores": {
+        "divida_liquida_ebitda": 2.69,
+        "divida_pl": 2.33,
+        "liquidez_corrente": 0.94,
+        "roe": 17.29
+      },
+      "analise": "A alavancagem é o principal ponto de atenção da análise. A Dív. Líquida/EBITDA de 2.69x (2025) está dentro do benchmark setorial (2.8x) e abaixo do limiar de atenção (3.5x). Contudo, pós-operação (assumindo uso parcial para refinanciamento), o indicador pode variar entre 2.1x (se R$ 100M substituir dívida existente) e 2.69x (se líquido). A liquidez corrente de 0.94x é preocupante (abaixo de 1.0x), indicando que ativos circulantes não cobrem integralmente os passivos de curto prazo. O ROE de 17.3% é saudável. A pulverização extrema de credores (71 no CP) gera ineficiência operacional e justifica a estratégia de liability management. O resultado financeiro líquido de -R$ 85.9M (2025) representa 57.4% do EBITDA, evidenciando peso significativo do serviço da dívida. A evolução 2019→2025 mostra que o endividamento cresceu de R$ 51.6M para R$ 316.3M (6.1x), enquanto a receita cresceu 4.0x e o EBITDA estimado ~8.2x.",
+      "rating_secao": "Atenção",
+      "flags": [
+        "Liquidez corrente de 0.94x abaixo de 1.0x — passivo circulante supera ativo circulante em R$ 25.8M",
+        "71 instituições financeiras no curto prazo — complexidade operacional extrema para gestão de dívida",
+        "Resultado financeiro líquido de -R$ 85.9M consome 57.4% do EBITDA",
+        "Dívida/PL de 2.33x indica dependência significativa de capital de terceiros",
+        "Crescimento do endividamento (6.1x em 6 anos) superou crescimento da receita (4.0x)",
+        "Pós-operação, se não houver amortização proporcional de dívida existente, Dív. Líquida/EBITDA pode ultrapassar 2.8x",
+        "Fornecedores de R$ 161.1M (2025) cresceram 532% vs 2019 (R$ 25.5M) — possível financiamento via fornecedores"
+      ]
+    },
+    "operacao": {
+      "tipo": "Crédito Estruturado — Nota Comercial",
+      "instrumento": "NC (Nota Comercial)",
+      "volume": 100000000,
+      "prazo": "48 meses (12 meses de carência de amortização + 36 parcelas mensais SAC). Nota: a solicitação inicial indicou 60 meses, porém o contrato e a apresentação indicam 48 meses com 12 de carência e 36 de amortização.",
+      "taxa": "CDI + 5.00% a.a. (overnight indexado)",
+      "estrutura": "Carência de 12 meses para amortização (juros pagos mensalmente desde o início). Após carência, 36 parcelas mensais no sistema SAC. Garantia principal: cessão fiduciária de recebíveis de locação (110% do saldo devedor). Avais PF (Fábio e Fernando Hoffmann Pegoraro) e PJ (Macromaq). Comissão de sucesso ZYN: 2.5%.",
+      "analise": "A operação de R$ 100M representa 31.6% da dívida total atual (R$ 316.3M) e 66.8% do EBITDA 2025. A finalidade de liability management é positiva: consolidação de credores e alongamento de prazo. A taxa de CDI+5.0% (estimada em ~19.75% a.a. com CDI a 14.75%) é compatível com o perfil de risco, embora o custo efetivo com comissão de 2.5% eleve o custo total. A carência de 12 meses para amortização é longa para uma operação de refinanciamento — o serviço de juros nos primeiros 12 meses será de aproximadamente R$ 19.75M (R$ 1.65M/mês), sem redução do principal. O prazo discrepante entre solicitação (60m) e contrato/apresentação (48m) precisa ser esclarecido. O volume de R$ 100M é 3.3x o volume mediano do Pipeline ZYN para o setor (R$ 30M), demandando atenção redobrada na estruturação.",
+      "rating_secao": "Adequado",
+      "flags": [
+        "Divergência de prazo: solicitação indica 60 meses, contrato e apresentação indicam 48 meses — necessário esclarecer",
+        "Volume de R$ 100M é 3.3x acima do volume mediano ZYN para o setor (R$ 30M)",
+        "Carência de 12 meses sem amortização gera acúmulo de risco — custo de juros estimado de ~R$ 19.75M no período de carência",
+        "Comissão de sucesso de 2.5% (R$ 2.5M) impacta custo efetivo da operação",
+        "Cobertura de garantias proposta (110%) abaixo do mínimo ZYN (130%)"
+      ]
+    },
+    "pagamento": {
+      "fluxo_amortizacao": {
+        "descricao": "Carência de 12 meses (juros mensais) + 36 parcelas SAC mensais",
+        "parcela_amortizacao_mensal": 2777778,
+        "juros_estimados_primeiro_mes": 1645833,
+        "parcela_total_estimada_mes13": 4423611,
+        "parcela_total_estimada_mes48": 2823843,
+        "total_juros_estimado_periodo_carencia": 19750000,
+        "premissas": "CDI a 14.75% a.a., spread de 5.0% a.a., taxa total de 19.75% a.a., sistema SAC com amortização constante de R$ 2.778M/mês"
+      },
+      "dscr": 1.08,
+      "cobertura": "DSCR calculado considerando EBITDA 2025 de R$ 149.6M, serviço da dívida existente estimado (juros + amortizações correntes) e serviço da nova operação. O resultado financeiro de -R$ 85.9M (2025) já contempla o custo da dívida existente. O EBITDA menos resultado financeiro existente gera caixa operacional de ~R$ 63.7M. A nova operação adiciona ~R$ 19.75M de juros anuais no período de carência e ~R$ 53M/ano no período de amortização plena. O DSCR projetado de 1.08x no cenário base está ABAIXO do limiar de atenção de 1.2x.",
+      "stress_tests": {
+        "cenario_base": {
+          "premissas": "CDI 14.75%, receita R$ 573.7M, EBITDA R$ 149.6M, resultado financeiro existente -R$ 85.9M",
+          "dscr": 1.08,
+          "viabilidade": "Viável com margem estreita",
+          "covenants_rompidos": [
+            "DSCR mínimo de 1.20x seria rompido"
+          ]
+        },
+        "estresse_juros": {
+          "premissas": "CDI +300bps (17.75%), taxa total 22.75% a.a., demais premissas inalteradas",
+          "dscr": 0.95,
+          "viabilidade": "INVIÁVEL — DSCR abaixo de 1.0x indica incapacidade de serviço integral da dívida",
+          "covenants_rompidos": [
+            "DSCR mínimo de 1.20x",
+            "DSCR mínimo de 1.0x (crítico)"
+          ],
+          "impacto_adicional_juros_anual": 3000000,
+          "comentario": "Elevação de 300bps no CDI impacta tanto a nova operação quanto a parcela da dívida existente indexada a taxas flutuantes. Resultado financeiro negativo pode ultrapassar -R$ 100M."
+        },
+        "estresse_receita": {
+          "premissas": "Queda de 20% na receita (R$ 458.9M), EBITDA ajustado proporcional (~R$ 119.7M, assumindo alavancagem operacional), demais premissas inalteradas",
+          "dscr": 0.82,
+          "viabilidade": "INVIÁVEL — DSCR crítico",
+          "covenants_rompidos": [
+            "DSCR mínimo de 1.20x",
+            "DSCR mínimo de 1.0x (crítico)",
+            "Dív. Líquida/EBITDA ultrapassaria 3.5x"
+          ],
+          "comentario": "Queda de 20% na receita com manutenção da base de custos fixos comprime severamente o EBITDA. Cenário possível em recessão ou perda de contratos relevantes."
+        },
+        "estresse_combinado": {
+          "premissas": "CDI +200bps (16.75%), queda 15% receita (R$ 487.6M), EBITDA ~R$ 127.2M, desvalorização 20% garantias",
+          "dscr": 0.87,
+          "viabilidade": "INVIÁVEL — DSCR crítico, cobertura de garantias severamente comprometida",
+          "covenants_rompidos": [
+            "DSCR mínimo de 1.20x",
+            "DSCR mínimo de 1.0x (crítico)",
+            "Cobertura de garantias mínima de 110%"
+          ],
+          "comentario": "Cenário combinado evidencia fragilidade estrutural. A desvalorização de 20% nos recebíveis cedidos reduziria cobertura abaixo dos 110% contratuais."
+        },
+        "estresse_setorial": {
+          "premissas": "Queda de 25% no volume de locação + perda do principal cliente (Odebrecht, R$ 79.9M de backlog). Receita ajustada ~R$ 380M, EBITDA ~R$ 99M",
+          "dscr": 0.62,
+          "viabilidade": "INVIÁVEL — cenário de estresse severo com DSCR muito abaixo do mínimo",
+          "covenants_rompidos": [
+            "Todos os covenants financeiros",
+            "Dív. Líquida/EBITDA > 5.0x (crítico)"
+          ],
+          "comentario": "A perda de Odebrecht (maior contrato individual no backlog) combinada com queda de volume seria catastrófica. Risco mitigado pela diversificação de ~312 contratos e qualidade creditícia dos demais locatários. Nota: Odebrecht/Novonor apresenta risco creditício próprio elevado."
+        }
+      },
+      "analise": "A capacidade de pagamento é o ponto mais crítico da análise. O DSCR de 1.08x no cenário base já está abaixo do limiar de atenção (1.2x) e em todos os cenários de estresse a operação se torna inviável (DSCR < 1.0x). O resultado financeiro líquido já consome 57.4% do EBITDA antes da nova operação. A adição de R$ 100M a CDI+5% agrava significativamente a pressão financeira. O período de carência de 12 meses alivia temporariamente o fluxo, mas a partir do mês 13 a amortização SAC de ~R$ 2.78M/mês mais juros decrescentes gera parcelas iniciais de ~R$ 4.4M/mês. A viabilidade depende criticamente de: (1) que a nova operação substitua dívidas mais caras, gerando economia líquida no resultado financeiro; (2) crescimento de receita/EBITDA conforme projetado pela empresa (R$ 573.7M/R$ 149.6M em 2025); (3) manutenção do backlog de locação.",
+      "rating_secao": "Atenção",
+      "flags": [
+        "DSCR de 1.08x ABAIXO do limiar de atenção de 1.2x — flag ATENÇÃO",
+        "Em TODOS os cenários de estresse o DSCR fica abaixo de 1.0x — flag CRÍTICO",
+        "Resultado financeiro consome 57.4% do EBITDA — margem de segurança estreita",
+        "Ausência de fluxo de caixa projetado detalhado fornecido pela empresa",
+        "Crescimento projetado para 2025 (R$ 573.7M receita vs R$ 464.7M em 2024 = +23.4%) precisa ser validado — dados 2025 disponíveis mas ainda não encerrado o exercício fiscal (documento datado de jan/2026)",
+        "Período de carência de 12 meses sem amortização acumula R$ 19.75M em juros sem redução do principal"
+      ]
+    },
+    "onus": {
+      "gravames": [],
+      "certidoes": "Não disponível — nenhuma certidão negativa foi apresentada (FGTS, INSS, Federal, Estadual, Municipal, Trabalhista)",
+      "analise": "Impossível avaliar a existência de ônus, gravames, protestos, ações judiciais ou pendências fiscais/tributárias. Com 71 instituições financeiras no curto prazo, é altamente provável que existam garantias reais já constituídas sobre ativos da empresa (equipamentos, recebíveis, imóveis). Sem matrículas de imóveis e certidões de ônus reais, não é possível confirmar a disponibilidade dos ativos para constituição de novas garantias. Este é um ponto bloqueante para a formalização da operação.",
+      "rating_secao": "Crítico",
+      "flags": [
+        "NENHUMA certidão negativa disponível — impossível avaliar regularidade fiscal e jurídica",
+        "NENHUMA matrícula de imóvel disponível — impossível verificar ônus reais",
+        "Com 71 credores no CP, é provável existência de garantias reais já constituídas sobre ativos",
+        "Ausência de consulta SCR/BACEN impede validação do endividamento declarado",
+        "Risco de alienação fiduciária prévia sobre equipamentos da frota de locação"
+      ]
+    },
+    "riscos": {
+      "mercado": "Risco moderado. O setor de locação de equipamentos industriais é cíclico, porém menos volátil que vendas. O backlog de R$ 614M com contratos de médio/longo prazo (até 6 anos) proporciona previsibilidade. Risco cambial presente nas importações de equipamentos (cotação de referência R$ 5.00/USD conforme contrato JTI). Risco de juros elevado dado a estrutura de dívida indexada a CDI.",
+      "credito": "Risco elevado. Endividamento total de R$ 316.3M (pré-operação) com 71 credores no CP demonstra complexidade e risco de descoordenação entre credores. DSCR de 1.08x no cenário base é apertado. Resultado financeiro consome 57.4% do EBITDA. Liquidez corrente abaixo de 1.0x. Mitigantes: carteira de clientes investment grade (Ambev, Heineken, Suzano, JBS), backlog robusto e crescimento consistente do EBITDA.",
+      "operacional": "Risco moderado. Dependência de fornecedores concentrada em Hangcha e XCMG — risco de fornecedor único por linha de equipamento. Operação intensiva em mão de obra (1.000 colaboradores + terceirizados). Necessidade de manutenção contínua da frota de 3.000 equipamentos. SLA de 95% de disponibilidade em contratos de locação cria obrigação operacional rigorosa.",
+      "legal": "Risco elevado pela ausência de documentação. Sem contrato social, certidões ou matrículas, há risco de: (1) poderes de representação inadequados; (2) passivos ocultos (trabalhistas, fiscais, ambientais); (3) garantias ineficazes por vícios formais ou ônus preexistentes; (4) risco de questionamento em caso de execução. Contratos de locação com clientes podem ter cláusulas de cessibilidade restrita, impactando a garantia de cessão fiduciária.",
+      "setorial": "Risco moderado. O mercado de locação de equipamentos industriais no Brasil é fragmentado, com barreiras de entrada moderadas (intensivo em capital). A Macromaq tem posição competitiva forte pela escala (3.000 equipamentos), parcerias OEM exclusivas e base de clientes diversificada. Riscos setoriais incluem: ciclo de investimento industrial, obsolescência tecnológica (eletrificação de frotas), regulação trabalhista (NRs para operadores) e concorrência de players maiores (Movida Industrial, Mills, Armac).",
+      "matriz_riscos": [
+        {
+          "risco": "DSCR insuficiente / incapacidade de serviço da dívida",
+          "probabilidade": "Média",
+          "impacto": "Alto",
+          "mitigante": "Liability management visa reduzir custo médio da dívida; backlog de R$ 614M garante receita recorrente; covenants de DSCR mínimo com trigger de amortização acelerada"
+        },
+        {
+          "risco": "Elevação de juros (CDI) comprimindo margem financeira",
+          "probabilidade": "Média-Alta",
+          "impacto": "Alto",
+          "mitigante": "Contratos de locação com reajuste anual (IPCA/INPC) parcialmente compensam; possibilidade de hedge de taxa de juros"
+        },
+        {
+          "risco": "Perda de contratos relevantes de locação",
+          "probabilidade": "Baixa",
+          "impacto": "Alto",
+          "mitigante": "Diversificação com 312 contratos e clientes investment grade; SLAs rigorosos garantem qualidade de serviço; multas rescisórias de 30-50% do saldo contratual"
+        },
+        {
+          "risco": "Garantias insuficientes ou ineficazes",
+          "probabilidade": "Média",
+          "impacto": "Alto",
+          "mitigante": "Exigir cobertura mínima de 130% (vs 110% proposto); incluir alienação fiduciária de equipamentos; trava bancária sobre recebíveis"
+        },
+        {
+          "risco": "Passivos ocultos (fiscais, trabalhistas, ambientais)",
+          "probabilidade": "Média",
+          "impacto": "Médio-Alto",
+          "mitigante": "Exigir certidões negativas atualizadas antes do desembolso; consulta SCR/BACEN; due diligence jurídica completa"
+        },
+        {
+          "risco": "Risco de cross-default com outros credores",
+          "probabilidade": "Média",
+          "impacto": "Alto",
+          "mitigante": "Incluir cláusula de cross-default e negative pledge; exigir declaração de ausência de inadimplência com outros credores"
+        },
+        {
+          "risco": "Concentração em fornecedores (Hangcha/XCMG)",
+          "probabilidade": "Baixa",
+          "impacto": "Médio",
+          "mitigante": "Ambos são fabricantes globais de grande porte (top 3 mundial); contratos de longo prazo de distribuição"
+        },
+        {
+          "risco": "Risco cambial nas importações de equipamentos",
+          "probabilidade": "Média",
+          "impacto": "Médio",
+          "mitigante": "Repasse parcial ao preço de locação; Finimp de R$ 21.7M indica exposição cambial limitada vs receita total"
+        }
+      ],
+      "rating_secao": "Atenção",
+      "flags": [
+        "Risco de crédito elevado pela combinação de alta alavancagem + DSCR apertado + ausência de documentação",
+        "Risco legal crítico pela ausência total de certidões e validação societária",
+        "Odebrecht/Novonor como maior cliente individual no backlog (R$ 79.9M) apresenta risco creditício próprio significativo",
+        "Exposição cambial em Finimp (R$ 21.7M) sem evidência de hedge"
+      ]
+    },
+    "covenants": {
+      "clausulas": [
+        {
+          "covenant": "Cobertura mínima de recebíveis cedidos sobre saldo devedor",
+          "limite": "110%",
+          "atual": "Não verificável — cessão não formalizada",
+          "status": "Pendente"
+        },
+        {
+          "covenant": "Fluxo mensal de recebíveis equivalente a 2 PMTs vincendas",
+          "limite": "2x PMT",
+          "atual": "Faturamento mensal recorrente de ~R$ 22M vs PMT máxima estimada de ~R$ 4.4M = 5.0x",
+          "status": "Atende (se formalizado)"
+        },
+        {
+          "covenant": "Dívida Líquida / EBITDA (recomendado)",
+          "limite": "≤ 3.0x",
+          "atual": "2.69x (2025)",
+          "status": "Atende"
+        },
+        {
+          "covenant": "DSCR mínimo (recomendado)",
+          "limite": "≥ 1.20x",
+          "atual": "1.08x (projetado)",
+          "status": "NÃO ATENDE"
+        },
+        {
+          "covenant": "Liquidez Corrente (recomendado)",
+          "limite": "≥ 1.0x",
+          "atual": "0.94x (2025)",
+          "status": "NÃO ATENDE"
+        }
+      ],
+      "analise": "O contrato proposto inclui apenas covenants de garantia (cobertura de recebíveis e fluxo mínimo de 2 PMTs), sem covenants financeiros tradicionais. Recomenda-se fortemente a inclusão de Dív. Líquida/EBITDA ≤ 3.0x, DSCR ≥ 1.20x e Liquidez Corrente ≥ 1.0x. No momento, a empresa NÃO atenderia o DSCR mínimo de 1.20x (atual 1.08x) nem a liquidez corrente de 1.0x (atual 0.94x). A inclusão de trigger events (ex: backlog mínimo de R$ 400M, fluxo mensal de locação mínimo de R$ 18M) seria prudente dada a dependência da receita recorrente de locação.",
+      "rating_secao": "Atenção",
+      "flags": [
+        "Ausência de covenants financeiros no contrato proposto — apenas covenants de garantia",
+        "DSCR projetado de 1.08x NÃO atenderia covenant recomendado de 1.20x",
+        "Liquidez corrente de 0.94x NÃO atenderia covenant recomendado de 1.0x",
+        "Sem cláusula de cross-default ou negative pledge no contrato apresentado"
+      ]
+    },
+    "cronograma": {
+      "etapas": [
+        {
+          "etapa": "Obtenção de contrato social consolidado e validação KYC completa",
+          "prazo": "Imediato — pré-condição",
+          "responsavel": "Tomador / ZYN Capital"
+        },
+        {
+          "etapa": "Obtenção de certidões negativas (federais, estaduais, municipais, trabalhistas, FGTS, INSS)",
+          "prazo": "Imediato — pré-condição",
+          "responsavel": "Tomador"
+        },
+        {
+          "etapa": "Consulta SCR/BACEN para validação de endividamento",
+          "prazo": "Imediato — pré-condição",
+          "responsavel": "ZYN Capital"
+        },
+        {
+          "etapa": "Laudo de avaliação dos ativos (equipamentos, imóveis) por avaliador independente",
+          "prazo": "15-30 dias",
+          "responsavel": "Tomador"
+        },
+        {
+          "etapa": "Definição e formalização das garantias (cessão fiduciária com trava bancária + garantias reais adicionais)",
+          "prazo": "30 dias",
+          "responsavel": "ZYN Capital / Assessoria Jurídica"
+        },
+        {
+          "etapa": "Due diligence jurídica completa (gravames, ônus, litigiosidade)",
+          "prazo": "30 dias",
+          "responsavel": "Assessoria Jurídica"
+        },
+        {
+          "etapa": "Revisão e inclusão de covenants financeiros no contrato",
+          "prazo": "15 dias",
+          "responsavel": "ZYN Capital / Assessoria Jurídica"
+        },
+        {
+          "etapa": "Aprovação pelo Comitê de Crédito",
+          "prazo": "15 dias após documentação completa",
+          "responsavel": "Comitê ZYN"
+        },
+        {
+          "etapa": "Formalização da NC e registro na CVM/ANBIMA (se aplicável)",
+          "prazo": "15-30 dias após aprovação",
+          "responsavel": "ZYN Capital / Escriturador"
+        },
+        {
+          "etapa": "Desembolso — 1ª tranche (sugerido: 50% condicionado a constituição de garantias)",
+          "prazo": "D+5 após formalização",
+          "responsavel": "ZYN Capital"
+        },
+        {
+          "etapa": "Desembolso — 2ª tranche (50% restante condicionado a comprovação de quitação de dívidas alvo)",
+          "prazo": "30 dias após 1ª tranche",
+          "responsavel": "ZYN Capital"
+        }
+      ],
+      "analise": "O cronograma está condicionado à obtenção de documentação crítica atualmente faltante. A ausência de contrato social, certidões e laudos de avaliação impede a formalização imediata. Sugere-se desembolso em 2 tranches para garantir que os recursos sejam efetivamente utilizados para liability management conforme declarado. O prazo estimado para first disbursement é de 45-60 dias a partir da data da análise, assumindo cooperação do tomador na entrega de documentos.",
+      "rating_secao": "Atenção",
+      "flags": [
+        "Documentação crítica faltante pode atrasar cronograma significativamente",
+        "Sugere-se desembolso em tranches condicionadas para mitigar risco de desvio de finalidade"
+      ]
+    },
+    "cross_referencing": {
+      "inconsistencias": [
+        {
+          "documentos": [
+            "Demonstracoes Financeiras (2024)",
+            "Demonstracoes Financeiras 14 (2024)"
+          ],
+          "campo": "Patrimônio Líquido",
+          "valores": [
+            "R$ 117.626.092 (DF principal)",
+            "R$ 111.810.000 (DF14)"
+          ],
+          "gravidade": "Alta",
+          "comentario": "Divergência de R$ 5.816.092 (5.2%) no PL para o mesmo exercício (dez/2024). Supera o limiar de 5% para flag. Pode indicar versões diferentes do balanço (provisório vs. final) ou ajuste contábil. A DF principal pode ser a versão final e a DF14 uma versão gerencial/preliminar."
+        },
+        {
+          "documentos": [
+            "Demonstracoes Financeiras (2024)",
+            "Demonstracoes Financeiras 14 (2024)"
+          ],
+          "campo": "EBITDA",
+          "valores": [
+            "R$ 81.554.437 (DF principal)",
+            "R$ 120.018.603 (DF14)"
+          ],
+          "gravidade": "Alta",
+          "comentario": "Divergência MASSIVA de R$ 38.464.166 (47.2%) no EBITDA para o mesmo exercício. A DF principal apresenta EBITDA de R$ 81.6M (margem 17.6%) enquanto a DF14 apresenta R$ 120.0M (margem 25.9%). A apresentação institucional indica R$ 121.0M (margem 26.0%). A diferença pode decorrer de tratamento contábil distinto de depreciação/amortização na composição do EBITDA. É CRÍTICO esclarecer qual é o EBITDA correto antes de prosseguir. A DF principal pode estar reportando EBIT (não EBITDA) ou usando critério diferente de cálculo."
+        },
+        {
+          "documentos": [
+            "Demonstracoes Financeiras (2024)",
+            "Demonstracoes Financeiras 14 (2024)"
+          ],
+          "campo": "Custo das Mercadorias/Serviços",
+          "valores": [
+            "R$ 340.655.065 (DF principal)",
+            "R$ 340.676.065 (DF14)"
+          ],
+          "gravidade": "Baixa",
+          "comentario": "Divergência marginal de R$ 21.000 (0.006%). Provavelmente erro de digitação ou arredondamento."
+        },
+        {
+          "documentos": [
+            "Demonstracoes Financeiras (2024)",
+            "Demonstracoes Financeiras 14 (2024)"
+          ],
+          "campo": "Passivo Não Circulante",
+          "valores": [
+            "R$ 192.098.054 (DF principal)",
+            "R$ 197.914.146 (DF14)"
+          ],
+          "gravidade": "Média",
+          "comentario": "Divergência de R$ 5.816.092 (3.0%). Compatível com a divergência no PL — sugere que a diferença está na classificação entre PL e Passivo NC."
+        },
+        {
+          "documentos": [
+            "Demonstracoes Financeiras (2024)",
+            "Demonstracoes Financeiras 14 (2024)"
+          ],
+          "campo": "Lucro Líquido",
+          "valores": [
+            "R$ 16.188.599 (DF principal)",
+            "R$ 16.154.406 (DF14)"
+          ],
+          "gravidade": "Baixa",
+          "comentario": "Divergência de R$ 34.193 (0.2%). Marginal, provavelmente arredondamento."
+        },
+        {
+          "documentos": [
+            "Faturamento (2025)",
+            "Demonstracoes Financeiras 6 (2025)"
+          ],
+          "campo": "Receita / Faturamento",
+          "valores": [
+            "R$ 698.255 (Faturamento declarado 2025)",
+            "R$ 573.671.633 (Receita Líquida DRE 2025)"
+          ],
+          "gravidade": "Alta",
+          "comentario": "DIVERGÊNCIA EXTREMA — o documento de faturamento reporta valores mensais na faixa de R$ 43-68K, totalizando R$ 698K no ano, enquanto o DRE mostra receita de R$ 573.7M. A diferença é de ~820x. Possíveis explicações: (1) os valores do documento de faturamento estão em MILHARES de reais (R$ mil), não em unidades — neste caso o faturamento seria R$ 698.3M, divergência de 21.7% vs receita líquida, acima do limiar de 10%; (2) o documento refere-se a uma filial ou linha de negócio específica; (3) erro de extração. NECESSÁRIO ESCLARECER."
+        },
+        {
+          "documentos": [
+            "Outro (Apresentação)",
+            "Demonstracoes Financeiras (2024)"
+          ],
+          "campo": "EBITDA 2024",
+          "valores": [
+            "R$ 121.000.000 (Apresentação)",
+            "R$ 81.554.437 (DF principal)"
+          ],
+          "gravidade": "Alta",
+          "comentario": "Apresentação da ZYN/Macromaq reporta EBITDA de R$ 121M para 2024, alinhado com DF14 (R$ 120M) mas divergente da DF principal (R$ 81.6M). Sugere que a DF principal pode estar reportando um conceito diferente (EBIT?) ou que há ajuste de depreciação significativo (~R$ 39M)."
+        },
+        {
+          "documentos": [
+            "Outro 7 (Endividamento)",
+            "Demonstracoes Financeiras 6 (2025)"
+          ],
+          "campo": "Empréstimos CP",
+          "valores": [
+            "R$ 170.022.791 (Outro 7 — total CP)",
+            "R$ 170.022.791 (DF6 — empréstimos CP)"
+          ],
+          "gravidade": "Baixa",
+          "comentario": "Valores de endividamento CP são consistentes entre o relatório de endividamento e o balanço 2025. Cross-reference positivo."
+        },
+        {
+          "documentos": [
+            "Outro 7 (Endividamento)",
+            "Demonstracoes Financeiras 6 (2025)"
+          ],
+          "campo": "Empréstimos LP",
+          "valores": [
+            "R$ 146.293.148 (Outro 7)",
+            "R$ 146.293.148 (DF6)"
+          ],
+          "gravidade": "Baixa",
+          "comentario": "Valores de endividamento LP consistentes. Cross-reference positivo."
+        },
+        {
+          "documentos": [
+            "Solicitação",
+            "Contrato / Apresentação"
+          ],
+          "campo": "Prazo da operação",
+          "valores": [
+            "60 meses (solicitação)",
+            "48 meses (contrato e apresentação: 12 carência + 36 amortização)"
+          ],
+          "gravidade": "Média",
+          "comentario": "Prazo da solicitação (60m) difere do contrato e apresentação (48m). Necessário esclarecer antes da formalização."
+        },
+        {
+          "documentos": [
+            "Solicitação",
+            "Contrato / Documentos Societários"
+          ],
+          "campo": "Sócio / Representante",
+          "valores": [
+            "Luiz Roberto Evangelista (solicitação como 'sócio')",
+            "Fábio Hoffmann Pegoraro e Fernando Hoffmann Pegoraro (documentos da empresa)"
+          ],
+          "gravidade": "Baixa",
+          "comentario": "Luiz Roberto Evangelista é membro da equipe ZYN Capital (assessora financeira), não sócio da Macromaq. Conforme regra de cross-referencing, NÃO constitui divergência de QSA."
+        },
+        {
+          "documentos": [
+            "Demonstracoes Financeiras 6 (2025)",
+            "Outro (Apresentação — projeções 2025)"
+          ],
+          "campo": "Endividamento CP 2025",
+          "valores": [
+            "R$ 170.022.791 (DF6)",
+            "R$ 172.300.000 (Apresentação)"
+          ],
+          "gravidade": "Baixa",
+          "comentario": "Divergência de R$ 2.277.209 (1.3%). Provavelmente arredondamento na apresentação."
+        }
+      ],
+      "qualidade_docs": [
+        {
+          "documento": "Demonstracoes Financeiras (2024) — DF principal",
+          "classificacao": "Não-auditado",
+          "observacao": "Sem indicação de auditoria independente. Apresenta divergência significativa de EBITDA com DF14 do mesmo exercício. Peso moderado na análise."
+        },
+        {
+          "documento": "Demonstracoes Financeiras 14 (2024)",
+          "classificacao": "Não-auditado",
+          "observacao": "Segunda versão do balanço 2024 com PL e EBITDA divergentes da DF principal. Possivelmente versão gerencial. Peso reduzido."
+        },
+        {
+          "documento": "Demonstracoes Financeiras 6 (2025)",
+          "classificacao": "Não-auditado",
+          "observacao": "Balanço do exercício 2025 ainda não encerrado oficialmente (documento datado início 2026). Dados provisórios. Peso moderado."
+        },
+        {
+          "documento": "Demonstracoes Financeiras 3 (2022)",
+          "classificacao": "Não-auditado",
+          "observacao": "Demonstrações históricas. Consistentes com dados da apresentação. Peso moderado."
+        },
+        {
+          "documento": "Demonstracoes Financeiras 8 (2021)",
+          "classificacao": "Não-auditado",
+          "observacao": "Demonstrações históricas. Peso baixo (>3 anos)."
+        },
+        {
+          "documento": "Demonstracoes Financeiras 9 (2023)",
+          "classificacao": "Não-auditado",
+          "observacao": "Demonstrações históricas. Consistentes com dados da apresentação. Peso moderado."
+        },
+        {
+          "documento": "Demonstracoes Financeiras 10 (2020)",
+          "classificacao": "Não-auditado",
+          "observacao": "Dados incompletos (CMV, lucro bruto, EBITDA = 0). Exercício impactado por COVID-19. Peso muito baixo."
+        },
+        {
+          "documento": "Demonstracoes Financeiras 16 (2019)",
+          "classificacao": "Não-auditado",
+          "observacao": "Dados históricos (>5 anos). Peso muito baixo."
+        },
+        {
+          "documento": "Contrato (NC)",
+          "classificacao": "Gerencial",
+          "observacao": "Minuta/termo de referência da operação. Não é contrato assinado. Peso moderado para condições da operação."
+        },
+        {
+          "documento": "Faturamento (2025)",
+          "classificacao": "Autodeclarado",
+          "observacao": "ATENÇÃO: valores parecem estar em R$ mil (não em unidades), gerando aparente divergência extrema com DRE. Assinado por sócio administrador e contador. Peso baixo até esclarecimento da unidade monetária."
+        },
+        {
+          "documento": "Faturamento 11 (Backlog Locação)",
+          "classificacao": "Gerencial",
+          "observacao": "Relatório interno de backlog contratual. Dados críticos para avaliação de garantias (cessão de recebíveis). Não auditado. Peso moderado."
+        },
+        {
+          "documento": "Outro (Apresentação de Crédito)",
+          "classificacao": "Gerencial",
+          "observacao": "Apresentação comercial preparada para captação. Dados financeiros alinhados com DF14 (não com DF principal para EBITDA 2024). Viés otimista esperado. Peso baixo para dados financeiros, moderado para informações operacionais."
+        },
+        {
+          "documento": "Outro 7 (Endividamento)",
+          "classificacao": "Autodeclarado",
+          "observacao": "Relatório de acompanhamento assinado por sócio e contador. Consistente com DF6 2025. Peso moderado."
+        },
+        {
+          "documento": "Outro 12 (Institucional)",
+          "classificacao": "Gerencial",
+          "observacao": "Apresentação institucional sem dados financeiros. Útil para contexto operacional. Peso baixo."
+        },
+        {
+          "documento": "Outro 15 (Equipamentos JTI)",
+          "classificacao": "Gerencial",
+          "observacao": "Anexo de contrato de locação JTI. Útil para validação de operação. Peso baixo."
+        },
+        {
+          "documento": "Alteracao Contratual / Alteracao Contratual 17",
+          "classificacao": "Não-auditado",
+          "observacao": "Aditivos contratuais com JTI. Confirmam relacionamento comercial ativo. Peso baixo."
+        },
+        {
+          "documento": "Contrato 18 (Locação JTI)",
+          "classificacao": "Não-auditado",
+          "observacao": "Proposta comercial de locação para JTI. Confirma operação recorrente. Peso baixo."
+        }
+      ]
+    },
+    "benchmarking": {
+      "setor": "Indústria e Serviços — Locação e Venda de Máquinas e Equipamentos",
+      "metricas_vs_setor": [
+        {
+          "metrica": "Margem EBITDA",
+          "valor_empresa": "26.1% (2025) ou 17.6% (DF principal 2024)",
+          "media_setor": "15%",
+          "posicao": "ACIMA do benchmark — se confirmado o EBITDA de R$ 149.6M (2025), a margem de 26.1% é significativamente superior à média setorial de 15%. Mesmo usando a DF principal de 2024 (17.6%), a empresa supera o benchmark. Reflete a natureza recorrente e de maior margem do negócio de locação vs. indústria tradicional."
+        },
+        {
+          "metrica": "Dívida Líquida / EBITDA",
+          "valor_empresa": "2.69x (2025)",
+          "media_setor": "2.8x",
+          "posicao": "ALINHADO ao benchmark — ligeiramente abaixo da média setorial. Contudo, pós-operação pode ultrapassar o benchmark dependendo do uso líquido dos recursos."
+        },
+        {
+          "metrica": "DSCR",
+          "valor_empresa": "1.08x (projetado)",
+          "media_setor": "1.4x",
+          "posicao": "ABAIXO do benchmark — DSCR de 1.08x é significativamente inferior à média setorial de 1.4x, indicando capacidade de serviço da dívida mais apertada que os pares."
+        },
+        {
+          "metrica": "LTV",
+          "valor_empresa": "Não calculável (garantias não formalizadas)",
+          "media_setor": "Máximo recomendado 60%",
+          "posicao": "NÃO AVALIÁVEL — necessário laudo de avaliação e formalização de garantias."
+        },
+        {
+          "metrica": "Volume da Operação",
+          "valor_empresa": "R$ 100.000.000",
+          "media_setor": "R$ 30.000.000 (mediana Pipeline ZYN)",
+          "posicao": "ACIMA — operação de R$ 100M é 3.3x a mediana do pipeline, representando concentração de risco relevante."
+        },
+        {
+          "metrica": "Prazo",
+          "valor_empresa": "48 meses (12 carência + 36 amortização)",
+          "media_setor": "12-48 meses",
+          "posicao": "NO LIMITE SUPERIOR — prazo de 48 meses está no topo da faixa típica para o setor."
+        }
+      ]
+    },
+    "investor_matching": {
+      "setor_detectado": "industria",
+      "investidores_sugeridos": [
+        {
+          "nome": "GCB",
+          "score": 95.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Opera NC/CCB",
+            "Atua em industria",
+            "Volume dentro da faixa",
+            "12 deals ZYN"
+          ],
+          "perfil": "Generalista, maior parceiro ZYN. Apetite amplo.",
+          "deals_pipeline": 12,
+          "instrumentos": [
+            "CRI",
+            "CRA",
+            "CPR-F",
+            "NC/CCB",
+            "FIDC",
+            "SLB",
+            "Debenture"
+          ],
+          "setores": [
+            "agro",
+            "imobiliario",
+            "industria",
+            "servicos",
+            "fidc",
+            "special_sits"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Jive",
+          "score": 95.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Opera NC/CCB",
+            "Atua em industria",
+            "Volume dentro da faixa",
+            "4 deals ZYN"
+          ],
+          "perfil": "Diversificado, aceita special situations e NPL.",
+          "deals_pipeline": 4,
+          "instrumentos": [
+            "CRI",
+            "CRA",
+            "NC/CCB",
+            "NPL"
+          ],
+          "setores": [
+            "agro",
+            "imobiliario",
+            "industria",
+            "special_sits"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "BS2",
+          "score": 95.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Opera NC/CCB",
+            "Atua em industria",
+            "Volume dentro da faixa",
+            "3 deals ZYN"
+          ],
+          "perfil": "DCM/CCB, credito corporativo.",
+          "deals_pipeline": 3,
+          "instrumentos": [
+            "NC/CCB",
+            "Debenture"
+          ],
+          "setores": [
+            "industria",
+            "servicos"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "IORQ / Luso Brasileiro",
+          "score": 93.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Opera NC/CCB",
+            "Atua em industria"
+          ],
+          "perfil": "Credito bancario corporativo.",
+          "deals_pipeline": 2,
+          "instrumentos": [
+            "NC/CCB",
+            "Debenture"
+          ],
+          "setores": [
+            "industria",
+            "servicos"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Virgo",
+          "score": 88.6,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Opera NC/CCB",
+            "Atua em industria",
+            "Volume dentro da faixa"
+          ],
+          "perfil": "Plataforma de securitizacao.",
+          "deals_pipeline": 1,
+          "instrumentos": [
+            "CRI",
+            "Debenture"
+          ],
+          "setores": [
+            "imobiliario",
+            "industria"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Fegik",
+          "score": 65.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Atua em industria",
+            "4 deals ZYN"
+          ],
+          "perfil": "CRI com foco em imobiliario e industria.",
+          "deals_pipeline": 4,
+          "instrumentos": [
+            "CRI"
+          ],
+          "setores": [
+            "imobiliario",
+            "industria"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Bside",
+          "score": 65.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Atua em industria",
+            "3 deals ZYN"
+          ],
+          "perfil": "CRI com apetite medio.",
+          "deals_pipeline": 3,
+          "instrumentos": [
+            "CRI"
+          ],
+          "setores": [
+            "imobiliario",
+            "industria"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Inco",
+          "score": 58.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Volume dentro da faixa",
+            "7 deals ZYN"
+          ],
+          "perfil": "Foco exclusivo em CRI/imobiliario.",
+          "deals_pipeline": 7,
+          "instrumentos": [
+            "CRI"
+          ],
+          "setores": [
+            "imobiliario"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Solis",
+          "score": 58.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Atua em industria"
+          ],
+          "perfil": "CRI e CRA, tickets menores.",
+          "deals_pipeline": 1,
+          "instrumentos": [
+            "CRI",
+            "CRA"
+          ],
+          "setores": [
+            "imobiliario",
+            "industria"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Vinci",
+          "score": 54.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Volume dentro da faixa",
+            "4 deals ZYN"
+          ],
+          "perfil": "Agro: SLB rural, CPR-F, CRA. Tickets maiores.",
+          "deals_pipeline": 4,
+          "instrumentos": [
+            "CRA",
+            "CPR-F",
+            "SLB"
+          ],
+          "setores": [
+            "agro"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Galapagos",
+          "score": 54.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Volume dentro da faixa",
+            "3 deals ZYN"
+          ],
+          "perfil": "CRI e Agro, perfil diversificado.",
+          "deals_pipeline": 3,
+          "instrumentos": [
+            "CRI",
+            "CRA",
+            "CPR-F"
+          ],
+          "setores": [
+            "agro",
+            "imobiliario"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Pine",
+          "score": 47.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Volume dentro da faixa"
+          ],
+          "perfil": "Agro: CPR-F e CRA.",
+          "deals_pipeline": 2,
+          "instrumentos": [
+            "CPR-F",
+            "CRA"
+          ],
+          "setores": [
+            "agro"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "EXT Capital",
+          "score": 47.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Volume dentro da faixa"
+          ],
+          "perfil": "FIDC e Fiagro especializado.",
+          "deals_pipeline": 2,
+          "instrumentos": [
+            "FIDC",
+            "Fiagro"
+          ],
+          "setores": [
+            "fidc"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Oliveira Trust",
+          "score": 47.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "Volume dentro da faixa"
+          ],
+          "perfil": "Securitizadora/trustee, CRI e FIDC.",
+          "deals_pipeline": 1,
+          "instrumentos": [
+            "CRI",
+            "FIDC"
+          ],
+          "setores": [
+            "imobiliario",
+            "fidc"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "exes",
+          "score": 43.0,
+          "fonte": "Pipeline ZYN",
+          "motivos": [
+            "3 deals ZYN"
+          ],
+          "perfil": "CRI/imobiliario.",
+          "deals_pipeline": 3,
+          "instrumentos": [
+            "CRI"
+          ],
+          "setores": [
+            "imobiliario"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Fibra",
+          "score": 36.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [],
+          "perfil": "Agro com foco em CPR-F.",
+          "deals_pipeline": 2,
+          "instrumentos": [
+            "CPR-F",
+            "CRA",
+            "SLB"
+          ],
+          "setores": [
+            "agro"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Kijani",
+          "score": 36.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [],
+          "perfil": "Agro/Fiagro, perfil ESG.",
+          "deals_pipeline": 1,
+          "instrumentos": [
+            "CRA",
+            "CPR-F",
+            "Fiagro"
+          ],
+          "setores": [
+            "agro"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "Opea",
+          "score": 36.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [],
+          "perfil": "Securitizadora CRI/CRA.",
+          "deals_pipeline": 1,
+          "instrumentos": [
+            "CRI",
+            "CRA"
+          ],
+          "setores": [
+            "imobiliario",
+            "agro"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        },
+        {
+          "nome": "True Securitizadora",
+          "score": 36.4,
+          "fonte": "Pipeline ZYN",
+          "motivos": [],
+          "perfil": "CRI imobiliario.",
+          "deals_pipeline": 1,
+          "instrumentos": [
+            "CRI"
+          ],
+          "setores": [
+            "imobiliario"
+          ],
+          "tipo_investidor": "Parceiro ZYN"
+        }
+      ],
+      "total_matches": 19
+    },
+    "_setor": "industria"
+  },
+  "extracted_data": {
+    "Oportunidade_NotaComercial_Macromaq_ZYN.pdf": {
+      "classificacao": {
+        "tipo": "contrato",
+        "confianca": 0.85,
+        "descricao": "Nota Comercial - Instrumento de dívida com características de empréstimo estruturado, incluindo termos, garantias e fluxo de recursos."
+      },
+      "dados": {
+        "tipo_contrato": "Nota Comercial",
+        "partes": [
+          "Macromaq Equipamentos Ltda.",
+          "ZYN Capital (Credor - implícito)"
+        ],
+        "objeto": "Financiamento para liability management, redução de instituições financeiras e reforço de capital de giro",
+        "valor": 100000000,
+        "prazo": "48 meses",
+        "taxa": "CDI + 5.0% a.a.",
+        "carencia_juros": "12 meses",
+        "amortizacao": "36 parcelas mensais após carência",
+        "pagamento_juros": "Mensal, sem carência",
+        "garantias": [
+          "Cessão fiduciária de direitos creditórios oriundos de contratos de locação de equipamentos (mínimo 110% do saldo devedor)",
+          "Fluxo mensal dos recebíveis vinculados equivalente a 2 PMTs vincendas da dívida",
+          "Aval PJ da Macromaq Equipamentos Ltda.",
+          "Aval PF de Fabio Hoffmann Pegoraro",
+          "Aval PF de Fernando Hoffman Pegoraro"
+        ],
+        "clausulas_relevantes": [
+          "Overnight indexado a CDI com spread de 5.0% a.a.",
+          "Fluxo de recebíveis mínimo equivalente a 2 parcelas vincendas como garantia adicional",
+          "Direitos creditórios oriundos de contratos de locação representam pelo menos 110% do saldo devedor"
+        ],
+        "_tipo_documento": "contrato"
+      }
+    },
+    "DF_s 2024 - DFs - VF TATICCA - Auditada.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.99,
+        "descricao": "Demonstrações Financeiras Individuais e Consolidadas completas da Macromaq Equipamentos Ltda., incluindo BP, DRE, DMPL, DFC e Notas Explicativas, auditadas pela TATICCA, com opinião com ressalva."
+      },
+      "dados": {
+        "data_base": "2024-12-31",
+        "periodo_dre": "2024",
+        "ativo_total": 668552591,
+        "ativo_circulante": 371951049,
+        "caixa_equivalentes": 22239541,
+        "estoques": 198392139,
+        "contas_receber": 135768814,
+        "ativo_nao_circulante": 296601542,
+        "imobilizado": 247817278,
+        "passivo_circulante": 358828445,
+        "emprestimos_cp": 203085772,
+        "fornecedores": 103865718,
+        "passivo_nao_circulante": 192098054,
+        "emprestimos_lp": 138957739,
+        "patrimonio_liquido": 117626092,
+        "capital_social": 55000000,
+        "receita_liquida": 464696731,
+        "custo_mercadorias": 340655065,
+        "lucro_bruto": 124041666,
+        "despesas_operacionais": 42487229,
+        "ebitda": 81554437,
+        "resultado_financeiro": -60073180,
+        "lucro_liquido": 16188599,
+        "margem_bruta_pct": 26.71,
+        "margem_ebitda_pct": 17.56,
+        "margem_liquida_pct": 3.49,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "DF_s 2022 - Auditada.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.99,
+        "descricao": "Demonstrações Financeiras completas da MACROMAQ EQUIPAMENTOS LTDA encerradas em 31 de dezembro de 2022, incluindo Balanço Patrimonial, DRE, DMPL, DFC e Notas Explicativas."
+      },
+      "dados": {
+        "data_base": "2022-12-31",
+        "periodo_dre": "2022-01-01 a 2022-12-31",
+        "ativo_total": 342213411,
+        "ativo_circulante": 135507642,
+        "caixa_equivalentes": 8600155,
+        "estoques": 53637641,
+        "contas_receber": 63413414,
+        "ativo_nao_circulante": 206705769,
+        "imobilizado": 180485392,
+        "passivo_circulante": 147921333,
+        "emprestimos_cp": 81517081,
+        "fornecedores": 40821851,
+        "passivo_nao_circulante": 126346356,
+        "emprestimos_lp": 91079051,
+        "patrimonio_liquido": 67945722,
+        "capital_social": 23890000,
+        "receita_liquida": 386582803,
+        "custo_mercadorias": 288912625,
+        "lucro_bruto": 97670178,
+        "despesas_operacionais": 28861579,
+        "ebitda": 90854294,
+        "resultado_financeiro": -37829526,
+        "lucro_liquido": 25470721,
+        "margem_bruta_pct": 25.28,
+        "margem_ebitda_pct": 23.52,
+        "margem_liquida_pct": 6.59,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "Oportunidade de Crédito Estruturado - Macromaq - 05.03.2026.pptx": {
+      "classificacao": {
+        "tipo": "outro",
+        "confianca": 0.95,
+        "descricao": "Apresentação de oportunidade de crédito estruturado contendo proposta de nota comercial, estrutura de operação, destaques de investimento, visão geral da companhia e dados financeiros históricos"
+      },
+      "dados": {
+        "tipo_documento": "apresentacao_credito_estruturado",
+        "empresa": "Macromaq Equipamentos Ltda.",
+        "instrumento": "Nota Comercial",
+        "volume": 100000000,
+        "data_apresentacao": "2026-03-05",
+        "taxa_indicativa": "CDI + 5.00% a.a.",
+        "comissao_sucesso": 2.5,
+        "prazo_meses": 48,
+        "carencia_meses": 12,
+        "amortizacao": "36 PMTs mensais após carência",
+        "uso_recursos": "Alongamento de dívida, reforço de capital de giro",
+        "garantias": [
+          "Cessão fiduciária de direitos creditórios de contratos de locação (110% do saldo devedor)",
+          "Fluxo mensal de recebíveis equivalente a 2 PMTs vincendas",
+          "Aval PF dos acionistas Fabio Hoffmann Pegoraro e Fernando Hoffmann Pegoraro"
+        ],
+        "empresa_fundacao": 1978,
+        "empresa_anos_operacao": 45,
+        "equipamentos_locacao": 3000,
+        "backlog_contratual": 614000000,
+        "faturamento_mensal_recorrente": 22000000,
+        "clientes_principais": [
+          "Ambev",
+          "Heineken",
+          "BRF",
+          "Suzano",
+          "JBS",
+          "Saint-Gobain",
+          "Arauco"
+        ],
+        "parcerias_oem": [
+          "Hangcha (desde 2022)",
+          "XCMG (desde 2019)"
+        ],
+        "financeiro_historico": [
+          {
+            "ano": 2022,
+            "receita_liquida": 387900000,
+            "custo_mercadorias": 290400000,
+            "lucro_bruto": 97500000,
+            "margem_bruta_pct": 25.1,
+            "despesas_operacionais": 28700000,
+            "ebitda": 90900000,
+            "margem_ebitda_pct": 23.4,
+            "lucro_operacional": 68800000,
+            "margem_operacional_pct": 17.7,
+            "resultado_financeiro_liquido": -37800000,
+            "lucro_liquido": 25500000,
+            "margem_liquida_pct": 6.6,
+            "caixa": 11400000,
+            "endividamento_cp": 82000000,
+            "endividamento_lp": 91600000,
+            "dívida_liquida_ebitda": 1.8
+          },
+          {
+            "ano": 2023,
+            "receita_liquida": 423400000,
+            "custo_mercadorias": 316400000,
+            "lucro_bruto": 107000000,
+            "margem_bruta_pct": 25.3,
+            "despesas_operacionais": 33500000,
+            "ebitda": 103100000,
+            "margem_ebitda_pct": 24.4,
+            "lucro_operacional": 73500000,
+            "margem_operacional_pct": 17.4,
+            "resultado_financeiro_liquido": -48000000,
+            "lucro_liquido": 19400000,
+            "margem_liquida_pct": 4.6,
+            "caixa": 23000000,
+            "endividamento_cp": 151900000,
+            "endividamento_lp": 134100000,
+            "dívida_liquida_ebitda": 2.6
+          },
+          {
+            "ano": 2024,
+            "receita_liquida": 465500000,
+            "custo_mercadorias": 341500000,
+            "lucro_bruto": 123900000,
+            "margem_bruta_pct": 26.6,
+            "despesas_operacionais": 42100000,
+            "ebitda": 121000000,
+            "margem_ebitda_pct": 26.0,
+            "lucro_operacional": 81800000,
+            "margem_operacional_pct": 17.6,
+            "resultado_financeiro_liquido": -60300000,
+            "lucro_liquido": 16200000,
+            "margem_liquida_pct": 3.5,
+            "caixa": 22200000,
+            "endividamento_cp": 204200000,
+            "endividamento_lp": 140900000,
+            "dívida_liquida_ebitda": 2.7
+          },
+          {
+            "ano": 2025,
+            "receita_liquida": 573700000,
+            "custo_mercadorias": 423300000,
+            "lucro_bruto": 150400000,
+            "margem_bruta_pct": 26.2,
+            "despesas_operacionais": 39800000,
+            "ebitda": 149600000,
+            "margem_ebitda_pct": 26.1,
+            "lucro_operacional": 110600000,
+            "margem_operacional_pct": 19.3,
+            "resultado_financeiro_liquido": -85900000,
+            "lucro_liquido": 23500000,
+            "margem_liquida_pct": 4.1,
+            "caixa": 17800000,
+            "endividamento_cp": 172300000,
+            "endividamento_lp": 153600000,
+            "dívida_liquida_ebitda": 2.1
+          }
+        ],
+        "dívida_total_estrutura": 316300000,
+        "principais_credores": [
+          {
+            "instituicao": "Banco XCMG Brasil",
+            "cp": 29400000,
+            "lp": 24100000,
+            "total": 53500000
+          },
+          {
+            "instituicao": "Leasing",
+            "cp": 12700000,
+            "lp": 14700000,
+            "total": 27500000
+          },
+          {
+            "instituicao": "CEF",
+            "cp": 7200000,
+            "lp": 15400000,
+            "total": 22600000
+          },
+          {
+            "instituicao": "Finimp",
+            "cp": 21700000,
+            "lp": 0,
+            "total": 21700000
+          },
+          {
+            "instituicao": "Unicred",
+            "cp": 7200000,
+            "lp": 12800000,
+            "total": 19900000
+          },
+          {
+            "instituicao": "Banco do Brasil",
+            "cp": 4300000,
+            "lp": 14900000,
+            "total": 19300000
+          },
+          {
+            "instituicao": "Bradesco",
+            "cp": 8600000,
+            "lp": 5900000,
+            "total": 14500000
+          },
+          {
+            "instituicao": "Finame",
+            "cp": 2700000,
+            "lp": 8800000,
+            "total": 11500000
+          },
+          {
+            "instituicao": "Banco ABC",
+            "cp": 6300000,
+            "lp": 3500000,
+            "total": 9800000
+          },
+          {
+            "instituicao": "Itaú",
+            "cp": 4900000,
+            "lp": 4000000,
+            "total": 9000000
+          }
+        ],
+        "metricas_crescimento": {
+          "receita_cagr_2022_2025_pct": 14.0,
+          "ebitda_cagr_2022_2025_pct": 18.0
+        },
+        "confidencialidade": "Estritamente Confidencial",
+        "_tipo_documento": "outro"
+      }
+    },
+    "12-Faturamento 12 meses.pdf": {
+      "classificacao": {
+        "tipo": "faturamento",
+        "confianca": 0.95,
+        "descricao": "Demonstrativo de faturamento mensal de 12 meses (jan-25 a dez-25) da empresa MACROMAQ EQUIPAMENTOS LTDA com faturamento acumulado"
+      },
+      "dados": {
+        "empresa": "MACROMAQ EQUIPAMENTOS LTDA",
+        "cnpj": "83.675.413/0001-01",
+        "periodo": "2025-01-01 a 2025-12-31",
+        "faturamento_total": 698255,
+        "detalhamento_mensal": [
+          {
+            "mes": "2025-01",
+            "valor": 52535
+          },
+          {
+            "mes": "2025-02",
+            "valor": 51631
+          },
+          {
+            "mes": "2025-03",
+            "valor": 56351
+          },
+          {
+            "mes": "2025-04",
+            "valor": 59829
+          },
+          {
+            "mes": "2025-05",
+            "valor": 61957
+          },
+          {
+            "mes": "2025-06",
+            "valor": 58009
+          },
+          {
+            "mes": "2025-07",
+            "valor": 68242
+          },
+          {
+            "mes": "2025-08",
+            "valor": 43100
+          },
+          {
+            "mes": "2025-09",
+            "valor": 56431
+          },
+          {
+            "mes": "2025-10",
+            "valor": 65733
+          },
+          {
+            "mes": "2025-11",
+            "valor": 60461
+          },
+          {
+            "mes": "2025-12",
+            "valor": 63974
+          }
+        ],
+        "detalhamento_empresa": [],
+        "observacoes": "Documento assinado por Fábio Hoffmann Pegoraro (Sócio Administrador) e Rafael de Souza Rodrigues (Contador CRC RS-094587/O-0) em 2026-01-09. Valores em R$ conforme cabeçalho do documento.",
+        "_tipo_documento": "faturamento"
+      },
+      "_from_cache": true
+    },
+    "12-Resultado de Dezembro.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.95,
+        "descricao": "Documento contém Balanço Patrimonial e Demonstrativo de Resultado (DRE) acumulado da empresa Macromaq referente ao período de 31/12/2025"
+      },
+      "dados": {
+        "data_base": "2025-12-31",
+        "periodo_dre": "2025-12-31",
+        "ativo_total": 756923379,
+        "ativo_circulante": 386746035,
+        "caixa_equivalentes": 14137489,
+        "estoques": 183075717,
+        "contas_receber": 122168179,
+        "ativo_nao_circulante": 370177343,
+        "imobilizado": 307534828,
+        "passivo_circulante": 412551261,
+        "emprestimos_cp": 170022791,
+        "fornecedores": 161124615,
+        "passivo_nao_circulante": 208564459,
+        "emprestimos_lp": 146293148,
+        "patrimonio_liquido": 135807659,
+        "capital_social": 55000000,
+        "receita_liquida": 573671633,
+        "custo_mercadorias": 423274719,
+        "lucro_bruto": 150396913,
+        "despesas_operacionais": 108426006,
+        "ebitda": 149646996,
+        "resultado_financeiro": -85889879,
+        "lucro_liquido": 23482146,
+        "margem_bruta_pct": 26.2,
+        "margem_ebitda_pct": 26.1,
+        "margem_liquida_pct": 4.1,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "Macromaq - Acompanhamento do endividamento 12-2025 (1).pdf": {
+      "classificacao": {
+        "tipo": "outro",
+        "confianca": 0.95,
+        "descricao": "Relatório de acompanhamento de endividamento bancário e financeiro, apresentando composição de dívidas por instituição financeira em curto e longo prazo"
+      },
+      "dados": {
+        "empresa": "MACROMAQ EQUIPAMENTOS LTDA.",
+        "data_base": "2025-12-31",
+        "periodo": "31/12/2025",
+        "tipo_relatorio": "Acompanhamento de Endividamento",
+        "endividamento_bancario_cp": 159672298.82,
+        "transferencia_saldos_credores_cp": 2442363.0,
+        "total_cp": 170022791.0,
+        "endividamento_bancario_lp": 146293148.0,
+        "consorcio_cp": 7908129.0,
+        "total_lp": 146293148.0,
+        "endividamento_total": 316315939.0,
+        "principais_credores_cp": [
+          {
+            "instituicao": "Banco XCMG Brasil",
+            "valor": 29409914.0
+          },
+          {
+            "instituicao": "Leasing",
+            "valor": 12733777.0
+          },
+          {
+            "instituicao": "Finimp",
+            "valor": 21729361.0
+          },
+          {
+            "instituicao": "Banco Bradesco",
+            "valor": 8593131.0
+          },
+          {
+            "instituicao": "Banco ABC",
+            "valor": 6288849.0
+          }
+        ],
+        "principais_credores_lp": [
+          {
+            "instituicao": "Banco XCMG",
+            "valor": 24053449.0
+          },
+          {
+            "instituicao": "Caixa Economica Federal",
+            "valor": 15421174.0
+          },
+          {
+            "instituicao": "Banco do Brasil",
+            "valor": 14949150.0
+          },
+          {
+            "instituicao": "Leasing",
+            "valor": 14745041.0
+          },
+          {
+            "instituicao": "Unicred",
+            "valor": 12770627.0
+          }
+        ],
+        "composicao_divi_cp": "Bancária (94%) e Consórcios (6%)",
+        "composicao_div_lp": "100% Bancária",
+        "signatarios": [
+          {
+            "nome": "Fábio Hoffmann Pegoraro",
+            "cargo": "Sócio Administrador",
+            "cpf": "020.365.489-70"
+          },
+          {
+            "nome": "Rafael de Souza Rodrigues",
+            "cargo": "Contador",
+            "crc": "CRC RS-094587/O-0",
+            "cpf": "00.999.040-85"
+          }
+        ],
+        "observacoes": "Relatório detalhado de endividamento com 71 instituições financeiras distintas em curto prazo e 52 em longo prazo. Significativa concentração em Banco XCMG Brasil e Leasing.",
+        "_tipo_documento": "outro"
+      },
+      "_from_cache": true
+    },
+    "DF_s 2021 - Auditadas e Assinadas.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.99,
+        "descricao": "Demonstrações Financeiras completas da MACROMAQ EQUIPAMENTOS LTDA. incluindo Balanço Patrimonial, Demonstração do Resultado do Exercício, Demonstração do Resultado Abrangente, Mutações do Patrimônio Líquido e Demonstração dos Fluxos de Caixa, referentes aos exercícios encerrados em 31 de dezembro de 2021 e 2020."
+      },
+      "dados": {
+        "data_base": "2021-12-31",
+        "periodo_dre": "2021-01-01 a 2021-12-31",
+        "ativo_total": 259877450,
+        "ativo_circulante": 95637920,
+        "caixa_equivalentes": 9079944,
+        "estoques": 24327193,
+        "contas_receber": 48740189,
+        "ativo_nao_circulante": 164239530,
+        "imobilizado": 140895404,
+        "passivo_circulante": 121970362,
+        "emprestimos_cp": 45681570,
+        "fornecedores": 53533899,
+        "passivo_nao_circulante": 87470211,
+        "emprestimos_lp": 61002498,
+        "patrimonio_liquido": 50436877,
+        "capital_social": 23890000,
+        "receita_liquida": 293042164,
+        "custo_mercadorias": 224275588,
+        "lucro_bruto": 68766576,
+        "despesas_operacionais": 20694896,
+        "ebitda": 57174191,
+        "resultado_financeiro": -18958836,
+        "lucro_liquido": 22244297,
+        "margem_bruta_pct": 23.48,
+        "margem_ebitda_pct": 19.51,
+        "margem_liquida_pct": 7.59,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "DF_s 2023 - DFs - VF TATICCA - Auditada.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.98,
+        "descricao": "Demonstrações Financeiras completas (BP + DRE + DMPL + DFC + Notas) da Macromaq Equipamentos Ltda., individuais e consolidadas, auditadas, com relatório de auditor independente com ressalvas."
+      },
+      "dados": {
+        "data_base": "2023-12-31",
+        "periodo_dre": "2023-01-01 a 2023-12-31",
+        "ativo_total": 462728735,
+        "ativo_circulante": 195270920,
+        "caixa_equivalentes": 22984376,
+        "estoques": 46742903,
+        "contas_receber": 101125569,
+        "ativo_nao_circulante": 267457815,
+        "imobilizado": 233991328,
+        "passivo_circulante": 229666638,
+        "emprestimos_cp": 151152094,
+        "fornecedores": 47524337,
+        "passivo_nao_circulante": 184895192,
+        "emprestimos_lp": 133591219,
+        "patrimonio_liquido": 48166904,
+        "capital_social": 23890000,
+        "receita_liquida": 422820199,
+        "custo_mercadorias": 315844530,
+        "lucro_bruto": 106975669,
+        "despesas_operacionais": 33476528,
+        "ebitda": 103126877,
+        "resultado_financeiro": -47955936,
+        "lucro_liquido": 19358437,
+        "margem_bruta_pct": 25.3,
+        "margem_ebitda_pct": 24.4,
+        "margem_liquida_pct": 4.58,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "DF_s 2020 - Auditada.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.95,
+        "descricao": "Demonstrações Financeiras Individuais e Consolidadas completas com Balanço Patrimonial, DRE implícita nos cálculos, Notas Explicativas e informações de patrimônio líquido da empresa MACROMAQ EQUIPAMENTOS LTDA referente ao exercício encerrado em 31 de dezembro de 2020."
+      },
+      "dados": {
+        "data_base": "2020-12-31",
+        "periodo_dre": "2020-01-01 a 2020-12-31",
+        "ativo_total": 178755819,
+        "ativo_circulante": 78152706,
+        "caixa_equivalentes": 6204970,
+        "estoques": 14195114,
+        "contas_receber": 24705142,
+        "ativo_nao_circulante": 100603113,
+        "imobilizado": 110518957,
+        "passivo_circulante": 77079661,
+        "emprestimos_cp": 32445505,
+        "fornecedores": 24885336,
+        "passivo_nao_circulante": 50903615,
+        "emprestimos_lp": 47348856,
+        "patrimonio_liquido": 50772543,
+        "capital_social": 23890000,
+        "receita_liquida": 178102410,
+        "custo_mercadorias": 0,
+        "lucro_bruto": 0,
+        "despesas_operacionais": 0,
+        "ebitda": 0,
+        "resultado_financeiro": -15563342,
+        "lucro_liquido": 5564372,
+        "margem_bruta_pct": 0,
+        "margem_ebitda_pct": 0,
+        "margem_liquida_pct": 3.12,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "BACKLOG - REL GERENCIAL 12-2025.pdf": {
+      "classificacao": {
+        "tipo": "faturamento",
+        "confianca": 0.92,
+        "descricao": "Relatório gerencial de contratos de locação com PMT (parcela mensal) e saldo de clientes. Estruturado como backlog de receitas/faturamento recorrente."
+      },
+      "dados": {
+        "empresa": "ZYN Capital (Relatório de Clientes em Locação)",
+        "periodo": "2025-12",
+        "faturamento_total": 22188874.56,
+        "saldo_total_contrato": 614375777.2,
+        "quantidade_contratos": 312,
+        "detalhamento_empresa": [
+          {
+            "empresa": "AMBEV",
+            "valor": 48618109.66
+          },
+          {
+            "empresa": "ODEBRECHT",
+            "valor": 79942500.0
+          },
+          {
+            "empresa": "HEINEKEN",
+            "valor": 60681973.0
+          },
+          {
+            "empresa": "SUZANO",
+            "valor": 34102668.17
+          },
+          {
+            "empresa": "MINERVA",
+            "valor": 48522500.0
+          },
+          {
+            "empresa": "JTI",
+            "valor": 26241877.68
+          },
+          {
+            "empresa": "AIR LIQUIDE",
+            "valor": 3146550.0
+          },
+          {
+            "empresa": "ARAUCO",
+            "valor": 39313544.93
+          },
+          {
+            "empresa": "HEINZ",
+            "valor": 20981884.1
+          },
+          {
+            "empresa": "IBEMA",
+            "valor": 14033300.0
+          }
+        ],
+        "observacoes": "Relatório de backlog de contratos de locação de equipamentos/espaço com data base 12/2025. PMT refere-se à parcela/pagamento mensal. Saldo representa o valor contratual remanescente. Principais clientes: ODEBRECHT (R$ 79.9M), AMBEV (R$ 48.6M), HEINEKEN (R$ 60.7M). Contratos variam de prazos curtos (até 1 ano) até 6 anos. Portfolio diversificado entre setores de alimentos, bebidas, construção e logística.",
+        "_tipo_documento": "faturamento"
+      }
+    },
+    "Apresentação Institucional Macromaq 2026.pdf": {
+      "classificacao": {
+        "tipo": "outro",
+        "confianca": 0.95,
+        "descricao": "Apresentação Institucional - documento de marketing e comunicação corporativa contendo histórico, missão, visão, valores, estrutura operacional, linhas de distribuição e serviços oferecidos pela empresa Macromaq."
+      },
+      "dados": {
+        "empresa": "MACROMAQ Equipamentos",
+        "tipo_documento": "Apresentacao Institucional",
+        "versao": "2025.03",
+        "website": "www.macromaq.com.br",
+        "historico_fundacao": "1978",
+        "localizacao_fundacao": "Chapecó - SC",
+        "missao": "Atua no setor de vendas e locação de máquinas, peças e serviços, trabalhando com a distribuição de produtos da mais alta qualidade e durabilidade, para levar segurança e produtividade a todos os seus clientes.",
+        "visao": "Manter a liderança em seu segmento, visando à evolução constante na distribuição dos melhores produtos e serviços aos seus clientes.",
+        "valores": [
+          "Ética Profissional",
+          "Produtos e Serviços de Qualidade",
+          "Clientes em Primeiro Lugar",
+          "Pessoas Comprometidas"
+        ],
+        "estrutura": {
+          "equipamentos_locados": 3000,
+          "colaboradores": 1000,
+          "unidades": 11,
+          "postos_avancados": 30
+        },
+        "filiais_principais": [
+          "São José - SC (Matriz)",
+          "São Paulo - SP",
+          "Joinville - SC",
+          "Curitiba - PR",
+          "Belo Horizonte - MG",
+          "Itajaí - SC",
+          "São Leopoldo - RS",
+          "Soledade - RS",
+          "Cascavel - PR",
+          "Marialva - PR",
+          "Campo Grande - MS",
+          "Jaguariúna - SP"
+        ],
+        "marcas_distribuidas": [
+          "HANGCHA",
+          "XCMG"
+        ],
+        "linhas_negocio": [
+          "Rental (Locação de equipamentos)",
+          "Vendas de equipamentos",
+          "Seminovos",
+          "Logística",
+          "Terceirização de mão de obra",
+          "Pós-venda e assistência técnica"
+        ],
+        "principais_produtos_rental": [
+          "Empilhadeiras",
+          "Reach Stacker",
+          "Plataformas",
+          "Caminhões",
+          "Equipamentos de Linha Amarela",
+          "Equipamentos de Pavimentação",
+          "Equipamentos Agrícolas",
+          "Guindastes"
+        ],
+        "servicos_complementares": [
+          "Gestão da Manutenção (Software Dedicado)",
+          "Gestão da Operação (Telemetria)",
+          "Terceirização de operadores, ajudantes e serviços gerais",
+          "Assistência Técnica Especializada",
+          "Peças Originais e Manutenção Ágil",
+          "Suporte Técnico",
+          "Consultoria e Treinamentos"
+        ],
+        "fornecedores_principais": [
+          {
+            "marca": "HANGCHA",
+            "historia": "Desde 1956",
+            "descricao": "Referência mundial na fabricação de empilhadeiras e equipamentos para indústria",
+            "presenca_paises": 120,
+            "funcionarios": 5000,
+            "engenheiros": 1200,
+            "area_fabrica_m2": 1000000,
+            "capacidade_producao_anual": 250000,
+            "ranking_mundial": "Top 3 maior fabricante de empilhadeiras"
+          },
+          {
+            "marca": "XCMG",
+            "historia": "Desde 1943",
+            "descricao": "Referência global na fabricação de máquinas pesadas para construção, mineração e infraestrutura",
+            "presenca_paises": 190,
+            "funcionarios": 40000,
+            "engenheiros": 7000,
+            "area_industrial_m2": 16000000,
+            "centros_pesquisa_desenvolvimento": 15,
+            "ranking_mundial": "3º maior fabricante de equipamentos pesados do mundo"
+          }
+        ],
+        "observacoes": "Documento de apresentação corporativa sem dados financeiros específicos (receitas, custos, lucros). Foco em histórico, estrutura operacional, linhas de negócio e portfólio de serviços. Atua nacionalmente com presença em múltiplos estados brasileiros.",
+        "_tipo_documento": "outro"
+      }
+    },
+    "Summary (50).pdf": {
+      "classificacao": {
+        "tipo": "alteracao_contratual",
+        "confianca": 0.95,
+        "descricao": "Certificado de conclusão de assinatura de Décimo Terceiro Aditivo ao Contrato de Locação de Equipamentos Industriais entre JTI e Macromaq, processado via DocuSign"
+      },
+      "dados": {
+        "empresa": "JTI Processadora de Tobacos do Brasil / JTI Distribuidora de Cigarros LTDA",
+        "cnpj": "",
+        "tipo_alteracao": "Aditivo contratual",
+        "data": "2026-01-08",
+        "objeto_alteracao": "Décimo Terceiro Aditivo ao Contrato de Locação de Equipamentos Industriais - Macromaq",
+        "capital_social": 0,
+        "socios": [
+          {
+            "nome": "Coretti La Cava Jr",
+            "participacao_pct": 0
+          },
+          {
+            "nome": "Eduardo Raffi",
+            "participacao_pct": 0
+          },
+          {
+            "nome": "Elenise dos Santos",
+            "participacao_pct": 0
+          },
+          {
+            "nome": "Fábio Hoffmann Pegoraro",
+            "participacao_pct": 0
+          },
+          {
+            "nome": "Gustavo Sodre de Lima",
+            "participacao_pct": 0
+          },
+          {
+            "nome": "Marcos Paulo Ribeiro",
+            "participacao_pct": 0
+          },
+          {
+            "nome": "Raquel Roth",
+            "participacao_pct": 0
+          }
+        ],
+        "clausulas_relevantes": [
+          "Documento assinado digitalmente via DocuSign",
+          "Envelope ID: A964B554-1AC3-4B0F-9EBC-1900D1EA1D04",
+          "48 páginas do documento original",
+          "7 assinaturas recolhidas",
+          "Status final: Completed em 2026-01-08 14:00"
+        ],
+        "_tipo_documento": "alteracao_contratual"
+      }
+    },
+    "DF_s 2024 - V1° TATICCA - Reapresentação.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.99,
+        "descricao": "Demonstrações Financeiras Individuais e Consolidadas completas da Macromaq Equipamentos Ltda., incluindo Balanço Patrimonial, DRE, DMPL, DFC e Notas Explicativas para o exercício findo em 31 de dezembro de 2024, com comparativo de 2023."
+      },
+      "dados": {
+        "data_base": "2024-12-31",
+        "periodo_dre": "2024-01-01 a 2024-12-31",
+        "ativo_total": 668552591,
+        "ativo_circulante": 371951049,
+        "caixa_equivalentes": 22239541,
+        "estoques": 198392139,
+        "contas_receber": 135768814,
+        "ativo_nao_circulante": 296601542,
+        "imobilizado": 247817278,
+        "passivo_circulante": 358828445,
+        "emprestimos_cp": 203085772,
+        "fornecedores": 103865718,
+        "passivo_nao_circulante": 197914146,
+        "emprestimos_lp": 138957739,
+        "patrimonio_liquido": 111810000,
+        "capital_social": 55000000,
+        "receita_liquida": 464696731,
+        "custo_mercadorias": 340676065,
+        "lucro_bruto": 124020666,
+        "despesas_operacionais": 42500422,
+        "ebitda": 120018603,
+        "resultado_financeiro": -60073180,
+        "lucro_liquido": 16154406,
+        "margem_bruta_pct": 26.71,
+        "margem_ebitda_pct": 25.85,
+        "margem_liquida_pct": 3.48,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "Anexo II - Equipamentos Locados (1).docx (2).pdf": {
+      "classificacao": {
+        "tipo": "outro",
+        "confianca": 0.95,
+        "descricao": "Anexo II - Lista de equipamentos locados com identificação de controle/modelo, localização por município, prédio e departamento"
+      },
+      "dados": {
+        "titulo": "ANEXO II – EQUIPAMENTOS LOCADOS",
+        "tipo_documento": "Relação de Ativos Locados",
+        "total_equipamentos": 68,
+        "municipios": [
+          "Pouso Redondo",
+          "Santa Cruz do Sul",
+          "São Matheus do Sul",
+          "São Paulo-SP",
+          "Sumaré-SP",
+          "Porto Alegre-RS",
+          "Rio de Janeiro-RJ"
+        ],
+        "distribuicao_por_municipio": {
+          "Pouso Redondo": 2,
+          "Santa Cruz do Sul": 57,
+          "São Matheus do Sul": 2,
+          "São Paulo-SP": 2,
+          "Sumaré-SP": 1,
+          "Porto Alegre-RS": 1,
+          "Rio de Janeiro-RJ": 1,
+          "Sem especificação": 2
+        },
+        "departamentos_identificados": [
+          "BS - Pouso Redondo",
+          "Crop inputs",
+          "Leaf Branches",
+          "Green Logistics",
+          "Casa do Pó",
+          "Processadora",
+          "Packed Storage",
+          "Processing Line 1",
+          "Market",
+          "BS - São Matheus do Sul"
+        ],
+        "predios_principais": [
+          "Pouso Redondo",
+          "Pouso R.",
+          "Crop inputs",
+          "Santa Cruz do Sul - LF Processadora",
+          "Santa Cruz do Sul - LF PA",
+          "Santa Cruz do Sul - CF",
+          "São Mateus",
+          "Market (5 localizações)",
+          "Santa Cruz do Sul - CF Processadora",
+          "Santa Cruz do Sul - RS Processadora"
+        ],
+        "tipos_modelo_equipamentos": [
+          "Modelo U (ex: 2842U, 2956U, 2890U)",
+          "Modelo T (ex: 2612T, 2725T, 2724T)",
+          "Modelo L (ex: 1619L)",
+          "Modelo M (ex: 2443M, 2472M)",
+          "Modelo com prefixo alfanumérico (ex: J1AI03223, I9AI02319, H1A128576)"
+        ],
+        "observacoes": "Documento contém relação de ativos locados distribuídos em múltiplas localidades, com foco em operações em Santa Cruz do Sul (83,8% dos equipamentos). Equipamentos estão alocados em diferentes departamentos relacionados a processamento, logística e armazenamento de produtos agrícolas.",
+        "_tipo_documento": "outro"
+      }
+    },
+    "DF_s 2019 - Auditada.pdf": {
+      "classificacao": {
+        "tipo": "demonstracoes_financeiras",
+        "confianca": 0.95,
+        "descricao": "Demonstrações Financeiras completas (BP + DRE + DMPL + DFC + Notas Explicativas) da Macromaq Equipamentos Ltda. encerradas em 31 de dezembro de 2019, com comparativo 2018."
+      },
+      "dados": {
+        "data_base": "2019-12-31",
+        "periodo_dre": "2019-01-01 a 2019-12-31",
+        "ativo_total": 166149483,
+        "ativo_circulante": 51631783,
+        "caixa_equivalentes": 5865213,
+        "estoques": 19916161,
+        "contas_receber": 18407384,
+        "ativo_nao_circulante": 114517700,
+        "imobilizado": 97530327,
+        "passivo_circulante": 80232931,
+        "emprestimos_cp": 23128466,
+        "fornecedores": 25537082,
+        "passivo_nao_circulante": 63052504,
+        "emprestimos_lp": 28439505,
+        "patrimonio_liquido": 22864048,
+        "capital_social": 23890000,
+        "receita_liquida": 143563795,
+        "custo_mercadorias": 113076174,
+        "lucro_bruto": 30487622,
+        "despesas_operacionais": 12130898,
+        "ebitda": 18356724,
+        "resultado_financeiro": -16888644,
+        "lucro_liquido": 1480822,
+        "margem_bruta_pct": 21.23,
+        "margem_ebitda_pct": 12.78,
+        "margem_liquida_pct": 1.03,
+        "_tipo_documento": "demonstracoes_financeiras"
+      },
+      "_from_cache": true
+    },
+    "2025 12 05 - 13 Aditivo - JTI e Macromaq.pdf": {
+      "classificacao": {
+        "tipo": "alteracao_contratual",
+        "confianca": 0.95,
+        "descricao": "Décimo Terceiro Aditivo a Contrato de Locação de Equipamentos Industriais entre JTI e Macromaq, com alterações de prazo de vigência e condições de substituição de equipamentos."
+      },
+      "dados": {
+        "empresa": "JTI PROCESSADORA DE TABACO DO BRASIL LTDA. / JT INTERNATIONAL DISTRIBUIDORA DE CIGARROS LTDA.",
+        "cnpj": "03.334.170/0001-09 / 11.124.629/0001-60",
+        "tipo_alteracao": "Aditivo contratual - Substituição de equipamentos e ajuste de prazo de vigência",
+        "data": "2025-12-05",
+        "objeto_alteracao": "Prorrogação da vigência da locação dos equipamentos antigos até 01 de janeiro de 2026, com compromisso de substituição pelos novos equipamentos até esta data. Nova vigência prevista de 02 de janeiro de 2026 até 30 de abril de 2030. Inclusão de SLA para equipamentos temporários e multa de rescisão de 30% do saldo do valor total do contrato.",
+        "capital_social": 0,
+        "socios": [],
+        "clausulas_relevantes": [
+          "Cláusula 1.1: Prorrogação da vigência da locação dos equipamentos antigos até 01 de janeiro de 2026",
+          "Cláusula 1.2: Compromisso de substituição dos equipamentos até 01 de janeiro de 2026",
+          "Cláusula 1.3: Nova vigência de 02 de janeiro de 2026 até 30 de abril de 2030, rescindível com 30 dias de aviso prévio, multa de 30% do saldo do contrato",
+          "Cláusula 1.4: Reajuste anual pelo IPCA a partir de janeiro de 2027",
+          "Cláusula 1.5: Obrigação de fornecimento de equipamentos alternativos equivalentes em caso de atraso na entrega",
+          "Cláusula 1.5.2: Rescisão imediata sem multa caso equipamentos alternativos não sejam fornecidos",
+          "Cláusula 1.6: SLA dos equipamentos temporários deve ser igual ao dos equipamentos novos",
+          "Cláusula 2.1: Aditivo tem efeito retroativo a 01 de maio de 2025",
+          "Cláusula 3.1: Demais cláusulas do contrato original permanecem inalteradas"
+        ],
+        "_tipo_documento": "alteracao_contratual"
+      }
+    },
+    "Propostas Macromaq_21_01.pdf": {
+      "classificacao": {
+        "tipo": "contrato",
+        "confianca": 0.95,
+        "descricao": "Conjunto de propostas comerciais de locação de equipamentos (empilhadeiras e transpaleteiras) entre Macromaq e JTI em múltiplas localidades"
+      },
+      "dados": {
+        "tipo_contrato": "Locação de Equipamentos",
+        "partes": [
+          "Macromaq (Locador)",
+          "JTI PROCESSADORA DE TABACO DO BRASIL LTDA (Locatária)"
+        ],
+        "objeto": "Locação de empilhadeiras contrabalançadas (elétricas e combustão), empilhadeiras retráteis e transpaleteiras com torre para operações em múltiplas unidades da JTI",
+        "valor": 330146.09,
+        "prazo": "60 meses",
+        "garantias": [
+          "Disponibilidade de frota de 95%",
+          "Assistência técnica por técnicos especializados",
+          "Manutenções preventivas e corretivas",
+          "Troca de peças por componentes novos e originais",
+          "Lubrificação"
+        ],
+        "clausulas_relevantes": [
+          "Validade da proposta: 5 dias",
+          "Variação anual pelo INPC",
+          "Condição de pagamento: FAT. MÊS CORRENTE COM PRAZO DE PAGTO DE 45 DIAS",
+          "Previsão de entrega: 120 a 150 dias",
+          "Impostos inclusos: PIS 1.65%, COFINS 7.60%",
+          "Frete e Seguro por conta do cliente",
+          "Equipamentos importados sofrem variação cambial (cotação: R$ 5.00)",
+          "Locatário responsável por manutenção corretiva oriunda de imprudência ou defeito estrutural",
+          "Cláusula de penalidade: 50% do saldo contratual em caso de desistência",
+          "Garantia de 95% de disponibilidade da frota",
+          "Obrigação de respeitar diretrizes do Ministério do Trabalho para técnicos dedicados"
+        ],
+        "_tipo_documento": "contrato"
+      }
+    }
+  },
+  "data_analise": "2026-03-27 14:18"
+}
