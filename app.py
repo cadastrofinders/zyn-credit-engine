@@ -2674,6 +2674,275 @@ def page_investidores():
 
 
 # ---------------------------------------------------------------------------
+# Page: Consulta Agro — Dados Fazenda
+# ---------------------------------------------------------------------------
+def page_consulta_agro():
+    st.markdown(
+        """
+        <div style="margin-bottom:20px;">
+            <h1 style="color:#223040; font-size:1.8rem; font-weight:800; margin:0;">
+                🌱 Consulta Agro — Dados Fazenda
+            </h1>
+            <p style="color:#8B9197; font-size:0.95rem; margin:4px 0 0 0;">
+                Consulta ambiental automatizada: CAR, NDVI, embargos IBAMA, sobreposições e SIGEF.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if not MODULES_AVAILABLE:
+        st.error(f"Módulos não disponíveis: {_IMPORT_ERROR}")
+        return
+
+    # Input
+    st.markdown("### Busca por CPF, CNPJ ou Código CAR")
+    col_input, col_tipo = st.columns([3, 1])
+    with col_input:
+        busca_input = st.text_input(
+            "CPF, CNPJ ou Código CAR",
+            placeholder="Ex: 123.456.789-09 ou MT-5106240-3A41E6F0E6FF4444BB2C1C97EF8D08BA",
+            key="agro_busca_input",
+        )
+    with col_tipo:
+        tipo_busca = st.selectbox("Tipo", ["Auto-detectar", "CPF", "CNPJ", "CAR"], key="agro_tipo_busca")
+
+    if st.button("🔍 Consultar", use_container_width=True, type="primary", key="agro_btn_consultar"):
+        if not busca_input.strip():
+            st.error("Informe um CPF, CNPJ ou código CAR.")
+            return
+
+        df_client = get_df_client()
+        if not df_client:
+            st.error(
+                "**Dados Fazenda não configurado.** "
+                "Adicione DADOS_FAZENDA_EMAIL e DADOS_FAZENDA_PASSWORD nos Secrets."
+            )
+            return
+
+        valor = busca_input.strip()
+        digits = __import__("re").sub(r"[^\dA-Za-z\-/]", "", valor)
+
+        # Auto-detect type
+        if tipo_busca == "Auto-detectar":
+            digits_only = __import__("re").sub(r"[^\d]", "", valor)
+            if len(digits_only) == 11:
+                tipo_busca = "CPF"
+            elif len(digits_only) == 14:
+                tipo_busca = "CNPJ"
+            elif "-" in valor and len(valor) > 20:
+                tipo_busca = "CAR"
+            else:
+                st.error("Não foi possível detectar o tipo. Selecione manualmente.")
+                return
+
+        progress = st.progress(0, text="🔄 Autenticando no Dados Fazenda...")
+        status = st.empty()
+        results_container = st.container()
+
+        try:
+            # Step 1: Authenticate
+            df_client._authenticate()
+            progress.progress(0.15, text="🔄 Buscando propriedades...")
+
+            if tipo_busca == "CAR":
+                # Direct CAR lookup
+                car_codes = [valor.upper().strip()]
+                progress.progress(0.20, text=f"🌱 Consultando CAR: {car_codes[0][:30]}...")
+            else:
+                # CPF/CNPJ — search all properties and filter
+                progress.progress(0.20, text=f"🔍 Buscando propriedades vinculadas ao {tipo_busca}...")
+                all_props = df_client.get_properties()
+                # For now, use all properties (API doesn't filter by CPF/CNPJ directly)
+                car_codes = [p.get("car_code", "") for p in all_props if p.get("car_code")]
+                status.info(f"📋 {len(car_codes)} propriedade(s) encontrada(s) na conta Dados Fazenda")
+
+            if not car_codes:
+                progress.empty()
+                st.warning("Nenhuma propriedade encontrada.")
+                return
+
+            # Step 2: Consult each property
+            progress.progress(0.30, text=f"🌱 Consultando {len(car_codes)} propriedade(s)...")
+            resultado = df_client.consulta_grupo(car_codes)
+            progress.progress(0.85, text="📊 Gerando relatório...")
+
+            # Step 3: Cross-reference SIGEF
+            cruzamento = df_client.cruzar_grupo_sigef(car_codes)
+            progress.progress(1.0, text="✅ Consulta concluída!")
+            status.empty()
+
+            # Save to session for potential use in analysis
+            st.session_state["agro_consulta"] = {
+                "busca": valor,
+                "tipo": tipo_busca,
+                "resultado": resultado,
+                "cruzamento": cruzamento,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            }
+
+        except Exception as e:
+            progress.empty()
+            status.empty()
+            st.error(f"Erro na consulta: {e}")
+            import traceback
+            with st.expander("Detalhes do erro"):
+                st.code(traceback.format_exc(), language=None)
+            return
+
+        # ── Display Results ──
+        with results_container:
+            st.markdown("---")
+
+            # Header with score
+            score = resultado.get("score_ambiental_grupo", "N/D")
+            score_colors = {"Verde": "#2E7D4F", "Amarelo": "#EAB308", "Vermelho": "#DC2626"}
+            score_color = score_colors.get(score, "#8B9197")
+
+            col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+            col_s1.markdown(
+                f'<div style="text-align:center; padding:12px; background:{score_color}; '
+                f'border-radius:8px; color:white; font-size:1.3rem; font-weight:800;">'
+                f'{score}</div>',
+                unsafe_allow_html=True,
+            )
+            col_s1.caption("Score Ambiental")
+            col_s2.metric("Propriedades", resultado.get("total_propriedades", 0))
+            col_s3.metric("Área Total", f"{resultado.get('area_total_ha', 0):,.0f} ha")
+            col_s4.metric("Alertas", len(resultado.get("alertas_consolidados", [])))
+
+            # Alerts
+            alertas = resultado.get("alertas_consolidados", [])
+            if alertas:
+                st.markdown("### ⚠️ Alertas")
+                for alerta in alertas:
+                    if "🔴" in alerta or "Vermelho" in alerta:
+                        st.error(alerta)
+                    elif "⚠" in alerta:
+                        st.warning(alerta)
+                    else:
+                        st.success(alerta)
+
+            # Properties detail
+            propriedades = resultado.get("propriedades", [])
+            if propriedades:
+                st.markdown("### 🗺️ Propriedades Consultadas")
+                for i, prop in enumerate(propriedades):
+                    car = prop.get("car_code", "N/D")
+                    score_prop = prop.get("score_ambiental", "N/D")
+                    prop_color = score_colors.get(score_prop, "#8B9197")
+
+                    with st.expander(
+                        f"**{car[:50]}** — {score_prop}",
+                        expanded=(i == 0),
+                    ):
+                        # NDVI
+                        ndvi = prop.get("ndvi", {})
+                        if ndvi:
+                            st.markdown("**📈 NDVI (Vegetação)**")
+                            cn1, cn2, cn3, cn4 = st.columns(4)
+                            cn1.metric("NDVI Médio", f"{ndvi.get('ndvi_mean', 0):.3f}")
+                            cn2.metric("NDVI Mediana", f"{ndvi.get('ndvi_median', 0):.3f}")
+                            cn3.metric("Tendência", ndvi.get("tendencia", "N/D"))
+                            cn4.metric("Cobertura Vegetal", f"{ndvi.get('cobertura_vegetal_pct', 0):.0f}%")
+
+                        # Embargos
+                        embargos = prop.get("embargos", {})
+                        if embargos:
+                            st.markdown("**🚫 Embargos**")
+                            tem_embargo = embargos.get("tem_embargo", False)
+                            if tem_embargo:
+                                st.error(f"⛔ EMBARGO ATIVO — {embargos.get('detalhes', 'Ver detalhes')}")
+                            else:
+                                st.success("✅ Sem embargos ativos")
+
+                        # Overlaps
+                        sobrep = prop.get("sobreposicoes", {})
+                        if sobrep:
+                            st.markdown("**🗺️ Sobreposições Ambientais**")
+                            items = [
+                                ("Terra Indígena", sobrep.get("terras_indigenas")),
+                                ("Quilombola", sobrep.get("quilombolas")),
+                                ("Unidade Conservação", sobrep.get("unidades_conservacao")),
+                                ("Assentamento", sobrep.get("assentamentos")),
+                            ]
+                            for label, data in items:
+                                if data and data.get("tem_sobreposicao"):
+                                    st.error(f"⛔ Sobreposição com {label} detectada")
+                                elif data:
+                                    st.success(f"✅ {label}: Sem sobreposição")
+
+                        # INCRA
+                        incra = prop.get("incra", {})
+                        if incra and incra.get("certificado"):
+                            st.success(f"✅ INCRA: Certificado — {incra.get('codigo', '')}")
+                        elif incra:
+                            st.warning("⚠ INCRA: Não certificado")
+
+            # SIGEF Cross-reference
+            if cruzamento:
+                st.markdown("### 🔗 Cruzamento SIGEF")
+                cob = cruzamento.get("cobertura_pct", 0)
+                cc1, cc2, cc3 = st.columns(3)
+                cc1.metric("Cobertura", f"{cob:.0f}%")
+                cc2.metric("No Monitoramento", cruzamento.get("propriedades_cadastradas", 0))
+                cc3.metric("Nos Documentos", cruzamento.get("propriedades_documentos", 0))
+
+                alertas_sigef = cruzamento.get("alertas", [])
+                for a in alertas_sigef:
+                    if "🔴" in a:
+                        st.error(a)
+                    elif "⚠" in a:
+                        st.warning(a)
+                    else:
+                        st.success(a)
+
+                nao_cad = cruzamento.get("nao_cadastradas", [])
+                if nao_cad:
+                    st.markdown("**CARs não monitorados:**")
+                    for nc in nao_cad:
+                        st.markdown(f"- ⚠ `{nc['car_code']}`")
+
+            # Summary for MAC
+            resumo = resultado.get("resumo", "")
+            if resumo:
+                st.markdown("### 📝 Resumo para MAC")
+                st.info(resumo)
+
+    # Show previous consultation if exists
+    if "agro_consulta" in st.session_state and not st.session_state.get("_agro_btn_clicked"):
+        prev = st.session_state["agro_consulta"]
+        resultado = prev.get("resultado", {})
+        cruzamento = prev.get("cruzamento", {})
+
+        if resultado:
+            st.markdown("---")
+            st.caption(f"Última consulta: **{prev['busca']}** ({prev['tipo']}) — {prev['timestamp']}")
+
+            score = resultado.get("score_ambiental_grupo", "N/D")
+            score_colors = {"Verde": "#2E7D4F", "Amarelo": "#EAB308", "Vermelho": "#DC2626"}
+            score_color = score_colors.get(score, "#8B9197")
+
+            col_s1, col_s2, col_s3 = st.columns(3)
+            col_s1.markdown(
+                f'<div style="text-align:center; padding:8px; background:{score_color}; '
+                f'border-radius:8px; color:white; font-weight:800;">{score}</div>',
+                unsafe_allow_html=True,
+            )
+            col_s2.metric("Propriedades", resultado.get("total_propriedades", 0))
+            col_s3.metric("Área Total", f"{resultado.get('area_total_ha', 0):,.0f} ha")
+
+            alertas = resultado.get("alertas_consolidados", [])
+            for a in alertas[:5]:
+                if "🔴" in a:
+                    st.error(a)
+                elif "⚠" in a:
+                    st.warning(a)
+                else:
+                    st.success(a)
+
+
+# ---------------------------------------------------------------------------
 # Main Layout
 # ---------------------------------------------------------------------------
 def main():
@@ -2715,7 +2984,7 @@ def main():
 
         page = st.radio(
             "Navegação",
-            ["Dashboard", "Nova Análise", "Historico", "Checklist DD", "Investidores"],
+            ["Dashboard", "Nova Análise", "Historico", "Checklist DD", "Investidores", "Consulta Agro"],
             label_visibility="collapsed",
         )
 
@@ -2789,6 +3058,8 @@ def main():
         page_checklist_dd()
     elif page == "Investidores":
         page_investidores()
+    elif page == "Consulta Agro":
+        page_consulta_agro()
 
 
 if __name__ == "__main__":
