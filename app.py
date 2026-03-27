@@ -1313,6 +1313,44 @@ def page_dashboard():
     )
 
 
+def _gen_single_doc(doc_type: str, analise: dict, op: dict):
+    """Helper to generate a single document from loaded analysis."""
+    tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    try:
+        if doc_type == "excel":
+            name = f"AnaliseTecnica_{tomador_clean}_{timestamp}.xlsx"
+            path = str(OUTPUT_DIR / name)
+            hist = _list_history()
+            with st.spinner("Gerando Excel..."):
+                generate_excel(analise, op, path, hist if hist else None)
+            with open(path, "rb") as f:
+                st.download_button("📊 Baixar Excel", data=f.read(), file_name=name,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True, key=f"qdl_single_xl_{timestamp}")
+        elif doc_type == "mac":
+            name = f"MAC_{tomador_clean}_{timestamp}.docx"
+            path = str(OUTPUT_DIR / name)
+            with st.spinner("Gerando MAC..."):
+                generate_mac(analise, op, path)
+            with open(path, "rb") as f:
+                st.download_button("📄 Baixar MAC", data=f.read(), file_name=name,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True, key=f"qdl_single_mac_{timestamp}")
+        elif doc_type == "teaser":
+            name = f"Teaser_{tomador_clean}_{timestamp}.pptx"
+            path = str(OUTPUT_DIR / name)
+            with st.spinner("Gerando Teaser..."):
+                generate_teaser(analise, op, path)
+            with open(path, "rb") as f:
+                st.download_button("📑 Baixar Teaser", data=f.read(), file_name=name,
+                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    use_container_width=True, key=f"qdl_single_teaser_{timestamp}")
+    except Exception as e:
+        st.error(f"Erro ao gerar {doc_type}: {e}")
+
+
 def page_nova_analise():
     st.markdown(
         """
@@ -1336,6 +1374,112 @@ def page_nova_analise():
     if not MODULES_AVAILABLE:
         st.error(f"Erro ao importar módulos: {_IMPORT_ERROR}")
         return
+
+    # ── Quick doc generation banner (from "Carregar" on history) ──
+    if st.session_state.pop("_goto_docs", False) and st.session_state.analysis:
+        analise_loaded = st.session_state.analysis
+        op_loaded = st.session_state.current_op or {}
+        tomador_loaded = op_loaded.get("tomador", "operacao") or "operacao"
+        rating_loaded = analise_loaded.get("rating_final", {}).get("nota", "—")
+
+        st.markdown(
+            f"""
+            <div style="background:#F0F7FF; border:1px solid #223040; border-radius:10px;
+            padding:16px 24px; margin-bottom:20px;">
+                <h3 style="color:#223040; margin:0 0 4px 0;">
+                    📂 Análise carregada: <b>{tomador_loaded}</b> — Rating {rating_loaded}
+                </h3>
+                <p style="color:#8B9197; font-size:0.9rem; margin:0;">
+                    Clique abaixo para gerar novos documentos a partir desta análise salva.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        col_gen_all, col_gen_xl, col_gen_mac, col_gen_teaser = st.columns(4)
+
+        with col_gen_all:
+            if st.button("⚡ Gerar Todos", use_container_width=True, type="primary", key="quick_all"):
+                import concurrent.futures
+                tomador_clean = tomador_loaded.replace(" ", "_").replace("/", "-")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                xl_name = f"AnaliseTecnica_{tomador_clean}_{timestamp}.xlsx"
+                mac_name = f"MAC_{tomador_clean}_{timestamp}.docx"
+                teaser_name = f"Teaser_{tomador_clean}_{timestamp}.pptx"
+                xl_path = str(OUTPUT_DIR / xl_name)
+                mac_path = str(OUTPUT_DIR / mac_name)
+                teaser_path = str(OUTPUT_DIR / teaser_name)
+
+                hist = _list_history()
+                results = {}
+                progress_bar = st.progress(0, text="Gerando 3 documentos em paralelo...")
+
+                def _qgen_excel():
+                    generate_excel(analise_loaded, op_loaded, xl_path, hist if hist else None)
+                    return xl_path
+
+                def _qgen_mac():
+                    return generate_mac(analise_loaded, op_loaded, mac_path)
+
+                def _qgen_teaser():
+                    generate_teaser(analise_loaded, op_loaded, teaser_path)
+                    return teaser_path
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                    futures = {
+                        executor.submit(_qgen_excel): "excel",
+                        executor.submit(_qgen_mac): "mac",
+                        executor.submit(_qgen_teaser): "teaser",
+                    }
+                    done_count = 0
+                    for future in concurrent.futures.as_completed(futures):
+                        name = futures[future]
+                        done_count += 1
+                        try:
+                            results[name] = future.result(timeout=120)
+                            progress_bar.progress(done_count / 3, text=f"✅ {name.upper()} ({done_count}/3)")
+                        except Exception as e:
+                            results[name] = None
+                            st.error(f"Erro {name.upper()}: {e}")
+                            progress_bar.progress(done_count / 3, text=f"❌ {name.upper()} ({done_count}/3)")
+
+                progress_bar.progress(1.0, text="✅ Documentos prontos!")
+
+                dl1, dl2, dl3 = st.columns(3)
+                if results.get("excel"):
+                    with dl1:
+                        with open(xl_path, "rb") as f:
+                            st.download_button("📊 Baixar Excel", data=f.read(), file_name=xl_name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                use_container_width=True, key="qdl_xl")
+                if results.get("mac"):
+                    with dl2:
+                        with open(mac_path, "rb") as f:
+                            st.download_button("📄 Baixar MAC", data=f.read(), file_name=mac_name,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True, key="qdl_mac")
+                if results.get("teaser"):
+                    with dl3:
+                        with open(teaser_path, "rb") as f:
+                            st.download_button("📑 Baixar Teaser", data=f.read(), file_name=teaser_name,
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                use_container_width=True, key="qdl_teaser")
+
+        with col_gen_xl:
+            if st.button("📊 Excel", use_container_width=True, key="quick_xl"):
+                _gen_single_doc("excel", analise_loaded, op_loaded)
+
+        with col_gen_mac:
+            if st.button("📄 MAC", use_container_width=True, key="quick_mac"):
+                _gen_single_doc("mac", analise_loaded, op_loaded)
+
+        with col_gen_teaser:
+            if st.button("📑 Teaser", use_container_width=True, key="quick_teaser"):
+                _gen_single_doc("teaser", analise_loaded, op_loaded)
+
+        st.markdown("---")
 
     tab_upload, tab_extracao, tab_analise, tab_mac = st.tabs([
         "1 - Upload & Dados",
@@ -2317,13 +2461,14 @@ def page_historico():
                         st.error(f"Erro ao gerar Teaser: {e}")
 
             with col_load:
-                if st.button("Carregar", key=f"load_{i}", use_container_width=True):
+                if st.button("📂 Carregar → Docs", key=f"load_{i}", use_container_width=True):
                     st.session_state.analysis = analise
                     st.session_state.current_op = op
                     if item.get("extracted_data"):
                         st.session_state.extracted_data = item["extracted_data"]
+                    st.session_state["_goto_page"] = "Nova Análise"
+                    st.session_state["_goto_docs"] = True
                     _save_cache()
-                    st.success("Análise carregada na sessão.")
                     st.rerun()
 
             with col_del:
@@ -3144,9 +3289,13 @@ def main():
             unsafe_allow_html=True,
         )
 
+        _nav_options = ["Dashboard", "Nova Análise", "Historico", "Checklist DD", "Investidores", "Consulta Agro"]
+        _default_page = st.session_state.pop("_goto_page", None)
+        _default_idx = _nav_options.index(_default_page) if _default_page in _nav_options else 0
         page = st.radio(
             "Navegação",
-            ["Dashboard", "Nova Análise", "Historico", "Checklist DD", "Investidores", "Consulta Agro"],
+            _nav_options,
+            index=_default_idx,
             label_visibility="collapsed",
         )
 
