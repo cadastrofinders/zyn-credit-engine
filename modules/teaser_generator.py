@@ -227,15 +227,15 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
         # Company info
         "nome": parametros.get("tomador") or tom_a.get("razao_social") or tom_root.get("nome") or tom_root.get("razao_social") or "—",
         "cnpj": parametros.get("cnpj") or tom_a.get("cnpj") or tom_root.get("cnpj") or "—",
-        "fundacao": tom_a.get("fundacao") or tom_root.get("fundacao") or _extract_from_text(tom_a.get("historico", ""), r"[Ff]undad[ao] em (\d{4})") or "—",
-        "sede": parametros.get("localidade") or tom_a.get("sede") or tom_root.get("sede") or _extract_from_text(tom_a.get("historico", ""), r"em ([A-Z][a-záéíóúâêôãõç]+[-/][A-Z]{2})") or "—",
+        "fundacao": tom_a.get("fundacao") or tom_root.get("fundacao") or _extract_year_from_text(tom_a.get("historico", "")) or _extract_year_from_text(prod.get("historico_produtivo", "")) or "—",
+        "sede": parametros.get("localidade") or tom_a.get("sede") or tom_root.get("sede") or _extract_city_from_text(tom_a.get("historico", "")) or "—",
         "segmento": parametros.get("setor") or tom_a.get("setor") or tom_root.get("segmento") or tom_root.get("setor") or "—",
-        "socios": tom_a.get("grupo_economico") or tom_root.get("socios") or "—",
-        "descricao": tom_a.get("historico") or tom_root.get("descricao") or prod.get("capacidade") or "—",
-        "colaboradores": tom_a.get("colaboradores") or _extract_from_text(tom_a.get("historico", "") + " " + prod.get("capacidade", ""), r"~?(\d[.\d]*)\s*colaborador") or "—",
-        "capacidade": tom_a.get("capacidade") or _extract_from_text(prod.get("capacidade", ""), r"~?(\d[.\d]*)\s*equipamento") or "—",
-        "unidades": tom_a.get("unidades") or _extract_from_text(prod.get("capacidade", ""), r"(\d+)\s*unidade") or "—",
-        "clientes": tom_a.get("principais_clientes") or _extract_from_text(prod.get("analise", ""), r"\(([A-Z][a-záéíóú]+(?:,\s*[A-Z][a-záéíóú]+){2,})\)") or "—",
+        "socios": tom_a.get("grupo_economico") or tom_a.get("socios") or tom_root.get("socios") or tom_root.get("grupo_economico") or "—",
+        "descricao": tom_a.get("historico") or tom_root.get("descricao") or tom_root.get("historico") or prod.get("capacidade") or "—",
+        "colaboradores": tom_a.get("colaboradores") or tom_root.get("colaboradores") or _extract_number_near_keyword(tom_a.get("historico", "") + " " + prod.get("capacidade", ""), "colaborador") or "—",
+        "capacidade": tom_a.get("capacidade") or tom_root.get("capacidade") or _extract_number_near_keyword(prod.get("capacidade", ""), "equipamento") or _extract_number_near_keyword(prod.get("capacidade", ""), "hectare") or _extract_number_near_keyword(prod.get("capacidade", ""), " ha") or "—",
+        "unidades": tom_a.get("unidades") or tom_root.get("unidades") or _extract_number_near_keyword(prod.get("capacidade", ""), "unidade") or "—",
+        "clientes": tom_a.get("principais_clientes") or tom_root.get("principais_clientes") or _extract_clients_from_text(prod.get("analise", "")) or "—",
 
         # Financials
         "receita": kpis_a.get("receita_liquida") or kpis_root.get("receita_liquida") or 0,
@@ -275,6 +275,64 @@ def _extract_from_text(text: str, pattern: str) -> str:
         return ""
     match = re.search(pattern, text)
     return match.group(1) if match else ""
+
+
+def _extract_year_from_text(text: str) -> str:
+    """Extrai ano de fundacao de texto tipo 'Fundada em 1978' ou 'desde 1985'."""
+    import re
+    if not isinstance(text, str) or not text:
+        return ""
+    for pattern in [r'[Ff]undad[ao]\s+em\s+(\d{4})', r'desde\s+(\d{4})', r'criada?\s+em\s+(\d{4})', r'(\d{4})\s+em\s+\w']:
+        m = re.search(pattern, text)
+        if m:
+            year = m.group(1)
+            if 1900 <= int(year) <= 2030:
+                return year
+    return ""
+
+
+def _extract_city_from_text(text: str) -> str:
+    """Extrai cidade/UF de texto tipo 'em Chapeco-SC' ou 'sediada em Sao Paulo/SP'."""
+    import re
+    if not isinstance(text, str) or not text:
+        return ""
+    # Tenta padroes comuns: Cidade-UF, Cidade/UF, Cidade (UF)
+    for pattern in [r'em\s+([A-Z][\w\u00C0-\u00FF]+(?:\s+[\w\u00C0-\u00FF]+)*\s*[-/]\s*[A-Z]{2})',
+                    r'sediada?\s+em\s+([\w\u00C0-\u00FF]+(?:\s+[\w\u00C0-\u00FF]+)*)',
+                    r'sede\s+(?:em\s+)?([\w\u00C0-\u00FF]+[-/][A-Z]{2})']:
+        m = re.search(pattern, text)
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
+def _extract_number_near_keyword(text: str, keyword: str) -> str:
+    """Extrai numero proximo a uma keyword. Ex: '~3.000 equipamentos' -> '3.000'."""
+    import re
+    if not isinstance(text, str) or not text or not keyword:
+        return ""
+    # Busca: ~N.NNN keyword ou keyword N.NNN
+    pattern = rf'~?(\d[\d.]*)\s*{keyword}'
+    m = re.search(pattern, text, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    pattern = rf'{keyword}\w*\s+~?(\d[\d.]*)'
+    m = re.search(pattern, text, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    return ""
+
+
+def _extract_clients_from_text(text: str) -> str:
+    """Extrai nomes de clientes de texto tipo '(Ambev, Heineken, JBS, Suzano)'."""
+    import re
+    if not isinstance(text, str) or not text:
+        return ""
+    # Busca lista entre parenteses com nomes proprios
+    m = re.search(r'\(([A-Z][\w]+(?:,\s*[A-Z][\w]+){2,})\)', text)
+    if m:
+        return m.group(1)
+    return ""
 
 
 # ---------------------------------------------------------------------------
