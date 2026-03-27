@@ -28,9 +28,15 @@ from typing import Any
 import anthropic
 
 logger = logging.getLogger(__name__)
+# Ensure logs are visible in Streamlit Cloud
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 MODEL = "claude-sonnet-4-6"
-API_DELAY_SECONDS = 2  # Delay entre chamadas para respeitar rate limit Tier 1
+API_DELAY_SECONDS = 1.5  # Delay entre chamadas — reduzido de 2s para melhor throughput
 
 CACHE_DIR = Path(__file__).resolve().parent.parent / "output" / "extraction_cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -123,7 +129,7 @@ def _get_client() -> anthropic.Anthropic:
             "Variavel de ambiente ANTHROPIC_API_KEY nao definida. "
             "Configure-a antes de utilizar o modulo de extracao."
         )
-    return anthropic.Anthropic(api_key=api_key)
+    return anthropic.Anthropic(api_key=api_key, timeout=120)
 
 
 def _get_media_type(filename: str) -> str:
@@ -260,14 +266,21 @@ def _pdf_to_text(file_bytes: bytes) -> str:
         return ""
 
 
-def _pdf_ocr_fallback(file_bytes: bytes) -> str:
-    """Try OCR on PDF pages. Returns extracted text or empty string."""
+def _pdf_ocr_fallback(file_bytes: bytes, max_pages: int = 5) -> str:
+    """Try OCR on PDF pages. Returns extracted text or empty string.
+
+    Limited to max_pages to avoid hanging on large scanned PDFs.
+    Uses 150 DPI (faster) instead of 300 DPI.
+    """
     # Strategy 1: pdf2image + pytesseract (best quality)
     try:
         from pdf2image import convert_from_bytes
         import pytesseract
 
-        images = convert_from_bytes(file_bytes, dpi=300)
+        logger.info("Tentando OCR via pdf2image (max %d páginas, 150 DPI)...", max_pages)
+        images = convert_from_bytes(
+            file_bytes, dpi=150, first_page=1, last_page=max_pages,
+        )
         pages = []
         for i, img in enumerate(images):
             text = pytesseract.image_to_string(img, lang="por")
@@ -275,10 +288,10 @@ def _pdf_ocr_fallback(file_bytes: bytes) -> str:
                 pages.append(f"--- Página {i + 1} (OCR) ---\n{text}")
         result = "\n\n".join(pages)
         if result.strip():
-            logger.info("OCR via pdf2image+pytesseract extraiu %d chars", len(result))
+            logger.info("OCR via pdf2image+pytesseract extraiu %d chars de %d páginas", len(result), len(images))
             return result
     except ImportError:
-        logger.debug("pdf2image ou pytesseract nao disponiveis, tentando fallback Pillow")
+        logger.debug("pdf2image ou pytesseract nao disponiveis — pulando OCR")
     except Exception as e:
         logger.warning("Falha no OCR via pdf2image+pytesseract: %s", e)
 
@@ -287,7 +300,6 @@ def _pdf_ocr_fallback(file_bytes: bytes) -> str:
         from PIL import Image
         import pytesseract
 
-        # Try to open as image directly (some "PDFs" are actually wrapped images)
         img = Image.open(BytesIO(file_bytes))
         text = pytesseract.image_to_string(img, lang="por")
         if text.strip():
@@ -298,6 +310,7 @@ def _pdf_ocr_fallback(file_bytes: bytes) -> str:
     except Exception as e:
         logger.debug("Fallback Pillow+pytesseract falhou: %s", e)
 
+    logger.info("OCR nao disponivel ou falhou — PDF será enviado como document block")
     return ""
 
 
@@ -411,7 +424,7 @@ def _has_document_block(content: list[dict]) -> bool:
     return any(block.get("type") == "document" for block in content)
 
 
-def _call_api(client: anthropic.Anthropic, content: list[dict], max_tokens: int = 4096, retries: int = 3) -> str:
+def _call_api(client: anthropic.Anthropic, content: list[dict], max_tokens: int = 4096, retries: int = 5) -> str:
     """Chama a API Claude com retry, rate-limit handling e throttling global."""
     global _last_api_call
 
@@ -436,7 +449,7 @@ def _call_api(client: anthropic.Anthropic, content: list[dict], max_tokens: int 
             response = client.messages.create(**kwargs)
             return response.content[0].text
         except anthropic.RateLimitError:
-            wait = (attempt + 1) * 10  # 10s, 20s, 30s
+            wait = (attempt + 1) * 15  # 15s, 30s, 45s
             logger.warning("Rate limit atingido. Aguardando %ds antes de retry %d/%d", wait, attempt + 1, retries)
             time.sleep(wait)
         except anthropic.BadRequestError as e:
@@ -965,22 +978,28 @@ def process_file(file_bytes: bytes, filename: str) -> dict:
             - classificacao: resultado da classificacao
             - dados: dados extraidos
     """
-    logger.info("Processando arquivo: %s (%d bytes)", filename, len(file_bytes))
+    size_kb = len(file_bytes) / 1024
+    logger.info("[EXTRACT] Iniciando: %s (%.1f KB)", filename, size_kb)
 
     # Check cache first
     file_hash = _get_file_hash(file_bytes)
     cached = _get_cached(file_hash)
     if cached is not None:
-        logger.info("Resultado obtido do cache para '%s'", filename)
+        logger.info("[EXTRACT] Cache hit: %s", filename)
         cached["_from_cache"] = True
         return cached
 
     try:
+        logger.info("[EXTRACT] Preparando conteúdo: %s", filename)
         client = _get_client()
 
         # Unified prompt: classify + extract in 1 call
         prompt = _build_unified_prompt(TIPOS_DOCUMENTO)
         content = _build_content_blocks(file_bytes, filename, prompt)
+
+        # Log content size for debugging
+        total_content_len = sum(len(str(b)) for b in content)
+        logger.info("[EXTRACT] Chamando API: %s (content ~%d chars)", filename, total_content_len)
 
         response_text = _call_api(client, content, max_tokens=4096)
         result = _parse_json_response(response_text)
@@ -1046,14 +1065,19 @@ def process_files_parallel(
     if total == 0:
         return results
 
-    logger.info("Iniciando processamento paralelo de %d arquivos (max_workers=%d)", total, max_workers)
+    logger.info("[PARALLEL] Iniciando %d arquivos (max_workers=%d)", total, max_workers)
+
+    _completed = {"count": 0}
 
     def _process_one(args: tuple[int, bytes, str]) -> tuple[str, dict]:
         idx, file_bytes, filename = args
+        logger.info("[PARALLEL] [%d/%d] Processando: %s", idx, total, filename)
         result = process_file(file_bytes, filename)
+        _completed["count"] += 1
+        logger.info("[PARALLEL] [%d/%d] Concluído: %s (total done: %d)", idx, total, filename, _completed["count"])
         if progress_callback:
             try:
-                progress_callback(filename, idx, total, result)
+                progress_callback(filename, _completed["count"], total, result)
             except Exception as cb_err:
                 logger.warning("Erro no progress_callback para '%s': %s", filename, cb_err)
         return filename, result
@@ -1069,14 +1093,20 @@ def process_files_parallel(
         for future in concurrent.futures.as_completed(future_to_file):
             filename = future_to_file[future]
             try:
-                fname, result = future.result()
+                fname, result = future.result(timeout=180)  # 3 min max per file
                 results[fname] = result
+            except concurrent.futures.TimeoutError:
+                logger.error("[PARALLEL] TIMEOUT ao processar '%s' (>180s)", filename)
+                results[filename] = {
+                    "classificacao": {"tipo": "outro", "confianca": 0.0, "descricao": "", "error": "Timeout (>180s)"},
+                    "dados": {"error": f"Timeout ao processar {filename} (>180s)"},
+                }
             except Exception as e:
-                logger.exception("Erro fatal ao processar '%s' em paralelo", filename)
+                logger.exception("[PARALLEL] Erro fatal ao processar '%s'", filename)
                 results[filename] = {
                     "classificacao": {"tipo": "outro", "confianca": 0.0, "descricao": "", "error": str(e)},
                     "dados": {"error": str(e)},
                 }
 
-    logger.info("Processamento paralelo concluido: %d/%d arquivos processados", len(results), total)
+    logger.info("[PARALLEL] Concluído: %d/%d arquivos processados", len(results), total)
     return results

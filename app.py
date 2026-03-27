@@ -45,6 +45,10 @@ try:
     from modules.teaser_generator import generate_teaser
     from modules.excel_generator import generate_excel
     from modules.kyc_enrichment import enrich_analysis_data
+    from modules.investor_matching import (
+        match_investors, get_sector_benchmarks, _detect_sector,
+        PRODUCT_DD_EXTRAS, GUARANTEE_TYPES,
+    )
 
     MODULES_AVAILABLE = True
 except ImportError as _imp_err:
@@ -285,23 +289,26 @@ CUSTOM_CSS = """
         color: #223040;
     }
 
-    /* ── Rating badges ───────────────────────────────────── */
+    /* ── Rating badges (AAA-D scale) ───────────────────── */
     .rating-badge {
         display: inline-block;
         padding: 12px 32px;
         border-radius: 12px;
-        font-size: 2.8rem;
+        font-size: 2.4rem;
         font-weight: 800;
         color: #FFFFFF;
         text-align: center;
         letter-spacing: 2px;
         box-shadow: 0 4px 14px rgba(0,0,0,0.15);
     }
-    .rating-A { background: linear-gradient(135deg, #1E6B42, #2E9B62); }
-    .rating-B { background: linear-gradient(135deg, #223040, #3A5570); }
-    .rating-C { background: linear-gradient(135deg, #7D6608, #B8960E); }
-    .rating-D { background: linear-gradient(135deg, #E65100, #FF7A22); }
-    .rating-E { background: linear-gradient(135deg, #922B21, #C0392B); }
+    .rating-AAA { background: linear-gradient(135deg, #0D5C2F, #1E8B4F); }
+    .rating-AA { background: linear-gradient(135deg, #1E6B42, #2E9B62); }
+    .rating-A { background: linear-gradient(135deg, #2E7D4F, #45B06A); }
+    .rating-BBB { background: linear-gradient(135deg, #223040, #3A5570); }
+    .rating-BB { background: linear-gradient(135deg, #5C6B08, #8B9B0E); }
+    .rating-B { background: linear-gradient(135deg, #7D6608, #B8960E); }
+    .rating-C { background: linear-gradient(135deg, #E65100, #FF7A22); }
+    .rating-D { background: linear-gradient(135deg, #922B21, #C0392B); }
 
     /* ── Parecer colors ──────────────────────────────────── */
     .parecer-favoravel { color: #1E6B42; font-weight: 700; font-size: 1.1rem; }
@@ -888,13 +895,40 @@ def _clear_session():
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-def _fmt_brl(value: float) -> str:
-    """Formata valor em R$ brasileiro."""
-    if value >= 1_000_000:
-        return f"R$ {value / 1_000_000:,.2f} MM"
-    if value >= 1_000:
-        return f"R$ {value / 1_000:,.1f} mil"
-    return f"R$ {value:,.2f}"
+def _to_num(val, default=0):
+    """Safely convert any value to float."""
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        cleaned = val.replace("R$", "").replace("%", "").replace("x", "").replace("X", "").strip()
+        cleaned = cleaned.replace(".", "").replace(",", ".")
+        try:
+            return float(cleaned)
+        except ValueError:
+            return default
+    return default
+
+
+def _fmt_brl(value, compact: bool = False) -> str:
+    """Formata valor em R$ brasileiro. compact=True para caber em st.metric."""
+    v = _to_num(value)
+    if v == 0 and value:
+        return str(value)
+    if compact:
+        if abs(v) >= 1_000_000_000:
+            return f"R${v / 1_000_000_000:,.1f}B"
+        if abs(v) >= 1_000_000:
+            return f"R${v / 1_000_000:,.1f}MM"
+        if abs(v) >= 1_000:
+            return f"R${v / 1_000:,.0f}mil"
+        return f"R${v:,.0f}"
+    if abs(v) >= 1_000_000_000:
+        return f"R$ {v / 1_000_000_000:,.2f} B"
+    if abs(v) >= 1_000_000:
+        return f"R$ {v / 1_000_000:,.2f} MM"
+    if abs(v) >= 1_000:
+        return f"R$ {v / 1_000:,.1f} mil"
+    return f"R$ {v:,.2f}"
 
 
 def _confidence_color(conf: float) -> str:
@@ -906,7 +940,8 @@ def _confidence_color(conf: float) -> str:
 
 
 def _rating_class(nota: str) -> str:
-    return f"rating-{nota}" if nota in "ABCDE" else "rating-C"
+    valid_ratings = {"AAA", "AA", "A", "BBB", "BB", "B", "C", "D"}
+    return f"rating-{nota}" if nota in valid_ratings else "rating-BBB"
 
 
 def _parecer_class(parecer: str) -> str:
@@ -949,7 +984,7 @@ def page_dashboard():
                 ZYN Credit Engine
             </h1>
             <p style="color:rgba(255,255,255,0.7); font-size:1.05rem; margin:6px 0 0 0;">
-                Motor de Análise de Crédito Estruturado &nbsp;·&nbsp; Powered by Claude AI
+                Motor de Análise de Crédito Estruturado &nbsp;·&nbsp; Análise Setorial + Investor Matching &nbsp;·&nbsp; Powered by Claude AI
             </p>
         </div>
         """,
@@ -1104,7 +1139,8 @@ def page_nova_analise():
                 cnpj = st.text_input("CNPJ", placeholder="00.000.000/0001-00", value=st.session_state.current_op.get("cnpj", "") if st.session_state.current_op else "")
                 tipo_operacao = st.selectbox(
                     "Tipo de Operação",
-                    ["CRA", "CRI", "FIDC", "Fiagro", "SLB", "NC/CCB", "CPR-F", "Debênture"],
+                    ["CRI", "CRA", "CPR-F", "SLB", "NC/CCB", "FIDC", "Fiagro", "Debenture",
+                     "Compra de Estoque", "Precatorios", "NPL", "SCP"],
                     index=0,
                 )
                 volume = st.number_input("Volume (R$)", min_value=0.0, format="%.2f", value=st.session_state.current_op.get("volume", 0.0) if st.session_state.current_op else 0.0)
@@ -1113,7 +1149,11 @@ def page_nova_analise():
             with col_b:
                 taxa = st.text_input("Taxa", placeholder="CDI+4%", value=st.session_state.current_op.get("taxa", "") if st.session_state.current_op else "")
                 amortizacao = st.selectbox("Amortização", ["SAC", "Price", "Bullet"])
-                garantias_text = st.text_area("Garantias (uma por linha)", value=st.session_state.current_op.get("garantias_text", "") if st.session_state.current_op else "")
+                garantias_text = st.text_area(
+                    "Garantias (uma por linha)",
+                    value=st.session_state.current_op.get("garantias_text", "") if st.session_state.current_op else "",
+                    help="Tipos: Real, Fiduciária, Aval, Coobrigação, Alienação, Penhor",
+                )
                 tipo_captacao = st.selectbox("Tipo de Captação", ["Captação PJ", "Captação PF"])
                 instrumento = st.text_input("Instrumento", placeholder="NC / CCB", value=st.session_state.current_op.get("instrumento", "") if st.session_state.current_op else "")
 
@@ -1215,25 +1255,62 @@ def page_nova_analise():
                 if not API_KEY_SET:
                     st.error("ANTHROPIC_API_KEY não configurada. Não é possível realizar a extração.")
                 else:
-                    progress_bar = st.progress(0, text="Iniciando extração paralela...")
-                    status_text = st.empty()
                     total_files = len(st.session_state.uploaded_files)
+                    # Progress container with colored status
+                    progress_bar = st.progress(0, text=f"🔄 Preparando extração de {total_files} arquivos...")
+                    status_container = st.container()
+                    status_text = status_container.empty()
+                    stats_text = status_container.empty()
                     errors: list[str] = []
+                    _extraction_stats = {"ok": 0, "cache": 0, "error": 0, "current": ""}
 
                     # Preparar lista de arquivos para processamento paralelo
                     files_list = [(uf["bytes"], uf["name"]) for uf in st.session_state.uploaded_files]
 
                     def _extraction_progress(filename, idx, total, result):
-                        progress_bar.progress(
-                            idx / total,
-                            text=f"Extraindo {filename}... ({idx}/{total})",
-                        )
                         has_err = "error" in result.get("dados", {})
                         cached = result.get("_from_cache", False)
-                        tag = "📦 cache" if cached else ("❌ erro" if has_err else "✅ ok")
-                        status_text.info(f"{tag} — {filename} ({idx}/{total})")
+                        pct = idx / total
+
+                        if cached:
+                            _extraction_stats["cache"] += 1
+                        elif has_err:
+                            _extraction_stats["error"] += 1
+                        else:
+                            _extraction_stats["ok"] += 1
+
                         if has_err:
                             errors.append(f"{filename}: {result['dados']['error']}")
+
+                        # Color-coded progress text
+                        if pct < 0.33:
+                            phase = "🟡 Classificando e extraindo"
+                        elif pct < 0.66:
+                            phase = "🟠 Processando documentos"
+                        else:
+                            phase = "🟢 Finalizando"
+
+                        # Truncar nome do arquivo se muito longo
+                        fname_short = filename if len(filename) <= 35 else filename[:32] + "..."
+                        progress_bar.progress(pct, text=f"{phase} — **{fname_short}** ({idx}/{total})")
+
+                        # Stats line
+                        ok = _extraction_stats["ok"]
+                        cache = _extraction_stats["cache"]
+                        err = _extraction_stats["error"]
+                        parts = []
+                        if ok:
+                            parts.append(f"✅ {ok} extraído(s)")
+                        if cache:
+                            parts.append(f"📦 {cache} do cache")
+                        if err:
+                            parts.append(f"❌ {err} erro(s)")
+                        remaining = total - idx
+                        est_seconds = remaining * 4  # ~4s per file estimate
+                        est_min = est_seconds // 60
+                        est_sec = est_seconds % 60
+                        time_str = f"{est_min}m{est_sec:02d}s" if est_min > 0 else f"{est_sec}s"
+                        stats_text.caption(f"{' · '.join(parts)} · ⏱️ ~{time_str} restante(s)")
 
                     results = process_files_parallel(
                         files_list,
@@ -1241,20 +1318,31 @@ def page_nova_analise():
                         progress_callback=_extraction_progress,
                     )
 
-                    progress_bar.progress(1.0, text=f"Extração concluída — {total_files} arquivo(s).")
+                    # Detect missing files (silently failed / timed out)
+                    missing_files = [fn for _, fn in files_list if fn not in results]
+                    for mf in missing_files:
+                        results[mf] = {
+                            "classificacao": {"tipo": "outro", "confianca": 0.0, "descricao": "", "error": "Arquivo não processado (timeout ou erro silencioso)"},
+                            "dados": {"error": f"Arquivo não processado: {mf}"},
+                        }
+                        errors.append(f"{mf}: não processado (timeout ou erro)")
+
+                    progress_bar.progress(1.0, text=f"✅ Extração concluída — {len(results)}/{total_files} arquivo(s)")
                     status_text.empty()
+                    stats_text.empty()
                     st.session_state.extracted_data = results
                     _save_cache()
 
-                    # Resumo
+                    # Resumo final — contagem clara
                     cached_count = sum(1 for r in results.values() if r.get("_from_cache"))
                     error_count = sum(1 for r in results.values() if "error" in r.get("dados", {}))
-                    ok_count = len(results) - error_count
-                    st.success(f"**{ok_count}** extraído(s) · **{cached_count}** do cache · **{error_count}** erro(s)")
+                    new_count = len(results) - cached_count - error_count
+                    st.success(f"**{new_count}** novo(s) · **{cached_count}** do cache · **{error_count}** erro(s) · **{len(results)}** total")
 
                     if errors:
-                        for err in errors:
-                            st.error(f"❌ {err}")
+                        with st.expander(f"⚠️ {len(errors)} erro(s) — clique para ver"):
+                            for err in errors:
+                                st.error(f"❌ {err}")
 
             # Show extraction results
             if st.session_state.extracted_data:
@@ -1361,9 +1449,37 @@ def page_nova_analise():
                 if not API_KEY_SET:
                     st.error("ANTHROPIC_API_KEY não configurada. Não é possível realizar a análise.")
                 else:
+                    # Analysis progress with phases
+                    analysis_progress = st.progress(0, text="🔄 Preparando análise...")
                     status_container = st.empty()
+                    _analysis_phases = {
+                        "Setor detectado": 0.10,
+                        "Enviando": 0.15,
+                        "Conectando": 0.20,
+                        "Recebendo resposta": 0.40,
+                        "Resposta completa": 0.75,
+                        "Gerando matching": 0.85,
+                        "Enriquecendo": 0.05,
+                    }
                     def _update_status(msg):
-                        status_container.info(f"⏳ {msg}")
+                        # Detect phase from message and update progress
+                        pct = 0.10
+                        phase_icon = "🟡"
+                        for keyword, phase_pct in _analysis_phases.items():
+                            if keyword.lower() in msg.lower():
+                                pct = phase_pct
+                                break
+                        if pct < 0.25:
+                            phase_icon = "🟡"
+                        elif pct < 0.60:
+                            phase_icon = "🟠"
+                        else:
+                            phase_icon = "🟢"
+                        # Truncar msg se muito longa
+                        msg_short = msg if len(msg) <= 80 else msg[:77] + "..."
+                        analysis_progress.progress(pct, text=f"{phase_icon} {msg_short}")
+                        status_container.caption(f"⏳ Claude Opus está analisando {total_docs} documento(s)...")
+
                     with st.spinner("Analisando com Claude Opus..."):
                         try:
                             # KYC enrichment — busca dados públicos do CNPJ
@@ -1382,12 +1498,17 @@ def page_nova_analise():
                             st.session_state.current_op = op
                             _save_cache()
 
+                            analysis_progress.progress(1.0, text="✅ Análise concluída!")
                             status_container.empty()
                             _save_to_history(op, analise, st.session_state.extracted_data)
                             st.success("Análise concluída e salva no histórico.")
                         except Exception as e:
+                            analysis_progress.empty()
                             status_container.empty()
                             st.error(f"Erro durante a análise: {e}")
+                            import traceback
+                            with st.expander("Detalhes do erro"):
+                                st.code(traceback.format_exc(), language=None)
 
             # Display analysis results
             if st.session_state.analysis:
@@ -1417,20 +1538,22 @@ def page_nova_analise():
                 st.markdown("---")
                 st.markdown("### Indicadores-Chave")
                 k1, k2, k3, k4, k5, k6 = st.columns(6)
-                k1.metric("Receita Líq.", _fmt_brl(kpis.get("receita_liquida", 0)))
-                k2.metric("EBITDA", _fmt_brl(kpis.get("ebitda", 0)))
+                k1.metric("Receita Líq.", _fmt_brl(kpis.get("receita_liquida", 0), compact=True))
+                k2.metric("EBITDA", _fmt_brl(kpis.get("ebitda", 0), compact=True))
 
-                margem = kpis.get("margem_ebitda", 0)
-                margem_str = f"{margem:.1%}" if isinstance(margem, (int, float)) and margem <= 1 else f"{margem:.1f}%"
+                margem = _to_num(kpis.get("margem_ebitda", 0))
+                margem_str = f"{margem:.1%}" if 0 < margem <= 1 else f"{margem:.1f}%" if margem else str(kpis.get("margem_ebitda", "N/D"))
                 k3.metric("Margem EBITDA", margem_str)
 
-                k4.metric("Dív.Líq./EBITDA", f"{kpis.get('divida_liquida_ebitda', 0):.2f}x")
+                div_ebitda = _to_num(kpis.get("divida_liquida_ebitda", 0))
+                k4.metric("Dív.Líq./EBITDA", f"{div_ebitda:.2f}x" if div_ebitda else str(kpis.get("divida_liquida_ebitda", "N/D")))
 
-                ltv = kpis.get("ltv", 0)
-                ltv_str = f"{ltv:.1%}" if isinstance(ltv, (int, float)) and ltv <= 1 else f"{ltv:.1f}%"
+                ltv = _to_num(kpis.get("ltv", 0))
+                ltv_str = f"{ltv:.1%}" if 0 < ltv <= 1 else f"{ltv:.1f}%" if ltv else str(kpis.get("ltv", "N/D"))
                 k5.metric("LTV", ltv_str)
 
-                k6.metric("DSCR", f"{kpis.get('dscr', 0):.2f}x")
+                dscr = _to_num(kpis.get("dscr", 0))
+                k6.metric("DSCR", f"{dscr:.2f}x" if dscr else str(kpis.get("dscr", "N/D")))
 
                 # 10 analysis sections
                 st.markdown("---")
@@ -1510,6 +1633,33 @@ def page_nova_analise():
                                 "Motivo": info.get("motivo", ""),
                             })
                         st.dataframe(df_info, use_container_width=True, hide_index=True)
+
+                # Investor Matching
+                investor_data = analise.get("investor_matching", {})
+                investidores = investor_data.get("investidores_sugeridos", [])
+                if investidores:
+                    st.markdown("---")
+                    setor_det = investor_data.get("setor_detectado", "N/A")
+                    st.markdown(f"### Investidores Sugeridos — Setor: {setor_det.title()}")
+
+                    # Count by source
+                    fontes = {}
+                    for inv in investidores:
+                        f = inv.get("fonte", "Outro")
+                        fontes[f] = fontes.get(f, 0) + 1
+                    fonte_str = " | ".join(f"{k}: {v}" for k, v in fontes.items())
+                    st.caption(f"Ranking unificado: {fonte_str} ({len(investidores)} total)")
+
+                    inv_rows = []
+                    for inv in investidores:
+                        inv_rows.append({
+                            "Score": f"{inv.get('score', 0):.0f}",
+                            "Investidor": inv["nome"],
+                            "Fonte": inv.get("fonte", ""),
+                            "Perfil": inv.get("perfil", ""),
+                            "Motivos": " | ".join(inv.get("motivos", [])),
+                        })
+                    st.dataframe(inv_rows, use_container_width=True, hide_index=True)
 
                 # Botão Nova Análise — fora do bloco de geração
                 st.markdown("---")
@@ -1591,7 +1741,7 @@ def page_nova_analise():
             st.markdown("---")
 
             # Teaser button
-            if st.button("Gerar Teaser (.pptx) — 4 slides", use_container_width=True):
+            if st.button("Gerar Teaser (.pptx) — 5 slides", use_container_width=True):
                 try:
                     tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1649,8 +1799,9 @@ def page_historico():
         volume = op.get("volume", 0)
         filename = item.get("_filename", "")
 
-        # Color for rating badge
-        cor_nota = {"A": "#1E6B42", "B": "#2E7D4F", "C": "#7D6608", "D": "#922B21", "E": "#7B241C"}.get(nota, "#8B9197")
+        # Color for rating badge (AAA-D scale)
+        cor_nota = {"AAA": "#0D5C2F", "AA": "#1E6B42", "A": "#2E7D4F", "BBB": "#223040",
+                    "BB": "#5C6B08", "B": "#7D6608", "C": "#E65100", "D": "#922B21"}.get(nota, "#8B9197")
 
         with st.expander(
             f"**{tomador}** — {tipo} — {_fmt_brl(volume)} | Rating: {nota} | {data}",
@@ -1864,20 +2015,31 @@ def page_checklist_dd():
     tab_atual, tab_salvos = st.tabs(["Checklist Atual", "Checklists Salvos"])
 
     with tab_atual:
-        # Initialize DD status from session state
+        # Initialize DD status from session state (base + product-specific)
         if not st.session_state.dd_status:
             for modulo, itens in DD_CHECKLIST_TEMPLATE.items():
                 st.session_state.dd_status[modulo] = {}
                 for item in itens:
                     st.session_state.dd_status[modulo][item] = "PENDENTE"
 
-        # Try to load saved checklist for current client
+            # Add product-specific DD items based on operation type
+            if st.session_state.current_op and MODULES_AVAILABLE:
+                tipo_op = st.session_state.current_op.get("tipo_operacao", "")
+                product_extras = PRODUCT_DD_EXTRAS.get(tipo_op, {})
+                for modulo, itens in product_extras.items():
+                    if modulo not in st.session_state.dd_status:
+                        st.session_state.dd_status[modulo] = {}
+                    for item in itens:
+                        if item not in st.session_state.dd_status[modulo]:
+                            st.session_state.dd_status[modulo][item] = "PENDENTE"
+
+        # Try to load saved checklist for current client (only once per client)
         tomador = st.session_state.current_op.get("tomador", "") if st.session_state.current_op else ""
-        if tomador and not st.session_state.get("_checklist_loaded_for") == tomador:
+        if tomador and st.session_state.get("_checklist_loaded_for") != tomador:
             saved = _load_checklist(tomador)
             if saved and saved.get("dd_status"):
                 st.session_state.dd_status = saved["dd_status"]
-                st.session_state["_checklist_loaded_for"] = tomador
+            st.session_state["_checklist_loaded_for"] = tomador
 
         # Auto-populate from extracted data
         auto_matches: list[str] = []
@@ -1926,11 +2088,19 @@ def page_checklist_dd():
             st.markdown(f"**Operação:** {tomador} — {st.session_state.current_op.get('tipo_operacao', 'N/A')}")
             st.markdown("---")
 
-        # Module-by-module display
+        # Module-by-module display (base + product-specific)
         status_options = ["OK", "PENDENTE", "DESATUALIZADO"]
         status_icons = {"OK": "✅", "PENDENTE": "⏳", "DESATUALIZADO": "⚠️"}
 
+        # Build full module list: base template + any extras in dd_status
+        all_modules: dict[str, list[str]] = {}
         for modulo, itens in DD_CHECKLIST_TEMPLATE.items():
+            all_modules[modulo] = list(itens)
+        for modulo, itens_dict in st.session_state.dd_status.items():
+            if modulo not in all_modules:
+                all_modules[modulo] = list(itens_dict.keys())
+
+        for modulo, itens in all_modules.items():
             modulo_status = st.session_state.dd_status.get(modulo, {})
             ok_count = sum(1 for s in modulo_status.values() if s == "OK")
             total_mod = len(itens)
@@ -2054,6 +2224,163 @@ def page_checklist_dd():
                             st.rerun()
 
 
+def page_investidores():
+    st.markdown(
+        """
+        <div style="margin-bottom:20px;">
+            <h1 style="color:#223040; font-size:1.8rem; font-weight:800; margin:0;">Investidores & Matching</h1>
+            <p style="color:#8B9197; font-size:0.95rem; margin:4px 0 0 0;">
+                Base de investidores calibrada pelo Pipeline ZYN &nbsp;·&nbsp; Matching por perfil de operacao
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if not MODULES_AVAILABLE:
+        st.error(f"Erro ao importar modulos: {_IMPORT_ERROR}")
+        return
+
+    tab_matching, tab_base, tab_benchmarks = st.tabs(["Matching", "Base de Investidores", "Benchmarks Setoriais"])
+
+    with tab_matching:
+        st.markdown("### Simulador de Matching")
+        st.caption("Simule quais investidores tem maior aderencia ao perfil da sua operacao.")
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            sim_tipo = st.selectbox(
+                "Tipo de Operacao",
+                ["CRI", "CRA", "CPR-F", "SLB", "NC/CCB", "FIDC", "Fiagro", "Debenture",
+                 "Compra de Estoque", "Precatorios", "NPL", "SCP"],
+                key="sim_tipo",
+            )
+            sim_volume = st.number_input("Volume (R$)", min_value=0.0, value=30_000_000.0, format="%.0f", key="sim_vol")
+        with col_b:
+            sim_setor = st.selectbox(
+                "Setor (auto-detectado se vazio)",
+                ["(auto)", "agro", "imobiliario", "industria", "fidc", "special_sits"],
+                key="sim_setor",
+            )
+
+        if st.button("Buscar Investidores", use_container_width=True, type="primary"):
+            setor = None if sim_setor == "(auto)" else sim_setor
+            results = match_investors(
+                tipo_operacao=sim_tipo,
+                volume=sim_volume,
+                setor=setor,
+                top_n=10,
+            )
+
+            if not results:
+                st.warning("Nenhum investidor encontrado para este perfil.")
+            else:
+                st.success(f"**{len(results)}** investidores encontrados.")
+                for inv in results:
+                    score = inv.get("score", 0)
+                    # Color based on score
+                    if score >= 70:
+                        bar_color = "#1E6B42"
+                    elif score >= 40:
+                        bar_color = "#223040"
+                    else:
+                        bar_color = "#7D6608"
+
+                    with st.expander(f"**{inv['nome']}** — {score:.0f} pts | {inv.get('deals_pipeline', 0)} deals ZYN"):
+                        st.markdown(f"**Perfil:** {inv.get('perfil', '')}")
+                        st.markdown(f"**Instrumentos:** {', '.join(inv.get('instrumentos', []))}")
+                        st.markdown(f"**Setores:** {', '.join(inv.get('setores', []))}")
+                        st.markdown("**Motivos do match:**")
+                        for m in inv.get("motivos", []):
+                            st.markdown(f"- {m}")
+
+        # If there's a current analysis, show auto-match
+        if st.session_state.analysis:
+            investor_data = st.session_state.analysis.get("investor_matching", {})
+            investidores = investor_data.get("investidores_sugeridos", [])
+            if investidores:
+                st.markdown("---")
+                st.markdown("### Matching da Analise Atual")
+                op = st.session_state.current_op or {}
+                st.markdown(f"**{op.get('tomador', 'N/A')}** — {op.get('tipo_operacao', '')} — {_fmt_brl(op.get('volume', 0))}")
+                inv_rows = []
+                for inv in investidores:
+                    inv_rows.append({
+                        "Score": f"{inv.get('score', 0):.0f}",
+                        "Investidor": inv["nome"],
+                        "Deals ZYN": inv.get("deals_pipeline", 0),
+                        "Perfil": inv.get("perfil", ""),
+                        "Motivos": " | ".join(inv.get("motivos", [])),
+                    })
+                st.dataframe(inv_rows, use_container_width=True, hide_index=True)
+
+    with tab_base:
+        st.markdown("### Base de Investidores ZYN")
+        st.caption("43+ investidores institucionais mapeados a partir do Pipeline ZYN.")
+
+        from modules.investor_matching import INVESTOR_DATABASE
+
+        for inv in sorted(INVESTOR_DATABASE, key=lambda x: -x["deals_pipeline"]):
+            with st.expander(f"**{inv['nome']}** — {inv['deals_pipeline']} deals | R${inv['volume_min']/1e6:.0f}-{inv['volume_max']/1e6:.0f}MM"):
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Deals no Pipeline", inv["deals_pipeline"])
+                col2.metric("Volume Min", _fmt_brl(inv["volume_min"]))
+                col3.metric("Volume Max", _fmt_brl(inv["volume_max"]))
+                st.markdown(f"**Perfil:** {inv['perfil']}")
+                st.markdown(f"**Instrumentos:** {', '.join(inv['instrumentos'])}")
+                st.markdown(f"**Setores:** {', '.join(inv['setores'])}")
+
+    with tab_benchmarks:
+        st.markdown("### Benchmarks Setoriais")
+        st.caption("Referencias calibradas pelo mercado brasileiro de credito estruturado e Pipeline ZYN.")
+
+        for setor_key in ["agro", "imobiliario", "industria", "fidc", "special_sits"]:
+            bench = get_sector_benchmarks(setor_key)
+            with st.expander(f"**{bench['setor']}**", expanded=False):
+                col1, col2, col3, col4 = st.columns(4)
+                if bench.get("margem_ebitda_media"):
+                    col1.metric("Margem EBITDA", f"{bench['margem_ebitda_media']:.0%}")
+                else:
+                    col1.metric("Margem EBITDA", "N/A")
+                if bench.get("divida_ebitda_media"):
+                    col2.metric("Div/EBITDA", f"{bench['divida_ebitda_media']:.1f}x")
+                else:
+                    col2.metric("Div/EBITDA", "N/A")
+                if bench.get("dscr_medio"):
+                    col3.metric("DSCR", f"{bench['dscr_medio']:.1f}x")
+                else:
+                    col3.metric("DSCR", "N/A")
+                if bench.get("ltv_maximo_recomendado"):
+                    col4.metric("LTV Max", f"{bench['ltv_maximo_recomendado']:.0%}")
+                else:
+                    col4.metric("LTV Max", "N/A")
+
+                st.markdown(f"**Volume mediano:** {_fmt_brl(bench['volume_mediano'])}")
+                st.markdown(f"**Prazo tipico:** {bench['prazo_tipico_meses']} meses")
+                st.markdown(f"**Instrumentos comuns:** {', '.join(bench.get('instrumentos_comuns', []))}")
+                st.markdown(f"**Garantias tipicas:** {', '.join(bench.get('garantias_tipicas', []))}")
+
+                if bench.get("riscos_especificos"):
+                    st.markdown("**Riscos setoriais:**")
+                    for r in bench["riscos_especificos"]:
+                        st.markdown(f"- {r}")
+
+                if bench.get("notas"):
+                    st.info(bench["notas"])
+
+        # Guarantee types reference
+        st.markdown("---")
+        st.markdown("### Taxonomia de Garantias ZYN")
+        for tipo, info in GUARANTEE_TYPES.items():
+            with st.expander(f"**{tipo}** — {info['descricao']}"):
+                st.markdown("**Exemplos:**")
+                for ex in info["exemplos"]:
+                    st.markdown(f"- {ex}")
+                st.markdown("**Documentos necessarios:**")
+                for doc in info["docs_necessarios"]:
+                    st.markdown(f"- {doc}")
+
+
 # ---------------------------------------------------------------------------
 # Main Layout
 # ---------------------------------------------------------------------------
@@ -2092,7 +2419,7 @@ def main():
 
         page = st.radio(
             "Navegação",
-            ["Dashboard", "Nova Análise", "Historico", "Checklist DD"],
+            ["Dashboard", "Nova Análise", "Historico", "Checklist DD", "Investidores"],
             label_visibility="collapsed",
         )
 
@@ -2128,7 +2455,7 @@ def main():
 
         st.markdown("---")
         st.markdown(
-            '<p class="footer-text">ZYN Credit Engine v1.0</p>',
+            '<p class="footer-text">ZYN Credit Engine v2.0</p>',
             unsafe_allow_html=True,
         )
 
@@ -2141,6 +2468,8 @@ def main():
         page_historico()
     elif page == "Checklist DD":
         page_checklist_dd()
+    elif page == "Investidores":
+        page_investidores()
 
 
 if __name__ == "__main__":
