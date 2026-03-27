@@ -37,24 +37,20 @@ ALLOWED_EMAILS = {
 }
 
 
-def _get_auth_password() -> str:
-    """Get auth password from secrets or env."""
+def _get_user_password(email: str) -> str:
+    """Get password for a specific user from secrets."""
+    username = email.strip().lower().split("@")[0]
     try:
-        return st.secrets.get("AUTH_PASSWORD", os.environ.get("AUTH_PASSWORD", ""))
+        users = st.secrets.get("auth_users", {})
+        return users.get(username, "")
     except Exception:
-        return os.environ.get("AUTH_PASSWORD", "")
-
-
-def _get_ops_password() -> str:
-    """Get operations password from secrets or env."""
-    try:
-        return st.secrets.get("OPS_PASSWORD", os.environ.get("OPS_PASSWORD", ""))
-    except Exception:
-        return os.environ.get("OPS_PASSWORD", "")
+        return os.environ.get(f"AUTH_{username.upper()}", "")
 
 
 def _check_password(password: str, stored: str) -> bool:
     """Constant-time password comparison."""
+    if not stored:
+        return False
     return hmac.compare_digest(password, stored)
 
 
@@ -68,14 +64,22 @@ def _validate_email(email: str) -> bool:
     return False
 
 
+def _has_any_users_configured() -> bool:
+    """Check if at least one user password is configured."""
+    try:
+        users = st.secrets.get("auth_users", {})
+        return len(users) > 0
+    except Exception:
+        return False
+
+
 def _login_gate() -> bool:
     """Display login page and return True if authenticated."""
     if st.session_state.get("authenticated"):
         return True
 
-    auth_pw = _get_auth_password()
-    if not auth_pw:
-        # No password configured — skip auth (local dev)
+    if not _has_any_users_configured():
+        # No users configured — skip auth (local dev)
         return True
 
     st.markdown(
@@ -101,10 +105,14 @@ def _login_gate() -> bool:
         submitted = st.form_submit_button("Entrar", use_container_width=True, type="primary")
 
         if submitted:
+            if not email or not password:
+                st.error("Preencha email e senha")
+                return False
             if not _validate_email(email):
                 st.error("Acesso restrito a emails @zyncapital.com.br")
                 return False
-            if not _check_password(password, auth_pw):
+            stored_pw = _get_user_password(email)
+            if not _check_password(password, stored_pw):
                 st.error("Senha incorreta")
                 return False
             st.session_state.authenticated = True
@@ -119,34 +127,6 @@ def _login_gate() -> bool:
         """,
         unsafe_allow_html=True,
     )
-    return False
-
-
-def _require_ops_password() -> bool:
-    """Check if operations password is required and validated for this session."""
-    ops_pw = _get_ops_password()
-    if not ops_pw:
-        return True  # No ops password configured
-    if st.session_state.get("ops_authenticated"):
-        return True
-    return False
-
-
-def _ops_password_gate(action_label: str = "esta operação") -> bool:
-    """Prompt for operations password. Returns True if validated."""
-    ops_pw = _get_ops_password()
-    if not ops_pw or st.session_state.get("ops_authenticated"):
-        return True
-
-    with st.form(f"ops_pw_{action_label}"):
-        st.warning(f"Senha de operações necessária para **{action_label}**")
-        pw = st.text_input("Senha de operações", type="password", key=f"ops_input_{action_label}")
-        if st.form_submit_button("Confirmar", type="primary"):
-            if _check_password(pw, ops_pw):
-                st.session_state.ops_authenticated = True
-                st.rerun()
-            else:
-                st.error("Senha incorreta")
     return False
 
 # ---------------------------------------------------------------------------
