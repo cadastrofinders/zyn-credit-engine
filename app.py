@@ -1692,15 +1692,17 @@ def page_nova_analise():
                         if err:
                             parts.append(f"❌ {err} erro(s)")
                         remaining = total - idx
-                        est_seconds = remaining * 4  # ~4s per file estimate
+                        est_seconds = remaining * 2  # ~2s per file com 10 workers paralelos
                         est_min = est_seconds // 60
                         est_sec = est_seconds % 60
                         time_str = f"{est_min}m{est_sec:02d}s" if est_min > 0 else f"{est_sec}s"
                         stats_text.caption(f"{' · '.join(parts)} · ⏱️ ~{time_str} restante(s)")
 
+                    # Workers escala com volume: 5 para poucos docs, 10 para muitos
+                    n_workers = min(10, max(5, len(files_list) // 5))
                     results = process_files_parallel(
                         files_list,
-                        max_workers=3,
+                        max_workers=n_workers,
                         progress_callback=_extraction_progress,
                     )
 
@@ -2394,7 +2396,7 @@ def page_historico():
                         def _comp_progress(filename, idx, total, result):
                             progress_bar.progress(idx / total, text=f"Extraindo {filename}... ({idx}/{total})")
                             status_text.info(f"Processando {filename} ({idx}/{total})")
-                        comp_results = process_files_parallel(comp_files, max_workers=3, progress_callback=_comp_progress)
+                        comp_results = process_files_parallel(comp_files, max_workers=8, progress_callback=_comp_progress)
 
                     new_extracted.update(comp_results)
 
