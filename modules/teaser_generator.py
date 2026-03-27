@@ -189,11 +189,25 @@ def _deep_get(analise: dict, *paths, default="—"):
 
 
 def _extract_company_data(analise: dict, parametros: dict) -> dict:
-    """Extrai todos os dados da empresa de todas as secoes da analise."""
-    a = _safe_dict(analise.get("analise")) if isinstance(analise.get("analise"), dict) else {}
+    """Extrai todos os dados da empresa de todas as secoes da analise.
+
+    Suporta dois formatos:
+    1. Dict direto do Opus: {kpis: {}, tomador: {}, rating_final: {}, ...}
+    2. Dict salvo com wrapper: {analise: {kpis: {}, ...}, operacao: {...}}
+    """
+    # Detecta se tem camada wrapper ou se é direto
+    if isinstance(analise.get("analise"), dict) and "kpis" in analise.get("analise", {}):
+        # Formato wrapper: {analise: {...}, operacao: {...}}
+        a = _safe_dict(analise.get("analise"))
+    elif "kpis" in analise or "tomador" in analise or "rating_final" in analise:
+        # Formato direto do Opus
+        a = _safe_dict(analise)
+    else:
+        a = {}
+
     tom_a = _safe_dict(a.get("tomador"))
     tom_root = _safe_dict(analise.get("tomador"))
-    op_root = _safe_dict(analise.get("operacao"))
+    op_root = _safe_dict(analise.get("operacao")) if isinstance(analise.get("operacao"), dict) else {}
     op_a = _safe_dict(a.get("operacao"))
     kpis_a = _safe_dict(a.get("kpis"))
     kpis_root = _safe_dict(analise.get("kpis"))
@@ -204,7 +218,9 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
     pat_ativos = _safe_dict(pat.get("ativos_reais"))
     prod = _safe_dict(a.get("producao"))
     pag = _safe_dict(a.get("pagamento"))
-    rating = _safe_dict(a.get("rating_final")) if isinstance(a.get("rating_final"), dict) else _safe_dict(analise.get("rating_final"))
+    rating_a = _safe_dict(a.get("rating_final")) if isinstance(a.get("rating_final"), dict) else {}
+    rating_root = _safe_dict(analise.get("rating_final")) if isinstance(analise.get("rating_final"), dict) else {}
+    rating = rating_a if rating_a else rating_root
 
     return {
         # Company info
