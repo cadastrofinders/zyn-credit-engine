@@ -3,6 +3,8 @@ ZYN Credit Engine — Plataforma de Análise de Crédito Estruturado
 Streamlit App principal.
 """
 
+import hashlib
+import hmac
 import json
 import os
 import time
@@ -23,6 +25,129 @@ try:
             os.environ[key] = st.secrets[key]
 except Exception:
     pass  # secrets not available (local dev)
+
+# ---------------------------------------------------------------------------
+# Authentication — Login gate + operation password
+# ---------------------------------------------------------------------------
+ALLOWED_DOMAIN = "zyncapital.com.br"
+ALLOWED_EMAILS = {
+    "danilo@zyncapital.com.br",
+    "luiz@zyncapital.com.br",
+    "renato@zyncapital.com.br",
+}
+
+
+def _get_auth_password() -> str:
+    """Get auth password from secrets or env."""
+    try:
+        return st.secrets.get("AUTH_PASSWORD", os.environ.get("AUTH_PASSWORD", ""))
+    except Exception:
+        return os.environ.get("AUTH_PASSWORD", "")
+
+
+def _get_ops_password() -> str:
+    """Get operations password from secrets or env."""
+    try:
+        return st.secrets.get("OPS_PASSWORD", os.environ.get("OPS_PASSWORD", ""))
+    except Exception:
+        return os.environ.get("OPS_PASSWORD", "")
+
+
+def _check_password(password: str, stored: str) -> bool:
+    """Constant-time password comparison."""
+    return hmac.compare_digest(password, stored)
+
+
+def _validate_email(email: str) -> bool:
+    """Validate email is from allowed domain or whitelist."""
+    email = email.strip().lower()
+    if email in ALLOWED_EMAILS:
+        return True
+    if "@" in email and email.split("@")[1] == ALLOWED_DOMAIN:
+        return True
+    return False
+
+
+def _login_gate() -> bool:
+    """Display login page and return True if authenticated."""
+    if st.session_state.get("authenticated"):
+        return True
+
+    auth_pw = _get_auth_password()
+    if not auth_pw:
+        # No password configured — skip auth (local dev)
+        return True
+
+    st.markdown(
+        """
+        <div style="display:flex; justify-content:center; align-items:center; min-height:80vh;">
+            <div style="max-width:420px; width:100%;">
+                <div style="background:linear-gradient(135deg, #223040 0%, #2a3d52 60%, #1E6B42 100%);
+                    border-radius:16px; padding:40px 36px 20px 36px; text-align:center; margin-bottom:24px;">
+                    <h1 style="color:#FFFFFF; font-size:1.8rem; font-weight:800; margin:0;">
+                        ZYN Credit Engine
+                    </h1>
+                    <p style="color:rgba(255,255,255,0.6); font-size:0.9rem; margin:8px 0 0 0;">
+                        Acesso Restrito · Equipe ZYN Capital
+                    </p>
+                </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.form("login_form"):
+        email = st.text_input("Email corporativo", placeholder="nome@zyncapital.com.br")
+        password = st.text_input("Senha", type="password")
+        submitted = st.form_submit_button("Entrar", use_container_width=True, type="primary")
+
+        if submitted:
+            if not _validate_email(email):
+                st.error("Acesso restrito a emails @zyncapital.com.br")
+                return False
+            if not _check_password(password, auth_pw):
+                st.error("Senha incorreta")
+                return False
+            st.session_state.authenticated = True
+            st.session_state.user_email = email.strip().lower()
+            st.session_state.user_name = email.split("@")[0].capitalize()
+            st.rerun()
+
+    st.markdown(
+        """
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    return False
+
+
+def _require_ops_password() -> bool:
+    """Check if operations password is required and validated for this session."""
+    ops_pw = _get_ops_password()
+    if not ops_pw:
+        return True  # No ops password configured
+    if st.session_state.get("ops_authenticated"):
+        return True
+    return False
+
+
+def _ops_password_gate(action_label: str = "esta operação") -> bool:
+    """Prompt for operations password. Returns True if validated."""
+    ops_pw = _get_ops_password()
+    if not ops_pw or st.session_state.get("ops_authenticated"):
+        return True
+
+    with st.form(f"ops_pw_{action_label}"):
+        st.warning(f"Senha de operações necessária para **{action_label}**")
+        pw = st.text_input("Senha de operações", type="password", key=f"ops_input_{action_label}")
+        if st.form_submit_button("Confirmar", type="primary"):
+            if _check_password(pw, ops_pw):
+                st.session_state.ops_authenticated = True
+                st.rerun()
+            else:
+                st.error("Senha incorreta")
+    return False
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -2416,6 +2541,10 @@ def main():
 
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
+    # ── Authentication Gate ──
+    if not _login_gate():
+        return
+
     # Sidebar
     with st.sidebar:
         st.markdown(
@@ -2481,6 +2610,24 @@ def main():
                 st.rerun()
 
         st.markdown("---")
+
+        # User info + logout
+        user_name = st.session_state.get("user_name", "")
+        user_email = st.session_state.get("user_email", "")
+        if user_name:
+            st.markdown(
+                f"""<div style="padding:4px 8px;">
+                    <p style="color:rgba(255,255,255,0.5); font-size:0.7rem; margin:0 0 2px 0;">Conectado como</p>
+                    <p style="color:#FFFFFF; font-size:0.85rem; font-weight:600; margin:0;">{user_name}</p>
+                    <p style="color:rgba(255,255,255,0.4); font-size:0.7rem; margin:2px 0 0 0;">{user_email}</p>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+            if st.button("Sair", use_container_width=True, key="logout_btn"):
+                for k in ["authenticated", "ops_authenticated", "user_email", "user_name"]:
+                    st.session_state.pop(k, None)
+                st.rerun()
+
         st.markdown(
             '<p class="footer-text">ZYN Credit Engine v2.0</p>',
             unsafe_allow_html=True,
