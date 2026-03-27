@@ -604,14 +604,21 @@ def _load_cache():
 _load_cache()
 
 # ---------------------------------------------------------------------------
-# History — save completed analyses for future reference
+# History — save completed analyses (GitHub persistent + local fallback)
 # ---------------------------------------------------------------------------
 HISTORY_DIR = OUTPUT_DIR / "historico"
 HISTORY_DIR.mkdir(exist_ok=True)
 
+from modules.github_storage import (
+    save_analysis as _gh_save,
+    list_analyses as _gh_list,
+    load_analysis as _gh_load,
+    delete_analysis as _gh_delete,
+)
+
 
 def _save_to_history(op: dict, analise: dict, extracted: dict):
-    """Save a completed analysis to the history directory."""
+    """Save analysis to GitHub (persistent) + local (cache)."""
     tomador = op.get("tomador", "desconhecido").replace(" ", "_").replace("/", "-")
     ts = datetime.now().strftime("%Y%m%d_%H%M")
     filename = f"{tomador}_{ts}.json"
@@ -621,7 +628,10 @@ def _save_to_history(op: dict, analise: dict, extracted: dict):
         "extracted_data": extracted,
         "data_analise": datetime.now().strftime("%Y-%m-%d %H:%M"),
     }
+    # Save locally (fast access)
     (HISTORY_DIR / filename).write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+    # Save to GitHub (persistent across deploys)
+    _gh_save(filename, payload)
     # Auto-save checklist for this client
     tomador_orig = op.get("tomador", "desconhecido")
     if st.session_state.dd_status:
@@ -629,7 +639,22 @@ def _save_to_history(op: dict, analise: dict, extracted: dict):
 
 
 def _list_history() -> list[dict]:
-    """List all saved analyses, newest first."""
+    """List analyses: GitHub first (persistent), local fallback."""
+    # Try GitHub first
+    gh_files = _gh_list()
+    if gh_files:
+        items = []
+        for f in gh_files:
+            try:
+                data = _gh_load(f["name"])
+                if data:
+                    items.append(data)
+            except Exception:
+                continue
+        if items:
+            return items
+
+    # Fallback to local files
     items = []
     for f in sorted(HISTORY_DIR.glob("*.json"), reverse=True):
         try:
@@ -639,6 +664,12 @@ def _list_history() -> list[dict]:
         except Exception:
             continue
     return items
+
+
+@st.cache_data(ttl=300)
+def _list_history_cached() -> list[dict]:
+    """Cached version of _list_history (5 min TTL)."""
+    return _list_history()
 
 
 def _load_operacoes_from_history():
@@ -661,18 +692,20 @@ _load_operacoes_from_history()
 
 
 def _load_from_history(filename: str) -> dict | None:
-    """Load a specific analysis from history."""
+    """Load analysis: local first, then GitHub."""
     path = HISTORY_DIR / filename
     if path.exists():
         return json.loads(path.read_text())
-    return None
+    # Try GitHub
+    return _gh_load(filename)
 
 
 def _delete_from_history(filename: str):
-    """Delete a specific analysis from history."""
+    """Delete from both local and GitHub."""
     path = HISTORY_DIR / filename
     if path.exists():
         path.unlink()
+    _gh_delete(filename)
 
 
 # ---------------------------------------------------------------------------
@@ -2124,6 +2157,7 @@ def page_historico():
                         (HISTORY_DIR / filename).write_text(
                             json.dumps(updated_payload, ensure_ascii=False, indent=2)
                         )
+                        _gh_save(filename, updated_payload)
                         status_text.empty()
                         progress_bar.empty()
                         st.success(f"Análise atualizada com {len(complement_files)} documento(s) (incremental).")
