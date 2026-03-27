@@ -613,12 +613,18 @@ _load_cache()
 HISTORY_DIR = OUTPUT_DIR / "historico"
 HISTORY_DIR.mkdir(exist_ok=True)
 
-from modules.github_storage import (
-    save_analysis as _gh_save,
-    list_analyses as _gh_list,
-    load_analysis as _gh_load,
-    delete_analysis as _gh_delete,
-)
+try:
+    from modules.github_storage import (
+        save_analysis as _gh_save,
+        list_analyses as _gh_list,
+        load_analysis as _gh_load,
+        delete_analysis as _gh_delete,
+    )
+except ImportError:
+    def _gh_save(*a, **kw): pass
+    def _gh_list(*a, **kw): return []
+    def _gh_load(*a, **kw): return None
+    def _gh_delete(*a, **kw): pass
 
 
 def _save_to_history(op: dict, analise: dict, extracted: dict):
@@ -725,7 +731,7 @@ def _save_agro_consulta(consulta: dict):
     # Keep last 100 consultations
     if len(history) > 100:
         history = history[-100:]
-    _gh_save(f"../agro_consultas/historico.json", {"consultas": history})
+    _gh_save(f"agro_consultas_historico.json", {"consultas": history})
     # Also save locally
     local_dir = OUTPUT_DIR / "agro_consultas"
     local_dir.mkdir(exist_ok=True)
@@ -746,7 +752,7 @@ def _load_agro_history() -> list[dict]:
             pass
     # Try GitHub
     try:
-        data = _gh_load("../agro_consultas/historico.json")
+        data = _gh_load("agro_consultas_historico.json")
         if data and "consultas" in data:
             return data["consultas"]
     except Exception:
@@ -2166,28 +2172,28 @@ def page_nova_analise():
                         with open(xl_path, "rb") as f:
                             st.download_button("📊 Análise Técnica", data=f.read(), file_name=xl_name,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_all_xl")
 
                 if results.get("comite"):
                     with col_dl2:
                         with open(comite_path, "rb") as f:
                             st.download_button("🏛️ Comitê Crédito", data=f.read(), file_name=comite_name,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_all_comite")
 
                 if results.get("mac"):
                     with col_dl3:
                         with open(mac_path, "rb") as f:
                             st.download_button("📄 Baixar MAC", data=f.read(), file_name=mac_name,
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_all_mac")
 
                 if results.get("teaser"):
                     with col_dl4:
                         with open(teaser_path, "rb") as f:
                             st.download_button("📑 Baixar Teaser", data=f.read(), file_name=teaser_name,
                                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_all_teaser")
 
                 op["status"] = "Concluída"
                 st.session_state.current_op = op
@@ -2211,12 +2217,12 @@ def page_nova_analise():
                         with open(xl_path, "rb") as f:
                             st.download_button("📊 Baixar Excel", data=f.read(), file_name=xl_name,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_ind_xl")
                     except Exception as e:
                         st.error(f"Erro ao gerar planilha: {e}")
 
             with col_comite_btn:
-                if st.button("🏛️ Comitê Crédito (.xlsx)", use_container_width=True):
+                if st.button("🏛️ Comitê Crédito (.xlsx)", use_container_width=True, key="btn_ind_comite"):
                     try:
                         tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -2229,12 +2235,12 @@ def page_nova_analise():
                         with open(comite_path, "rb") as f:
                             st.download_button("🏛️ Baixar Comitê", data=f.read(), file_name=comite_name,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_ind_comite")
                     except Exception as e:
                         st.error(f"Erro ao gerar planilha comitê: {e}")
 
             with col_mac_btn:
-                if st.button("MAC (.docx)", use_container_width=True):
+                if st.button("MAC (.docx)", use_container_width=True, key="btn_ind_mac"):
                     try:
                         tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -2247,14 +2253,14 @@ def page_nova_analise():
                         with open(generated_path, "rb") as f:
                             st.download_button("📄 Baixar MAC", data=f.read(), file_name=filename,
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_ind_mac")
                         op["status"] = "Concluída"
                         st.session_state.current_op = op
                     except Exception as e:
                         st.error(f"Erro ao gerar MAC: {e}")
 
             with col_teaser_btn:
-                if st.button("Teaser (.pptx)", use_container_width=True):
+                if st.button("Teaser (.pptx)", use_container_width=True, key="btn_ind_teaser"):
                     try:
                         tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -2262,17 +2268,12 @@ def page_nova_analise():
                         teaser_path = str(OUTPUT_DIR / teaser_name)
 
                         with st.spinner("Gerando Teaser..."):
-                            import logging
-                            logging.warning(f"[TEASER] analise keys: {list(analise.keys()) if isinstance(analise, dict) else type(analise)}")
-                            logging.warning(f"[TEASER] op keys: {list(op.keys()) if isinstance(op, dict) else type(op)}")
-                            if isinstance(analise, dict) and 'tomador' in analise and isinstance(analise['tomador'], dict):
-                                logging.warning(f"[TEASER] tomador keys: {list(analise['tomador'].keys())}")
                             generate_teaser(analise, op, teaser_path)
 
                         with open(teaser_path, "rb") as f:
                             st.download_button("📑 Baixar Teaser", data=f.read(), file_name=teaser_name,
                                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                                use_container_width=True)
+                                use_container_width=True, key="dl_ind_teaser")
                     except Exception as e:
                         st.error(f"Erro ao gerar Teaser: {e}")
 
@@ -3224,12 +3225,13 @@ def page_consulta_agro():
                     file_name=f"ConsultaAgro_{busca_clean}_{ts_file}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     use_container_width=True,
+                    key="dl_agro_excel",
                 )
             except Exception as excel_err:
                 st.warning(f"Erro ao gerar Excel: {excel_err}")
 
-    # Show previous consultation if exists
-    if "agro_consulta" in st.session_state and not st.session_state.get("_agro_btn_clicked"):
+    # Show previous consultation if exists (only when not a fresh query — button returns False on rerun)
+    if "agro_consulta" in st.session_state:
         prev = st.session_state["agro_consulta"]
         resultado = prev.get("resultado", {})
         cruzamento = prev.get("cruzamento", {})
