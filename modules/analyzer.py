@@ -448,6 +448,132 @@ def analyze_credit(
     return analise
 
 
+INCREMENTAL_PROMPT = """\
+ATUALIZAÇÃO INCREMENTAL da análise MAC ZYN v4 para: {tomador} | {tipo_operacao}
+
+ANÁLISE ANTERIOR (JSON completo):
+{analise_anterior_json}
+
+DOCUMENTO COMPLEMENTAR RECEBIDO:
+{novos_dados}
+
+INSTRUÇÃO: Atualize a análise anterior incorporando as informações do documento complementar.
+- Mantenha a MESMA estrutura JSON exata da análise anterior
+- Atualize APENAS os campos impactados pelo novo documento
+- Recalcule rating, KPIs, DSCR, LTV se os novos dados afetarem esses indicadores
+- Adicione/atualize lacunas resolvidas pelo novo documento
+- Atualize o checklist de DD se aplicável
+- Mantenha investor_matching inalterado (será recalculado externamente)
+- Use escala de rating: AAA/AA/A/BBB/BB/B/C/D
+- Responda SOMENTE JSON válido, estrutura idêntica à análise anterior
+"""
+
+
+def analyze_incremental(
+    analise_anterior: dict,
+    novos_dados_extraidos: dict,
+    parametros_operacao: dict,
+    status_callback=None,
+) -> dict:
+    """Atualiza análise existente com dados de documentos complementares (incremental)."""
+    client = _get_client()
+
+    def _status(msg):
+        if status_callback:
+            status_callback(msg)
+        logger.info(msg)
+
+    _status("Análise incremental — atualizando com documento complementar...")
+
+    # Remove investor_matching from previous analysis to save tokens
+    analise_clean = {k: v for k, v in analise_anterior.items() if k not in ("investor_matching", "_setor")}
+    analise_json = json.dumps(analise_clean, ensure_ascii=False)
+
+    # Truncate if too large
+    if len(analise_json) > 80000:
+        analise_json = analise_json[:80000] + "\n... (truncado)"
+
+    novos_formatados = _format_dados(novos_dados_extraidos)
+
+    user_prompt = INCREMENTAL_PROMPT.format(
+        tomador=parametros_operacao.get("tomador", "N/I"),
+        tipo_operacao=parametros_operacao.get("tipo_operacao", "N/I"),
+        analise_anterior_json=analise_json,
+        novos_dados=novos_formatados,
+    )
+
+    total_chars = len(user_prompt)
+    est_tokens = total_chars // 4
+    _status(f"Incremental: ~{est_tokens:,} tokens para {MODEL}...")
+
+    response_text = ""
+    for attempt in range(MAX_RETRIES):
+        try:
+            _status(f"Conectando... (tentativa {attempt + 1}/{MAX_RETRIES})")
+            with client.messages.stream(
+                model=MODEL,
+                max_tokens=MAX_TOKENS,
+                system="Você é analista de crédito sênior da ZYN Capital. Atualize a análise existente com os novos dados. Responda SOMENTE JSON válido.",
+                messages=[{"role": "user", "content": user_prompt}],
+            ) as stream:
+                chunks = 0
+                for text in stream.text_stream:
+                    response_text += text
+                    chunks += 1
+                    if chunks % 20 == 0:
+                        _status(f"Recebendo atualização... ({len(response_text):,} chars)")
+
+            _status(f"Atualização completa: {len(response_text):,} chars. Processando...")
+            break
+
+        except anthropic.RateLimitError:
+            if attempt == MAX_RETRIES - 1:
+                raise
+            _status(f"Rate limit. Aguardando {RETRY_WAIT}s...")
+            time.sleep(RETRY_WAIT)
+            response_text = ""
+
+        except anthropic.APIStatusError as e:
+            if e.status_code == 529 and attempt < MAX_RETRIES - 1:
+                _status(f"API sobrecarregada. Aguardando {RETRY_WAIT}s...")
+                time.sleep(RETRY_WAIT)
+                response_text = ""
+            else:
+                raise
+
+    analise = _parse_json(response_text)
+
+    # Re-inject investor matching
+    _status("Atualizando matching de investidores...")
+    tipo_operacao = parametros_operacao.get("tipo_operacao", "N/I")
+    garantias_list = parametros_operacao.get("garantias", [])
+    setor = _detect_sector(tipo_operacao, garantias_list)
+    volume = parametros_operacao.get("volume", 0)
+    investors = match_investors(
+        tipo_operacao=tipo_operacao,
+        volume=volume,
+        setor=setor,
+        garantias=garantias_list,
+        rating=analise.get("rating_final", {}).get("nota"),
+        prazo_anos=parametros_operacao.get("prazo_meses", 0) / 12 if parametros_operacao.get("prazo_meses") else None,
+        top_n=30,
+    )
+    analise["investor_matching"] = {
+        "setor_detectado": setor,
+        "investidores_sugeridos": investors,
+        "total_matches": len(investors),
+    }
+    analise["_setor"] = setor
+
+    logger.info(
+        "Análise incremental concluída — Rating: %s | Parecer: %s",
+        analise.get("rating_final", {}).get("nota", "N/A"),
+        analise.get("rating_final", {}).get("parecer", "N/A"),
+    )
+
+    return analise
+
+
 def get_analysis_summary(analise: dict) -> str:
     """Gera resumo legível da análise de crédito (MAC ZYN v4)."""
 

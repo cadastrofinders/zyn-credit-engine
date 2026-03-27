@@ -145,7 +145,7 @@ CHECKLISTS_DIR.mkdir(exist_ok=True)
 # ---------------------------------------------------------------------------
 try:
     from modules.extractor import process_file, process_files_parallel, validate_cnpj
-    from modules.analyzer import analyze_credit, get_analysis_summary
+    from modules.analyzer import analyze_credit, analyze_incremental, get_analysis_summary
     from modules.docx_generator import generate_mac
     from modules.teaser_generator import generate_teaser
     from modules.excel_generator import generate_excel
@@ -2015,26 +2015,29 @@ def page_historico():
                     new_extracted.update(comp_results)
 
                     progress_bar.progress(1.0)
-                    status_text.info("Documentos extraídos. Re-analisando...")
+                    status_text.info("Documentos extraídos. Atualizando análise (incremental)...")
 
-                    # Build merged data for analysis
-                    dados_para_analise = {}
-                    total_docs = 0
-                    for fname, result in new_extracted.items():
+                    # Build data from NEW docs only (for incremental analysis)
+                    novos_dados = {}
+                    for fname, result in comp_results.items():
                         classificacao = result.get("classificacao", {})
                         dados = result.get("dados", {})
                         tipo = classificacao.get("tipo", "outro")
                         if "error" not in dados:
-                            total_docs += 1
-                            if tipo in dados_para_analise:
-                                dados_para_analise[f"{tipo}_{total_docs}"] = dados
-                            else:
-                                dados_para_analise[tipo] = dados
+                            novos_dados[tipo] = dados
+
+                    analise_anterior = item.get("analise", {})
 
                     try:
                         def _update_status(msg):
                             status_text.info(f"⏳ {msg}")
-                        nova_analise = analyze_credit(dados_para_analise, op, status_callback=_update_status)
+
+                        nova_analise = analyze_incremental(
+                            analise_anterior=analise_anterior,
+                            novos_dados_extraidos=novos_dados,
+                            parametros_operacao=op,
+                            status_callback=_update_status,
+                        )
 
                         # Update history file with new analysis
                         updated_payload = {
@@ -2048,7 +2051,7 @@ def page_historico():
                         )
                         status_text.empty()
                         progress_bar.empty()
-                        st.success(f"Análise complementada com {len(complement_files)} documento(s). Re-análise salva.")
+                        st.success(f"Análise atualizada com {len(complement_files)} documento(s) (incremental).")
                         st.rerun()
                     except Exception as ex:
                         status_text.empty()
