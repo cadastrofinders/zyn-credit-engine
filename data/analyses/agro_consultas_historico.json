@@ -1,0 +1,4106 @@
+{
+  "consultas": [
+    {
+      "busca": "19636024987",
+      "tipo": "CPF",
+      "resultado": {
+        "total_propriedades": 38,
+        "area_total_ha": 0,
+        "propriedades": [
+          {
+            "car_code": "0C30303D-F596-4B1A-A356-C7C2D4D74512",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "GO-5219209-D03736A69A78464CB1781BE970F29668",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.4169999957084656,
+              "ndvi_median": 0.2849999964237213,
+              "ndvi_min": -0.0729999989271164,
+              "ndvi_max": 0.8949999809265137,
+              "data_cena": "2026-03-02",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-3A41E6F0E6FF4444BB2C1C97EF8D08BA",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6159999966621399,
+              "ndvi_median": 0.6679999828338623,
+              "ndvi_min": 0.023000000044703484,
+              "ndvi_max": 0.8500000238418579,
+              "data_cena": "2026-03-10",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-ABBA1225A47644CFB17C0EFAACEBC355",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.7710000276565552,
+              "ndvi_median": 0.8169999718666077,
+              "ndvi_min": 0.014999999664723873,
+              "ndvi_max": 0.9039999842643738,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-E32F2A41E6764FA3901EE8E2A2BF76E7",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.4729999899864197,
+              "ndvi_median": 0.49900001287460327,
+              "ndvi_min": 0.04500000178813934,
+              "ndvi_max": 0.8140000104904175,
+              "data_cena": "2026-03-10",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-0ABC812D9BD14729816A7393BDF19531",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6769999861717224,
+              "ndvi_median": 0.7730000019073486,
+              "ndvi_min": -0.2809999883174896,
+              "ndvi_max": 0.8960000276565552,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-884AE2F07FC444478E5CBF41C6F4DCAB",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.5389999747276306,
+              "ndvi_median": 0.6990000009536743,
+              "ndvi_min": -0.41600000858306885,
+              "ndvi_max": 0.9390000104904175,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106307-9D7FA85FA7EA4C828C404C9257E84581",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6230000257492065,
+              "ndvi_median": 0.6200000047683716,
+              "ndvi_min": -0.26100000739097595,
+              "ndvi_max": 0.9340000152587891,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-0769DBF3EC6E483497A31D3C6BEE3C15",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6019999980926514,
+              "ndvi_median": 0.6259999871253967,
+              "ndvi_min": 0.012000000104308128,
+              "ndvi_max": 0.8180000185966492,
+              "data_cena": "2026-03-10",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5107941-F1CBA414C68044E3A82640284404999D",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.82,
+              "ndvi_median": 0.865,
+              "ndvi_min": 0.061,
+              "ndvi_max": 0.933,
+              "data_cena": "2026-01-15",
+              "pontos": 1,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "190600D1-7A02-416F-969C-0ED33CF1CA23",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B9FF7C41-CB6E-4D1C-B37E-371C2693111B",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "9C14E2E8-2EFD-44ED-994E-073A7694A282",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "C62E015F-63DF-4A8B-92BA-C4BF1616CE12",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B801B2BD-F0ED-4658-A86E-FF2BFB4DAB00",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "6BA61122-90A3-457A-A6BD-7D5FBA06452A",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B133F2FD-9E39-4AF5-87AD-D5E9721A8FE5",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "769998B1-712D-43A8-AC5C-3C2120AD053F",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "4C2C471D-2CCD-4960-873D-3023757FAC08",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "FAC2106C-E09B-4CBB-9160-CEA20674C42B",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106307-98C90E796F234D9C9A1AACED185E3D7F",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.5809999704360962,
+              "ndvi_median": 0.6769999861717224,
+              "ndvi_min": -0.3089999854564667,
+              "ndvi_max": 0.9340000152587891,
+              "data_cena": "2026-02-06",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106307-17559292A3034D8CB14CE762B645D208",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6520000100135803,
+              "ndvi_median": 0.7250000238418579,
+              "ndvi_min": -0.09099999815225601,
+              "ndvi_max": 0.9380000233650208,
+              "data_cena": "2026-02-06",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "9DD54E79-E5CF-4423-B648-EC72E780BCA4",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "1D1EA1BB-C7B1-4EC3-A75E-BCB2AC9FE6FB",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "48C048E5-50A9-489F-8D1F-B7B7402CB844",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "422F3C47-466B-4C92-BE46-E918305E4DB7",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "1907D5EA-2A03-447C-A3E0-72B4D49724F6",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "ADBD7C22-F7E3-42B7-A8D4-2DDAE45F773F",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "FA8BBD16-BA63-4733-8C57-64489E5131BC",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "249E2BA8-B114-40BA-8E15-89B09E4641BF",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "2DC1D95F-7401-471B-83C3-E188486D9A33",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "08FFF81C-BA3B-4D5F-8034-39FED789AE69",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B0E6FC9B-54F3-4B6A-8435-D11E0DD27FE0",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "AE7D8F65-385D-4601-97DC-FB5863573145",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "7BCE5BB3-5344-4011-88DA-A263088E1818",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "85E1A1DD-4541-4FD0-8C6A-97241FB3B8BC",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B3F9E642-4811-47A9-BCE4-15E80BF165E2",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5102637-886FED3F09934F3B809482E087AC3EE3",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.37700000405311584,
+              "ndvi_median": 0.39399999380111694,
+              "ndvi_min": 0.05400000140070915,
+              "ndvi_max": 0.7639999985694885,
+              "data_cena": "2026-03-14",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          }
+        ],
+        "alertas_consolidados": [
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre"
+        ],
+        "score_ambiental_grupo": "Verde",
+        "resumo": "Grupo com 38 propriedade(s) — Score: Verde"
+      },
+      "cruzamento": {
+        "propriedades_cadastradas": 38,
+        "propriedades_documentos": 38,
+        "matches": [
+          {
+            "car_code": "MT-5107941-F1CBA414C68044E3A82640284404999D",
+            "farm_name": "Tabaporã",
+            "area_ha": 2627.8093,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "0C30303D-F596-4B1A-A356-C7C2D4D74512",
+            "farm_name": "FAZENDA MORRO ALTO - 001",
+            "area_ha": 436.7776,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "4C2C471D-2CCD-4960-873D-3023757FAC08",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA - ÁREA DESMEMBRADA",
+            "area_ha": 2549.6086,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "08FFF81C-BA3B-4D5F-8034-39FED789AE69",
+            "farm_name": "Fazenda Camila - AREA B",
+            "area_ha": 2449.1101,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-3A41E6F0E6FF4444BB2C1C97EF8D08BA",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 7576.4106,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "9C14E2E8-2EFD-44ED-994E-073A7694A282",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.730 - Fazenda Sinopema -Área desmembrada",
+            "area_ha": 227.4091,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106307-9D7FA85FA7EA4C828C404C9257E84581",
+            "farm_name": "Fazenda em Paranatinga",
+            "area_ha": 8648.5569,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "48C048E5-50A9-489F-8D1F-B7B7402CB844",
+            "farm_name": "Fazenda Camila  DV IV - DV IV",
+            "area_ha": 1475.9604,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B133F2FD-9E39-4AF5-87AD-D5E9721A8FE5",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.730 - Fazenda Sinopema -Área Desmembrada",
+            "area_ha": 633.0163,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "2DC1D95F-7401-471B-83C3-E188486D9A33",
+            "farm_name": "Fazenda Camila - AREA C",
+            "area_ha": 2409.9382,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "AE7D8F65-385D-4601-97DC-FB5863573145",
+            "farm_name": "Fazenda Camila-Aurea - AUREA",
+            "area_ha": 1409.9692,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B801B2BD-F0ED-4658-A86E-FF2BFB4DAB00",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.866 - Fazenda Sinopema -Área desmembrada",
+            "area_ha": 254.6292,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5102637-886FED3F09934F3B809482E087AC3EE3",
+            "farm_name": "Fazenda em Campo Novo do Parecis",
+            "area_ha": 2990.6392,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B9FF7C41-CB6E-4D1C-B37E-371C2693111B",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA-ÁREA REMANESCENTE",
+            "area_ha": 1072.8095,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "190600D1-7A02-416F-969C-0ED33CF1CA23",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA ? PARCELA B",
+            "area_ha": 1760.5723,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106307-98C90E796F234D9C9A1AACED185E3D7F",
+            "farm_name": "Paranatinga",
+            "area_ha": 3147.6796,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "85E1A1DD-4541-4FD0-8C6A-97241FB3B8BC",
+            "farm_name": "Fazenda Camila - 1092",
+            "area_ha": 3806.1148,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-0769DBF3EC6E483497A31D3C6BEE3C15",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 9602.6726,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "249E2BA8-B114-40BA-8E15-89B09E4641BF",
+            "farm_name": "Fazenda Camila - 1015",
+            "area_ha": 483.7581,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "GO-5219209-D03736A69A78464CB1781BE970F29668",
+            "farm_name": "Fazenda em Santa Cruz de Goiás",
+            "area_ha": 437.089,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "6BA61122-90A3-457A-A6BD-7D5FBA06452A",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.866 - Fazenda Sinopema ? Área desmembrada",
+            "area_ha": 628.2162,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "1907D5EA-2A03-447C-A3E0-72B4D49724F6",
+            "farm_name": "Fazenda Camila DV VII - Parte 1",
+            "area_ha": 953.8761,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "769998B1-712D-43A8-AC5C-3C2120AD053F",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA-ÁREA DESMEMBRADA I",
+            "area_ha": 5361.1067,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-ABBA1225A47644CFB17C0EFAACEBC355",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 1280.1551,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-E32F2A41E6764FA3901EE8E2A2BF76E7",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 4389.6846,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "FA8BBD16-BA63-4733-8C57-64489E5131BC",
+            "farm_name": "Fazenda Camila - 225",
+            "area_ha": 2755.0802,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "FAC2106C-E09B-4CBB-9160-CEA20674C42B",
+            "farm_name": "Fazenda Sao Wustro - FazendaSão Wustro",
+            "area_ha": 9413.0162,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-884AE2F07FC444478E5CBF41C6F4DCAB",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 11873.9769,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106307-17559292A3034D8CB14CE762B645D208",
+            "farm_name": "Paranatinga",
+            "area_ha": 4929.0723,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "7BCE5BB3-5344-4011-88DA-A263088E1818",
+            "farm_name": "Fazenda Camila Demetrio - DEMETRIO",
+            "area_ha": 1022.0287,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B3F9E642-4811-47A9-BCE4-15E80BF165E2",
+            "farm_name": "Fazenda Norte II - Parcela 1",
+            "area_ha": 853.4543,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B0E6FC9B-54F3-4B6A-8435-D11E0DD27FE0",
+            "farm_name": "Fazenda Camila - AREA A",
+            "area_ha": 2433.0219,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "ADBD7C22-F7E3-42B7-A8D4-2DDAE45F773F",
+            "farm_name": "Fazenda Camila-Ubirajara - Ubirajara",
+            "area_ha": 1463.1196,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "9DD54E79-E5CF-4423-B648-EC72E780BCA4",
+            "farm_name": "Fazenda Camila - 456 A",
+            "area_ha": 538.5879,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "C62E015F-63DF-4A8B-92BA-C4BF1616CE12",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.866 - Fazenda Sinopema ? Área Remanescente",
+            "area_ha": 2402.3268,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "1D1EA1BB-C7B1-4EC3-A75E-BCB2AC9FE6FB",
+            "farm_name": "Fazenda Camila - INEZ 5589",
+            "area_ha": 580.3239,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-0ABC812D9BD14729816A7393BDF19531",
+            "farm_name": "Fazenda em Paranatinga",
+            "area_ha": 7113.7732,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "422F3C47-466B-4C92-BE46-E918305E4DB7",
+            "farm_name": "Fazenda Camila-Miguel - Parte 1",
+            "area_ha": 364.9556,
+            "status": "Encontrada"
+          }
+        ],
+        "nao_cadastradas": [],
+        "extras_monitoramento": [],
+        "cobertura_pct": 100.0,
+        "alertas": [
+          "✅ 100% dos CARs dos documentos estão monitorados no Dados Fazenda"
+        ]
+      },
+      "timestamp": "2026-03-27 18:57"
+    },
+    {
+      "busca": "68281633204",
+      "tipo": "CPF",
+      "resultado": {
+        "total_propriedades": 38,
+        "area_total_ha": 0,
+        "propriedades": [
+          {
+            "car_code": "0C30303D-F596-4B1A-A356-C7C2D4D74512",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "GO-5219209-D03736A69A78464CB1781BE970F29668",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.4169999957084656,
+              "ndvi_median": 0.2849999964237213,
+              "ndvi_min": -0.0729999989271164,
+              "ndvi_max": 0.8949999809265137,
+              "data_cena": "2026-03-02",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 17.8,
+                "bare_soil_urban": 0.2,
+                "sparse_vegetation": 50.4,
+                "water_clouds_urban": 0.0,
+                "dense_healthy_vegetation": 31.6
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-3A41E6F0E6FF4444BB2C1C97EF8D08BA",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6159999966621399,
+              "ndvi_median": 0.6679999828338623,
+              "ndvi_min": 0.023000000044703484,
+              "ndvi_max": 0.8500000238418579,
+              "data_cena": "2026-03-10",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 3.2,
+                "bare_soil_urban": 1.1,
+                "sparse_vegetation": 13.8,
+                "water_clouds_urban": 0.0,
+                "dense_healthy_vegetation": 81.8
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-ABBA1225A47644CFB17C0EFAACEBC355",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.7710000276565552,
+              "ndvi_median": 0.8169999718666077,
+              "ndvi_min": 0.014999999664723873,
+              "ndvi_max": 0.9039999842643738,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 1.7,
+                "bare_soil_urban": 0.9,
+                "sparse_vegetation": 4.0,
+                "water_clouds_urban": 0.0,
+                "dense_healthy_vegetation": 93.5
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-E32F2A41E6764FA3901EE8E2A2BF76E7",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.4729999899864197,
+              "ndvi_median": 0.49900001287460327,
+              "ndvi_min": 0.04500000178813934,
+              "ndvi_max": 0.8140000104904175,
+              "data_cena": "2026-03-10",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 5.6,
+                "bare_soil_urban": 1.3,
+                "sparse_vegetation": 43.4,
+                "water_clouds_urban": 0.0,
+                "dense_healthy_vegetation": 49.8
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-0ABC812D9BD14729816A7393BDF19531",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6769999861717224,
+              "ndvi_median": 0.7730000019073486,
+              "ndvi_min": -0.2809999883174896,
+              "ndvi_max": 0.8960000276565552,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 3.4,
+                "bare_soil_urban": 4.9,
+                "sparse_vegetation": 6.9,
+                "water_clouds_urban": 0.7,
+                "dense_healthy_vegetation": 84.2
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-884AE2F07FC444478E5CBF41C6F4DCAB",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.5389999747276306,
+              "ndvi_median": 0.6990000009536743,
+              "ndvi_min": -0.41600000858306885,
+              "ndvi_max": 0.9390000104904175,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 8.2,
+                "bare_soil_urban": 13.2,
+                "sparse_vegetation": 14.1,
+                "water_clouds_urban": 1.7,
+                "dense_healthy_vegetation": 62.8
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106307-9D7FA85FA7EA4C828C404C9257E84581",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6230000257492065,
+              "ndvi_median": 0.6200000047683716,
+              "ndvi_min": -0.26100000739097595,
+              "ndvi_max": 0.9340000152587891,
+              "data_cena": "2026-01-27",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 3.5,
+                "bare_soil_urban": 0.2,
+                "sparse_vegetation": 20.4,
+                "water_clouds_urban": 0.1,
+                "dense_healthy_vegetation": 75.8
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106240-0769DBF3EC6E483497A31D3C6BEE3C15",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6019999980926514,
+              "ndvi_median": 0.6259999871253967,
+              "ndvi_min": 0.012000000104308128,
+              "ndvi_max": 0.8180000185966492,
+              "data_cena": "2026-03-10",
+              "pontos": 5,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 1.3,
+                "bare_soil_urban": 0.3,
+                "sparse_vegetation": 13.4,
+                "water_clouds_urban": 0.0,
+                "dense_healthy_vegetation": 84.9
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5107941-F1CBA414C68044E3A82640284404999D",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.82,
+              "ndvi_median": 0.865,
+              "ndvi_min": 0.061,
+              "ndvi_max": 0.933,
+              "data_cena": "2026-01-15",
+              "pontos": 1,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "water_clouds_urban": 0.0,
+                "bare_soil_urban": 0.1,
+                "bare_soil": 1.2,
+                "sparse_vegetation": 4.4,
+                "dense_healthy_vegetation": 94.2
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "190600D1-7A02-416F-969C-0ED33CF1CA23",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B9FF7C41-CB6E-4D1C-B37E-371C2693111B",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "9C14E2E8-2EFD-44ED-994E-073A7694A282",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "C62E015F-63DF-4A8B-92BA-C4BF1616CE12",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B801B2BD-F0ED-4658-A86E-FF2BFB4DAB00",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "6BA61122-90A3-457A-A6BD-7D5FBA06452A",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B133F2FD-9E39-4AF5-87AD-D5E9721A8FE5",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "769998B1-712D-43A8-AC5C-3C2120AD053F",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "4C2C471D-2CCD-4960-873D-3023757FAC08",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "FAC2106C-E09B-4CBB-9160-CEA20674C42B",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106307-98C90E796F234D9C9A1AACED185E3D7F",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.5809999704360962,
+              "ndvi_median": 0.6769999861717224,
+              "ndvi_min": -0.3089999854564667,
+              "ndvi_max": 0.9340000152587891,
+              "data_cena": "2026-02-06",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 7.6,
+                "bare_soil_urban": 7.1,
+                "sparse_vegetation": 19.5,
+                "water_clouds_urban": 0.3,
+                "dense_healthy_vegetation": 65.4
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5106307-17559292A3034D8CB14CE762B645D208",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.6520000100135803,
+              "ndvi_median": 0.7250000238418579,
+              "ndvi_min": -0.09099999815225601,
+              "ndvi_max": 0.9380000233650208,
+              "data_cena": "2026-02-06",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 3.0,
+                "bare_soil_urban": 2.8,
+                "sparse_vegetation": 18.2,
+                "water_clouds_urban": 0.6,
+                "dense_healthy_vegetation": 75.4
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "9DD54E79-E5CF-4423-B648-EC72E780BCA4",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "1D1EA1BB-C7B1-4EC3-A75E-BCB2AC9FE6FB",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "48C048E5-50A9-489F-8D1F-B7B7402CB844",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "422F3C47-466B-4C92-BE46-E918305E4DB7",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "1907D5EA-2A03-447C-A3E0-72B4D49724F6",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "ADBD7C22-F7E3-42B7-A8D4-2DDAE45F773F",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "FA8BBD16-BA63-4733-8C57-64489E5131BC",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "249E2BA8-B114-40BA-8E15-89B09E4641BF",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "2DC1D95F-7401-471B-83C3-E188486D9A33",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "08FFF81C-BA3B-4D5F-8034-39FED789AE69",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B0E6FC9B-54F3-4B6A-8435-D11E0DD27FE0",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "AE7D8F65-385D-4601-97DC-FB5863573145",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "7BCE5BB3-5344-4011-88DA-A263088E1818",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "85E1A1DD-4541-4FD0-8C6A-97241FB3B8BC",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "B3F9E642-4811-47A9-BCE4-15E80BF165E2",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          },
+          {
+            "car_code": "MT-5102637-886FED3F09934F3B809482E087AC3EE3",
+            "alertas": [
+              "✅ Sem embargos IBAMA/MapBiomas",
+              "✅ Quilombolas: Livre",
+              "✅ Terras Indigenas: Livre",
+              "✅ Assentamentos: Livre",
+              "✅ Unidades Conservacao: Livre"
+            ],
+            "ndvi": {
+              "ndvi_mean": 0.37700000405311584,
+              "ndvi_median": 0.39399999380111694,
+              "ndvi_min": 0.05400000140070915,
+              "ndvi_max": 0.7639999985694885,
+              "data_cena": "2026-03-14",
+              "pontos": 3,
+              "tendencia": "Dados insuficientes",
+              "cobertura_vegetal_pct": 0,
+              "distribuicao": {
+                "bare_soil": 4.5,
+                "bare_soil_urban": 1.0,
+                "sparse_vegetation": 89.9,
+                "water_clouds_urban": 0.0,
+                "dense_healthy_vegetation": 4.6
+              }
+            },
+            "embargos": {
+              "tem_embargo": false,
+              "detalhes": "Sem embargos"
+            },
+            "areas": {
+              "area_total_ha": 0.0,
+              "area_agricultavel_ha": 0,
+              "area_pastagem_ha": 0,
+              "area_consolidada_ha": 0,
+              "area_solo_exposto_ha": 0,
+              "area_agua_urbano_ha": 0
+            },
+            "sobreposicoes": {
+              "quilombolas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "terras_indigenas": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "assentamentos": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              },
+              "unidades_conservacao": {
+                "tem_sobreposicao": false,
+                "dados": {}
+              }
+            },
+            "incra": {},
+            "score_ambiental": "Verde"
+          }
+        ],
+        "alertas_consolidados": [
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre",
+          "✅ Sem embargos IBAMA/MapBiomas",
+          "✅ Quilombolas: Livre",
+          "✅ Terras Indigenas: Livre",
+          "✅ Assentamentos: Livre",
+          "✅ Unidades Conservacao: Livre"
+        ],
+        "score_ambiental_grupo": "Verde",
+        "resumo": "Grupo com 38 propriedade(s) — Score: Verde"
+      },
+      "cruzamento": {
+        "propriedades_cadastradas": 38,
+        "propriedades_documentos": 38,
+        "matches": [
+          {
+            "car_code": "MT-5107941-F1CBA414C68044E3A82640284404999D",
+            "farm_name": "Tabaporã",
+            "area_ha": 2627.8093,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "0C30303D-F596-4B1A-A356-C7C2D4D74512",
+            "farm_name": "FAZENDA MORRO ALTO - 001",
+            "area_ha": 436.7776,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "4C2C471D-2CCD-4960-873D-3023757FAC08",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA - ÁREA DESMEMBRADA",
+            "area_ha": 2549.6086,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "08FFF81C-BA3B-4D5F-8034-39FED789AE69",
+            "farm_name": "Fazenda Camila - AREA B",
+            "area_ha": 2449.1101,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-3A41E6F0E6FF4444BB2C1C97EF8D08BA",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 7576.4106,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "9C14E2E8-2EFD-44ED-994E-073A7694A282",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.730 - Fazenda Sinopema -Área desmembrada",
+            "area_ha": 227.4091,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106307-9D7FA85FA7EA4C828C404C9257E84581",
+            "farm_name": "Fazenda em Paranatinga",
+            "area_ha": 8648.5569,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "48C048E5-50A9-489F-8D1F-B7B7402CB844",
+            "farm_name": "Fazenda Camila  DV IV - DV IV",
+            "area_ha": 1475.9604,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B133F2FD-9E39-4AF5-87AD-D5E9721A8FE5",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.730 - Fazenda Sinopema -Área Desmembrada",
+            "area_ha": 633.0163,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "2DC1D95F-7401-471B-83C3-E188486D9A33",
+            "farm_name": "Fazenda Camila - AREA C",
+            "area_ha": 2409.9382,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "AE7D8F65-385D-4601-97DC-FB5863573145",
+            "farm_name": "Fazenda Camila-Aurea - AUREA",
+            "area_ha": 1409.9692,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B801B2BD-F0ED-4658-A86E-FF2BFB4DAB00",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.866 - Fazenda Sinopema -Área desmembrada",
+            "area_ha": 254.6292,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5102637-886FED3F09934F3B809482E087AC3EE3",
+            "farm_name": "Fazenda em Campo Novo do Parecis",
+            "area_ha": 2990.6392,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B9FF7C41-CB6E-4D1C-B37E-371C2693111B",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA-ÁREA REMANESCENTE",
+            "area_ha": 1072.8095,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "190600D1-7A02-416F-969C-0ED33CF1CA23",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA ? PARCELA B",
+            "area_ha": 1760.5723,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106307-98C90E796F234D9C9A1AACED185E3D7F",
+            "farm_name": "Paranatinga",
+            "area_ha": 3147.6796,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "85E1A1DD-4541-4FD0-8C6A-97241FB3B8BC",
+            "farm_name": "Fazenda Camila - 1092",
+            "area_ha": 3806.1148,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-0769DBF3EC6E483497A31D3C6BEE3C15",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 9602.6726,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "249E2BA8-B114-40BA-8E15-89B09E4641BF",
+            "farm_name": "Fazenda Camila - 1015",
+            "area_ha": 483.7581,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "GO-5219209-D03736A69A78464CB1781BE970F29668",
+            "farm_name": "Fazenda em Santa Cruz de Goiás",
+            "area_ha": 437.089,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "6BA61122-90A3-457A-A6BD-7D5FBA06452A",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.866 - Fazenda Sinopema ? Área desmembrada",
+            "area_ha": 628.2162,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "1907D5EA-2A03-447C-A3E0-72B4D49724F6",
+            "farm_name": "Fazenda Camila DV VII - Parte 1",
+            "area_ha": 953.8761,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "769998B1-712D-43A8-AC5C-3C2120AD053F",
+            "farm_name": "FAZENDA SINOPEMA - FAZENDA SINOPEMA-ÁREA DESMEMBRADA I",
+            "area_ha": 5361.1067,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-ABBA1225A47644CFB17C0EFAACEBC355",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 1280.1551,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-E32F2A41E6764FA3901EE8E2A2BF76E7",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 4389.6846,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "FA8BBD16-BA63-4733-8C57-64489E5131BC",
+            "farm_name": "Fazenda Camila - 225",
+            "area_ha": 2755.0802,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "FAC2106C-E09B-4CBB-9160-CEA20674C42B",
+            "farm_name": "Fazenda Sao Wustro - FazendaSão Wustro",
+            "area_ha": 9413.0162,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-884AE2F07FC444478E5CBF41C6F4DCAB",
+            "farm_name": "Fazenda em Nova Ubiratã",
+            "area_ha": 11873.9769,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106307-17559292A3034D8CB14CE762B645D208",
+            "farm_name": "Paranatinga",
+            "area_ha": 4929.0723,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "7BCE5BB3-5344-4011-88DA-A263088E1818",
+            "farm_name": "Fazenda Camila Demetrio - DEMETRIO",
+            "area_ha": 1022.0287,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B3F9E642-4811-47A9-BCE4-15E80BF165E2",
+            "farm_name": "Fazenda Norte II - Parcela 1",
+            "area_ha": 853.4543,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "B0E6FC9B-54F3-4B6A-8435-D11E0DD27FE0",
+            "farm_name": "Fazenda Camila - AREA A",
+            "area_ha": 2433.0219,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "ADBD7C22-F7E3-42B7-A8D4-2DDAE45F773F",
+            "farm_name": "Fazenda Camila-Ubirajara - Ubirajara",
+            "area_ha": 1463.1196,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "9DD54E79-E5CF-4423-B648-EC72E780BCA4",
+            "farm_name": "Fazenda Camila - 456 A",
+            "area_ha": 538.5879,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "C62E015F-63DF-4A8B-92BA-C4BF1616CE12",
+            "farm_name": "Fazenda Sinopema ? Matrícula 2.866 - Fazenda Sinopema ? Área Remanescente",
+            "area_ha": 2402.3268,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "1D1EA1BB-C7B1-4EC3-A75E-BCB2AC9FE6FB",
+            "farm_name": "Fazenda Camila - INEZ 5589",
+            "area_ha": 580.3239,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "MT-5106240-0ABC812D9BD14729816A7393BDF19531",
+            "farm_name": "Fazenda em Paranatinga",
+            "area_ha": 7113.7732,
+            "status": "Encontrada"
+          },
+          {
+            "car_code": "422F3C47-466B-4C92-BE46-E918305E4DB7",
+            "farm_name": "Fazenda Camila-Miguel - Parte 1",
+            "area_ha": 364.9556,
+            "status": "Encontrada"
+          }
+        ],
+        "nao_cadastradas": [],
+        "extras_monitoramento": [],
+        "cobertura_pct": 100.0,
+        "alertas": [
+          "✅ 100% dos CARs dos documentos estão monitorados no Dados Fazenda"
+        ]
+      },
+      "timestamp": "2026-03-27 23:34"
+    }
+  ]
+}
