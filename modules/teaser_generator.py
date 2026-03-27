@@ -72,8 +72,8 @@ def _fmt_mult(value) -> str:
         return str(value) if value else "—"
 
 
-def _safe_get(d: dict, *keys, default="—"):
-    """Navegacao segura em dicts aninhados."""
+def _safe_get(d, *keys, default="—"):
+    """Navegacao segura em dicts aninhados. Retorna default se qualquer nivel nao for dict."""
     current = d
     for k in keys:
         if isinstance(current, dict):
@@ -81,6 +81,11 @@ def _safe_get(d: dict, *keys, default="—"):
         else:
             return default
     return current if current not in (None, "", 0, 0.0) else default
+
+
+def _safe_dict(value, default=None):
+    """Garante que o valor é um dict; retorna default={} se nao for."""
+    return value if isinstance(value, dict) else (default or {})
 
 
 def _current_date_pt() -> str:
@@ -326,6 +331,11 @@ def _fill_estrutura(slide, analise: dict, parametros: dict):
 
         for i, item in enumerate(destinacao[:3]):  # max 3 data rows
             row_idx = i + 1
+            if isinstance(item, str):
+                _replace_in_table_cell(destinacao_table, row_idx, 0, item)
+                continue
+            if not isinstance(item, dict):
+                continue
             _replace_in_table_cell(destinacao_table, row_idx, 0, str(item.get("destino", "—")))
             val = item.get("valor", "—")
             try:
@@ -345,7 +355,11 @@ def _fill_estrutura(slide, analise: dict, parametros: dict):
     # --- Indicadores Financeiros table (9 rows x 4 cols) ---
     if financeiros_table:
         kpis = analise.get("kpis", {})
+        if not isinstance(kpis, dict):
+            kpis = {}
         historico = analise.get("historico_financeiro", {})
+        if not isinstance(historico, dict):
+            historico = {}
         now = datetime.now()
         anos = [str(now.year - 2), str(now.year - 1), str(now.year)]
 
@@ -410,6 +424,12 @@ def _fill_garantias(slide, analise: dict, parametros: dict):
 
     # Tenta fazer match por tipo
     for gar in garantias_list:
+        if isinstance(gar, str):
+            # Garantia veio como string simples
+            _replace_on_slide(slide, list(placeholder_map.values())[0], gar)
+            continue
+        if not isinstance(gar, dict):
+            continue
         tipo_raw = str(gar.get("tipo", "")).lower().strip()
         desc = str(gar.get("descricao", "—"))
         placeholder = placeholder_map.get(tipo_raw)
@@ -512,6 +532,12 @@ def generate_teaser(
     Returns:
         Caminho do arquivo gerado.
     """
+    # Garante que analise e parametros sao dicts
+    if not isinstance(analise, dict):
+        analise = {}
+    if not isinstance(parametros, dict):
+        parametros = {}
+
     if not TEMPLATE_PATH.exists():
         return _generate_fallback(analise, parametros, output_path)
 
