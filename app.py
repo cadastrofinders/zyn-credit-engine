@@ -165,7 +165,7 @@ try:
         match_investors, get_sector_benchmarks, _detect_sector,
         PRODUCT_DD_EXTRAS, GUARANTEE_TYPES,
     )
-    from modules.analyzer import extract_car_codes
+    from modules.analyzer import extract_car_codes, extract_grupo_economico
     from modules.dados_fazenda import DadosFazendaClient, get_client as get_df_client
 
     MODULES_AVAILABLE = True
@@ -1670,6 +1670,19 @@ def page_nova_analise():
                             if cnpj and cnpj != "N/I":
                                 dados_para_analise = dict(dados_para_analise)  # copy
                                 enrich_analysis_data(cnpj, dados_para_analise, status_callback=_update_status)
+
+                            # Grupo Econômico — detecta CPFs e CNPJs em todos os docs
+                            _update_status("🔍 Mapeando grupo econômico nos documentos...")
+                            cpf_cnpj_input = op.get("cnpj", "") or ""
+                            grupo = extract_grupo_economico(
+                                st.session_state.extracted_data,
+                                cpf_cnpj_principal=cpf_cnpj_input,
+                            )
+                            if grupo["total_membros"] > 0:
+                                dados_para_analise["grupo_economico"] = grupo
+                                _update_status(
+                                    f"🔍 Grupo: {len(grupo['cpfs'])} CPF(s) + {len(grupo['cnpjs'])} CNPJ(s)"
+                                )
 
                             # Dados Fazenda — consulta ambiental agro (CAR, NDVI, embargos)
                             tipo_op = op.get("tipo_operacao", "")

@@ -243,6 +243,118 @@ def extract_car_codes(extractions: dict) -> list:
     return codes
 
 
+def extract_grupo_economico(extractions: dict, cpf_cnpj_principal: str = "") -> dict:
+    """
+    Extrai CPFs e CNPJs de todos os documentos para mapear o grupo econômico.
+
+    Retorna:
+    {
+        "principal": str,  # CPF/CNPJ informado pelo usuário
+        "cpfs": [str],     # Todos os CPFs encontrados nos documentos
+        "cnpjs": [str],    # Todos os CNPJs encontrados nos documentos
+        "nomes": [str],    # Nomes associados encontrados nos documentos
+        "total_membros": int,
+        "fontes": {cpf_or_cnpj: [lista de docs onde aparece]}
+    }
+    """
+    # Patterns
+    cpf_pattern = re.compile(r'\b(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b')
+    cnpj_pattern = re.compile(r'\b(\d{2}[\.\s]?\d{3}[\.\s]?\d{3}[/\s]?\d{4}[\-\s]?\d{2})\b')
+
+    all_cpfs = set()
+    all_cnpjs = set()
+    fontes = {}
+
+    def _normalize_cpf(cpf: str) -> str:
+        return re.sub(r'[^\d]', '', cpf)
+
+    def _normalize_cnpj(cnpj: str) -> str:
+        return re.sub(r'[^\d]', '', cnpj)
+
+    def _format_cpf(digits: str) -> str:
+        if len(digits) == 11:
+            return f"{digits[:3]}.{digits[3:6]}.{digits[6:9]}-{digits[9:]}"
+        return digits
+
+    def _format_cnpj(digits: str) -> str:
+        if len(digits) == 14:
+            return f"{digits[:2]}.{digits[2:5]}.{digits[5:8]}/{digits[8:12]}-{digits[12:]}"
+        return digits
+
+    def _validate_cpf(digits: str) -> bool:
+        if len(digits) != 11 or digits == digits[0] * 11:
+            return False
+        # Dígito verificador 1
+        soma = sum(int(digits[i]) * (10 - i) for i in range(9))
+        d1 = (soma * 10 % 11) % 10
+        if d1 != int(digits[9]):
+            return False
+        # Dígito verificador 2
+        soma = sum(int(digits[i]) * (11 - i) for i in range(10))
+        d2 = (soma * 10 % 11) % 10
+        return d2 == int(digits[10])
+
+    def _validate_cnpj(digits: str) -> bool:
+        if len(digits) != 14 or digits == digits[0] * 14:
+            return False
+        pesos1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        soma = sum(int(digits[i]) * pesos1[i] for i in range(12))
+        d1 = 11 - (soma % 11)
+        d1 = 0 if d1 >= 10 else d1
+        if d1 != int(digits[12]):
+            return False
+        pesos2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        soma = sum(int(digits[i]) * pesos2[i] for i in range(13))
+        d2 = 11 - (soma % 11)
+        d2 = 0 if d2 >= 10 else d2
+        return d2 == int(digits[13])
+
+    for fname, result in extractions.items():
+        text = str(result)
+
+        # Extrair CPFs
+        for match in cpf_pattern.finditer(text):
+            raw = match.group(1)
+            digits = _normalize_cpf(raw)
+            if len(digits) == 11 and _validate_cpf(digits):
+                formatted = _format_cpf(digits)
+                all_cpfs.add(formatted)
+                fontes.setdefault(formatted, [])
+                if fname not in fontes[formatted]:
+                    fontes[formatted].append(fname)
+
+        # Extrair CNPJs
+        for match in cnpj_pattern.finditer(text):
+            raw = match.group(1)
+            digits = _normalize_cnpj(raw)
+            if len(digits) == 14 and _validate_cnpj(digits):
+                formatted = _format_cnpj(digits)
+                all_cnpjs.add(formatted)
+                fontes.setdefault(formatted, [])
+                if fname not in fontes[formatted]:
+                    fontes[formatted].append(fname)
+
+    # Adicionar o CPF/CNPJ principal se fornecido
+    principal_digits = re.sub(r'[^\d]', '', cpf_cnpj_principal)
+    if len(principal_digits) == 11:
+        all_cpfs.add(_format_cpf(principal_digits))
+    elif len(principal_digits) == 14:
+        all_cnpjs.add(_format_cnpj(principal_digits))
+
+    cpfs_list = sorted(all_cpfs)
+    cnpjs_list = sorted(all_cnpjs)
+
+    logger.info(f"[GRUPO] {len(cpfs_list)} CPF(s) + {len(cnpjs_list)} CNPJ(s) detectados no grupo econômico")
+
+    return {
+        "principal": cpf_cnpj_principal,
+        "cpfs": cpfs_list,
+        "cnpjs": cnpjs_list,
+        "total_membros": len(cpfs_list) + len(cnpjs_list),
+        "fontes": fontes,
+    }
+
+
 def _get_client() -> anthropic.Anthropic:
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
