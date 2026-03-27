@@ -167,6 +167,7 @@ try:
     )
     from modules.analyzer import extract_car_codes, extract_grupo_economico
     from modules.dados_fazenda import DadosFazendaClient, get_client as get_df_client
+    from modules.agro_excel_generator import generate_agro_excel
 
     MODULES_AVAILABLE = True
 except ImportError as _imp_err:
@@ -708,6 +709,48 @@ def _delete_from_history(filename: str):
     if path.exists():
         path.unlink()
     _gh_delete(filename)
+
+
+# ---------------------------------------------------------------------------
+# Agro consultation history — persistent via GitHub
+# ---------------------------------------------------------------------------
+AGRO_HISTORY_FILE = "data/agro_consultas/historico.json"
+
+
+def _save_agro_consulta(consulta: dict):
+    """Append agro consultation to persistent history on GitHub."""
+    history = _load_agro_history()
+    history.append(consulta)
+    # Keep last 100 consultations
+    if len(history) > 100:
+        history = history[-100:]
+    _gh_save(f"../agro_consultas/historico.json", {"consultas": history})
+    # Also save locally
+    local_dir = OUTPUT_DIR / "agro_consultas"
+    local_dir.mkdir(exist_ok=True)
+    (local_dir / "historico.json").write_text(
+        json.dumps({"consultas": history}, ensure_ascii=False, indent=2)
+    )
+
+
+def _load_agro_history() -> list[dict]:
+    """Load agro consultation history from GitHub or local."""
+    # Try local first (fast)
+    local_path = OUTPUT_DIR / "agro_consultas" / "historico.json"
+    if local_path.exists():
+        try:
+            data = json.loads(local_path.read_text())
+            return data.get("consultas", [])
+        except Exception:
+            pass
+    # Try GitHub
+    try:
+        data = _gh_load("../agro_consultas/historico.json")
+        if data and "consultas" in data:
+            return data["consultas"]
+    except Exception:
+        pass
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -2816,6 +2859,12 @@ def page_consulta_agro():
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
             }
 
+            # Persist to GitHub history
+            try:
+                _save_agro_consulta(st.session_state["agro_consulta"])
+            except Exception:
+                pass  # non-blocking — history save failure should not affect UX
+
         except Exception as e:
             progress.empty()
             status.empty()
@@ -2944,6 +2993,22 @@ def page_consulta_agro():
                 st.markdown("### 📝 Resumo para MAC")
                 st.info(resumo)
 
+            # Excel download button
+            st.markdown("---")
+            try:
+                excel_bytes = generate_agro_excel(st.session_state["agro_consulta"])
+                ts_file = datetime.now().strftime("%Y%m%d_%H%M")
+                busca_clean = __import__("re").sub(r"[^\w\-]", "_", valor)
+                st.download_button(
+                    "📥 Baixar Relatório Excel",
+                    data=excel_bytes,
+                    file_name=f"ConsultaAgro_{busca_clean}_{ts_file}.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True,
+                )
+            except Exception as excel_err:
+                st.warning(f"Erro ao gerar Excel: {excel_err}")
+
     # Show previous consultation if exists
     if "agro_consulta" in st.session_state and not st.session_state.get("_agro_btn_clicked"):
         prev = st.session_state["agro_consulta"]
@@ -2975,6 +3040,55 @@ def page_consulta_agro():
                     st.warning(a)
                 else:
                     st.success(a)
+
+    # ── History Section ──
+    st.markdown("---")
+    st.markdown("### 📋 Histórico de Consultas")
+
+    agro_history = _load_agro_history()
+    if agro_history:
+        # Show most recent first, limit to 20
+        recent = list(reversed(agro_history[-20:]))
+        history_rows = []
+        for h in recent:
+            res = h.get("resultado", {})
+            score = res.get("score_ambiental_grupo", "N/D")
+            score_emoji = {"Verde": "🟢", "Amarelo": "🟡", "Vermelho": "🔴"}.get(score, "⚪")
+            history_rows.append({
+                "Data": h.get("timestamp", "N/D"),
+                "Busca": h.get("busca", "N/D"),
+                "Tipo": h.get("tipo", "N/D"),
+                "Score": f"{score_emoji} {score}",
+                "Propriedades": res.get("total_propriedades", 0),
+                "Alertas": len(res.get("alertas_consolidados", [])),
+            })
+
+        st.dataframe(
+            history_rows,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Data": st.column_config.TextColumn("Data", width="medium"),
+                "Busca": st.column_config.TextColumn("Busca", width="large"),
+                "Tipo": st.column_config.TextColumn("Tipo", width="small"),
+                "Score": st.column_config.TextColumn("Score", width="medium"),
+                "Propriedades": st.column_config.NumberColumn("Props", width="small"),
+                "Alertas": st.column_config.NumberColumn("Alertas", width="small"),
+            },
+        )
+
+        # Allow re-viewing a past consultation
+        selected_idx = st.selectbox(
+            "Recarregar consulta anterior",
+            range(len(recent)),
+            format_func=lambda i: f"{recent[i].get('timestamp', 'N/D')} — {recent[i].get('busca', 'N/D')} ({recent[i].get('tipo', '')})",
+            key="agro_history_select",
+        )
+        if st.button("🔄 Carregar consulta selecionada", key="agro_load_history"):
+            st.session_state["agro_consulta"] = recent[selected_idx]
+            st.rerun()
+    else:
+        st.info("Nenhuma consulta anterior registrada.")
 
 
 # ---------------------------------------------------------------------------
