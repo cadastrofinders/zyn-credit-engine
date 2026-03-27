@@ -19,7 +19,9 @@ BASE_URL = "https://api.dadosfazenda.com.br"
 APP_URL = "https://app.dadosfazenda.com.br"
 SUPABASE_URL = "https://touwirvweqpddxpblgip.supabase.co"
 SUPABASE_API_KEY = (
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"  # Supabase anon key (public)
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    ".eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvdXdpcnZ3ZXFwZGR4cGJsZ2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTQ4NDMsImV4cCI6MjA4NzI5MDg0M30"
+    ".DmoStkZO-At10tBwkeYkihNYT4_4GMZSyTynmfI1o9E"
 )
 
 
