@@ -1992,6 +1992,11 @@ def page_nova_analise():
                         teaser_path = str(OUTPUT_DIR / teaser_name)
 
                         with st.spinner("Gerando Teaser..."):
+                            import logging
+                            logging.warning(f"[TEASER] analise keys: {list(analise.keys()) if isinstance(analise, dict) else type(analise)}")
+                            logging.warning(f"[TEASER] op keys: {list(op.keys()) if isinstance(op, dict) else type(op)}")
+                            if isinstance(analise, dict) and 'tomador' in analise and isinstance(analise['tomador'], dict):
+                                logging.warning(f"[TEASER] tomador keys: {list(analise['tomador'].keys())}")
                             generate_teaser(analise, op, teaser_path)
 
                         with open(teaser_path, "rb") as f:

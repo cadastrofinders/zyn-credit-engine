@@ -1,5 +1,6 @@
 """
 ZYN Capital — Gerador de Teaser (.pptx) baseado em template oficial.
+v2.1 — Deep extraction com suporte a formato direto e wrapper.
 
 Abre o template Teaser_Template_ZYN.pptx (5 slides, 10x5.62 in, 16:9) e
 substitui os placeholders pelo conteudo real da operacao, preservando toda
