@@ -1996,14 +1996,22 @@ def page_historico():
                     progress_bar = st.progress(0)
                     status_text = st.empty()
 
-                    # Parallel extraction for complement files
+                    # Extract complement files
                     comp_files = [(uploaded.read(), uploaded.name) for uploaded in complement_files]
 
-                    def _comp_progress(filename, idx, total, result):
-                        progress_bar.progress(idx / total, text=f"Extraindo {filename}... ({idx}/{total})")
-                        status_text.info(f"Processando {filename} ({idx}/{total})")
+                    if len(comp_files) == 1:
+                        # Single file — direct extraction (no thread overhead)
+                        file_bytes, file_name = comp_files[0]
+                        status_text.info(f"Extraindo {file_name}...")
+                        progress_bar.progress(0.3, text=f"Extraindo {file_name}...")
+                        result = process_file(file_bytes, file_name)
+                        comp_results = {file_name: result}
+                    else:
+                        def _comp_progress(filename, idx, total, result):
+                            progress_bar.progress(idx / total, text=f"Extraindo {filename}... ({idx}/{total})")
+                            status_text.info(f"Processando {filename} ({idx}/{total})")
+                        comp_results = process_files_parallel(comp_files, max_workers=3, progress_callback=_comp_progress)
 
-                    comp_results = process_files_parallel(comp_files, max_workers=3, progress_callback=_comp_progress)
                     new_extracted.update(comp_results)
 
                     progress_bar.progress(1.0)
