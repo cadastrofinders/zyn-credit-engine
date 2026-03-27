@@ -164,6 +164,11 @@ def _set_cell(ws: Worksheet, row: int, col: int, value: Any,
     """Define valor e estilo de uma célula, tratando merged cells."""
     if value is None:
         return
+    # Safety: convert non-scalar types that openpyxl cannot write to a cell
+    if isinstance(value, list):
+        value = "; ".join(str(v) for v in value)
+    elif isinstance(value, dict):
+        value = str(value)
     cell = ws.cell(row=row, column=col)
     cell.value = value
     if font:

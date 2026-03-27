@@ -232,7 +232,7 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
         "segmento": parametros.get("setor") or tom_a.get("setor") or tom_root.get("segmento") or tom_root.get("setor") or "—",
         "socios": tom_a.get("grupo_economico") or tom_a.get("socios") or tom_root.get("socios") or tom_root.get("grupo_economico") or "—",
         "descricao": tom_a.get("historico") or tom_root.get("descricao") or tom_root.get("historico") or prod.get("capacidade") or "—",
-        "colaboradores": tom_a.get("colaboradores") or tom_root.get("colaboradores") or _extract_number_near_keyword(tom_a.get("historico", "") + " " + prod.get("capacidade", ""), "colaborador") or "—",
+        "colaboradores": tom_a.get("colaboradores") or tom_root.get("colaboradores") or _extract_number_near_keyword((tom_a.get("historico", "") if isinstance(tom_a.get("historico"), str) else "") + " " + (prod.get("capacidade", "") if isinstance(prod.get("capacidade"), str) else ""), "colaborador") or "—",
         "capacidade": tom_a.get("capacidade") or tom_root.get("capacidade") or _extract_number_near_keyword(prod.get("capacidade", ""), "equipamento") or _extract_number_near_keyword(prod.get("capacidade", ""), "hectare") or _extract_number_near_keyword(prod.get("capacidade", ""), " ha") or "—",
         "unidades": tom_a.get("unidades") or tom_root.get("unidades") or _extract_number_near_keyword(prod.get("capacidade", ""), "unidade") or "—",
         "clientes": tom_a.get("principais_clientes") or tom_root.get("principais_clientes") or _extract_clients_from_text(prod.get("analise", "")) or "—",
@@ -254,7 +254,7 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
         "taxa": parametros.get("taxa") or op_root.get("taxa") or op_a.get("taxa") or "—",
         "prazo": parametros.get("prazo_meses") or op_root.get("prazo_meses") or op_a.get("prazo") or "—",
         "amortizacao": parametros.get("amortizacao") or op_root.get("amortizacao") or "—",
-        "carencia": parametros.get("carencia") or _extract_from_text(op_a.get("estrutura", "") + " " + op_a.get("prazo", ""), r"(?:[Cc]ar[eê]ncia\s*(?:de\s*)?)(\d+\s*meses?)") or "—",
+        "carencia": parametros.get("carencia") or _extract_from_text((op_a.get("estrutura", "") if isinstance(op_a.get("estrutura"), str) else "") + " " + (op_a.get("prazo", "") if isinstance(op_a.get("prazo"), str) else ""), r"(?:[Cc]ar[eê]ncia\s*(?:de\s*)?)(\d+\s*meses?)") or "—",
         "garantias_text": parametros.get("garantias_text") or op_root.get("garantias_text") or "—",
         "finalidade": parametros.get("finalidade") or op_a.get("analise", "")[:200] if isinstance(op_a.get("analise"), str) else "—",
 
