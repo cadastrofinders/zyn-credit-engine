@@ -173,16 +173,102 @@ def _replace_on_slide(slide, old_text: str, new_text: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Helpers — Deep extraction from analise dict
+# ---------------------------------------------------------------------------
+def _deep_get(analise: dict, *paths, default="—"):
+    """
+    Busca um valor em multiplos caminhos possiveis no dict de analise.
+    O Opus retorna dados em analise.analise.X ou analise.X dependendo do contexto.
+    Tenta todos os caminhos ate achar um valor valido.
+    """
+    for path in paths:
+        val = _safe_get(analise, *path, default=None)
+        if val not in (None, "", 0, 0.0, "—", []):
+            return val
+    return default
+
+
+def _extract_company_data(analise: dict, parametros: dict) -> dict:
+    """Extrai todos os dados da empresa de todas as secoes da analise."""
+    a = _safe_dict(analise.get("analise")) if isinstance(analise.get("analise"), dict) else {}
+    tom_a = _safe_dict(a.get("tomador"))
+    tom_root = _safe_dict(analise.get("tomador"))
+    op_root = _safe_dict(analise.get("operacao"))
+    op_a = _safe_dict(a.get("operacao"))
+    kpis_a = _safe_dict(a.get("kpis"))
+    kpis_root = _safe_dict(analise.get("kpis"))
+    cap = _safe_dict(a.get("capital"))
+    cap_ind = _safe_dict(cap.get("indicadores"))
+    cap_end = _safe_dict(cap.get("endividamento"))
+    pat = _safe_dict(a.get("patrimonio"))
+    pat_ativos = _safe_dict(pat.get("ativos_reais"))
+    prod = _safe_dict(a.get("producao"))
+    pag = _safe_dict(a.get("pagamento"))
+    rating = _safe_dict(a.get("rating_final")) if isinstance(a.get("rating_final"), dict) else _safe_dict(analise.get("rating_final"))
+
+    return {
+        # Company info
+        "nome": parametros.get("tomador") or tom_a.get("razao_social") or tom_root.get("nome") or tom_root.get("razao_social") or "—",
+        "cnpj": parametros.get("cnpj") or tom_a.get("cnpj") or tom_root.get("cnpj") or "—",
+        "fundacao": tom_a.get("fundacao") or tom_root.get("fundacao") or _extract_from_text(tom_a.get("historico", ""), r"[Ff]undad[ao] em (\d{4})") or "—",
+        "sede": parametros.get("localidade") or tom_a.get("sede") or tom_root.get("sede") or _extract_from_text(tom_a.get("historico", ""), r"em ([A-Z][a-záéíóúâêôãõç]+[-/][A-Z]{2})") or "—",
+        "segmento": parametros.get("setor") or tom_a.get("setor") or tom_root.get("segmento") or tom_root.get("setor") or "—",
+        "socios": tom_a.get("grupo_economico") or tom_root.get("socios") or "—",
+        "descricao": tom_a.get("historico") or tom_root.get("descricao") or prod.get("capacidade") or "—",
+        "colaboradores": tom_a.get("colaboradores") or _extract_from_text(tom_a.get("historico", "") + " " + prod.get("capacidade", ""), r"~?(\d[.\d]*)\s*colaborador") or "—",
+        "capacidade": tom_a.get("capacidade") or _extract_from_text(prod.get("capacidade", ""), r"~?(\d[.\d]*)\s*equipamento") or "—",
+        "unidades": tom_a.get("unidades") or _extract_from_text(prod.get("capacidade", ""), r"(\d+)\s*unidade") or "—",
+        "clientes": tom_a.get("principais_clientes") or _extract_from_text(prod.get("analise", ""), r"\(([A-Z][a-záéíóú]+(?:,\s*[A-Z][a-záéíóú]+){2,})\)") or "—",
+
+        # Financials
+        "receita": kpis_a.get("receita_liquida") or kpis_root.get("receita_liquida") or 0,
+        "ebitda": kpis_a.get("ebitda") or kpis_root.get("ebitda") or 0,
+        "margem_ebitda": kpis_a.get("margem_ebitda") or kpis_root.get("margem_ebitda") or 0,
+        "divida_liquida": cap_end.get("divida_liquida_2025") or cap_end.get("divida_liquida") or kpis_a.get("divida_liquida") or 0,
+        "div_liq_ebitda": cap_ind.get("divida_liquida_ebitda") or kpis_a.get("divida_liquida_ebitda") or kpis_root.get("divida_liquida_ebitda") or 0,
+        "dscr": pag.get("dscr") or kpis_a.get("dscr") or kpis_root.get("dscr") or 0,
+        "ltv": kpis_a.get("ltv") or kpis_root.get("ltv") or pat.get("ltv") or 0,
+        "pl": pat_ativos.get("patrimonio_liquido_2025") or pat_ativos.get("patrimonio_liquido") or kpis_a.get("pl") or 0,
+        "liquidez": cap_ind.get("liquidez_corrente") or 0,
+
+        # Operation
+        "instrumento": parametros.get("tipo_operacao") or op_root.get("tipo_operacao") or op_a.get("instrumento") or op_root.get("instrumento") or "—",
+        "volume": parametros.get("volume") or op_root.get("volume") or op_a.get("volume") or 0,
+        "taxa": parametros.get("taxa") or op_root.get("taxa") or op_a.get("taxa") or "—",
+        "prazo": parametros.get("prazo_meses") or op_root.get("prazo_meses") or op_a.get("prazo") or "—",
+        "amortizacao": parametros.get("amortizacao") or op_root.get("amortizacao") or "—",
+        "carencia": parametros.get("carencia") or _extract_from_text(op_a.get("estrutura", "") + " " + op_a.get("prazo", ""), r"(?:[Cc]ar[eê]ncia\s*(?:de\s*)?)(\d+\s*meses?)") or "—",
+        "garantias_text": parametros.get("garantias_text") or op_root.get("garantias_text") or "—",
+        "finalidade": parametros.get("finalidade") or op_a.get("analise", "")[:200] if isinstance(op_a.get("analise"), str) else "—",
+
+        # Guarantees (detailed)
+        "garantias_detalhadas": pat.get("garantias_detalhadas") or [],
+
+        # Rating
+        "rating": rating.get("nota") or op_root.get("rating") or "—",
+        "parecer": rating.get("parecer") or op_root.get("parecer") or "—",
+        "justificativa": rating.get("justificativa") or "—",
+    }
+
+
+def _extract_from_text(text: str, pattern: str) -> str:
+    """Extrai valor de texto usando regex. Retorna '' se nao encontrar."""
+    import re
+    if not isinstance(text, str):
+        return ""
+    match = re.search(pattern, text)
+    return match.group(1) if match else ""
+
+
+# ---------------------------------------------------------------------------
 # Slide 1 — Cover
 # ---------------------------------------------------------------------------
 def _fill_cover(slide, analise: dict, parametros: dict):
-    tipo = parametros.get("tipo_operacao", _safe_get(analise, "operacao", "instrumento", default="NC/CCB"))
-    tomador = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default=""))
+    data = _extract_company_data(analise, parametros)
     data_pt = _current_date_pt()
 
-    _replace_on_slide(slide, "[TIPO DE INSTRUMENTO]", str(tipo).upper())
-    _replace_on_slide(slide, "[Nome da Operação / Tomador]", str(tomador))
-    # Atualiza data (template tem "Março 2026")
+    _replace_on_slide(slide, "[TIPO DE INSTRUMENTO]", str(data["instrumento"]).upper())
+    _replace_on_slide(slide, "[Nome da Operação / Tomador]", str(data["nome"]))
     _replace_on_slide(slide, "Março 2026", data_pt)
     _replace_on_slide(slide, "Marco 2026", data_pt)
 
@@ -191,20 +277,18 @@ def _fill_cover(slide, analise: dict, parametros: dict):
 # Slide 2 — Resumo Executivo & Termos Indicativos
 # ---------------------------------------------------------------------------
 def _fill_resumo(slide, analise: dict, parametros: dict):
+    data = _extract_company_data(analise, parametros)
     data_pt = _current_date_pt()
     _replace_on_slide(slide, "Março 2026", data_pt)
     _replace_on_slide(slide, "Marco 2026", data_pt)
 
     # --- KPI cards ---
-    volume_raw = parametros.get("volume", _safe_get(analise, "operacao", "volume", default=0))
-    taxa_raw = parametros.get("taxa", _safe_get(analise, "operacao", "taxa", default=""))
-    prazo_raw = parametros.get("prazo_meses", _safe_get(analise, "operacao", "prazo", default=""))
-    ltv_raw = _safe_get(analise, "kpis", "ltv", default="")
-
-    volume_str = _fmt_brl(volume_raw) if volume_raw and volume_raw != "—" else "—"
-    taxa_str = str(taxa_raw) if taxa_raw and taxa_raw != "—" else "—"
-    prazo_str = f"{prazo_raw} meses" if prazo_raw and prazo_raw != "—" else "—"
-    ltv_str = _fmt_pct(ltv_raw) if ltv_raw and ltv_raw != "—" else "—"
+    volume_str = _fmt_brl(data["volume"]) if data["volume"] else "—"
+    taxa_str = str(data["taxa"]) if data["taxa"] != "—" else "—"
+    prazo_str = f"{data['prazo']}" if data["prazo"] != "—" else "—"
+    if prazo_str != "—" and "mes" not in str(prazo_str).lower():
+        prazo_str = f"{prazo_str} meses"
+    ltv_str = _fmt_pct(data["ltv"]) if data["ltv"] else "—"
 
     _replace_on_slide(slide, "R$ [XX] MM", volume_str)
     _replace_on_slide(slide, "CDI + [X]%", taxa_str)
@@ -220,80 +304,66 @@ def _fill_resumo(slide, analise: dict, parametros: dict):
     if table is None:
         return
 
-    tomador = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default="—"))
-    instrumento = parametros.get("tipo_operacao", _safe_get(analise, "operacao", "instrumento", default="—"))
-    volume_full = _fmt_brl(volume_raw) if volume_raw and volume_raw != "—" else "—"
-    taxa = str(taxa_raw) if taxa_raw and taxa_raw != "—" else "—"
-    prazo = str(prazo_raw) + " meses" if prazo_raw and prazo_raw != "—" else "—"
-    amort = parametros.get("amortizacao", _safe_get(analise, "operacao", "amortizacao", default="—"))
-    carencia = parametros.get("carencia", _safe_get(analise, "operacao", "carencia", default="—"))
-    garantias = parametros.get("garantias_text", _safe_get(analise, "operacao", "garantias", default="—"))
-    finalidade = parametros.get("finalidade", _safe_get(analise, "operacao", "finalidade", default="—"))
-    rating = _safe_get(analise, "rating_final", "nota", default="—")
-
-    termos = [tomador, instrumento, volume_full, taxa, prazo, amort, carencia, garantias, finalidade, rating]
+    termos = [
+        str(data["nome"]),
+        str(data["instrumento"]),
+        volume_str,
+        taxa_str,
+        prazo_str,
+        str(data["amortizacao"]),
+        str(data["carencia"]),
+        str(data["garantias_text"]),
+        str(data["finalidade"])[:200],
+        str(data["rating"]),
+    ]
     for i, val in enumerate(termos):
-        _replace_in_table_cell(table, i + 1, 1, str(val))
+        _replace_in_table_cell(table, i + 1, 1, val)
 
 
 # ---------------------------------------------------------------------------
 # Slide 3 — Overview da Empresa
 # ---------------------------------------------------------------------------
 def _fill_overview(slide, analise: dict, parametros: dict):
+    data = _extract_company_data(analise, parametros)
     data_pt = _current_date_pt()
     _replace_on_slide(slide, "Março 2026", data_pt)
     _replace_on_slide(slide, "Marco 2026", data_pt)
 
     # --- Left panel: company info ---
-    nome = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default="[NOME]"))
-    fundacao = _safe_get(analise, "tomador", "fundacao", default="[Ano]")
-    sede = parametros.get("localidade", _safe_get(analise, "tomador", "sede", default="[Cidade/UF]"))
-    segmento = parametros.get("setor", _safe_get(analise, "tomador", "segmento", default="[Segmento]"))
-    socios = _safe_get(analise, "tomador", "socios", default="[Sócios / Gestão]")
-    descricao = _safe_get(analise, "tomador", "descricao", default="[Descrição da empresa]")
-
-    _replace_on_slide(slide, "[NOME DO GRUPO / EMPRESA]", str(nome))
-    # Fundacao, Sede, Segmento sao parte do text block no shape 9
-    _replace_on_slide(slide, "[Ano]", str(fundacao))
-    _replace_on_slide(slide, "[Cidade/UF]", str(sede))
-    _replace_on_slide(slide, "[Agronegócio / Imobiliário / Industrial / etc.]", str(segmento))
-
-    # Socios e descricao
-    _replace_on_slide(slide, "[Nomes e cargos principais]", str(socios))
+    _replace_on_slide(slide, "[NOME DO GRUPO / EMPRESA]", str(data["nome"]))
+    _replace_on_slide(slide, "[Ano]", str(data["fundacao"]))
+    _replace_on_slide(slide, "[Cidade/UF]", str(data["sede"]))
+    _replace_on_slide(slide, "[Agronegócio / Imobiliário / Industrial / etc.]", str(data["segmento"]))
+    _replace_on_slide(slide, "[Nomes e cargos principais]", str(data["socios"]))
+    # Descricao: truncar para caber no box
+    desc = str(data["descricao"])[:500]
     _replace_on_slide(
         slide,
         "[Breve histórico da empresa, atividades principais, diferenciais competitivos, principais clientes/offtakers, e posicionamento de mercado. 3-4 linhas.]",
-        str(descricao),
+        desc,
     )
 
     # --- Right panel: KPI cards ---
-    receita = _safe_get(analise, "kpis", "receita_liquida", default=0)
-    ebitda = _safe_get(analise, "kpis", "ebitda", default=0)
-    colaboradores = _safe_get(analise, "tomador", "colaboradores", default="—")
-    capacidade = _safe_get(analise, "tomador", "capacidade", default="—")
-    unidades = _safe_get(analise, "tomador", "unidades", default="—")
-    clientes = _safe_get(analise, "tomador", "principais_clientes", default="—")
-
-    _replace_on_slide(slide, "R$ [XXX] MM", _fmt_brl(receita) if receita != "—" else "—")
-    _replace_on_slide(slide, "R$ [XX] MM", _fmt_brl(ebitda) if ebitda != "—" else "—")
-    _replace_on_slide(slide, "[XXX]", str(colaboradores))
-    _replace_on_slide(slide, "[XX.XXX ha / m² / ton]", str(capacidade))
-    _replace_on_slide(slide, "[X] unidades em [UFs]", str(unidades))
-    _replace_on_slide(slide, "[Cliente A, B, C]", str(clientes))
+    _replace_on_slide(slide, "R$ [XXX] MM", _fmt_brl(data["receita"]) if data["receita"] else "—")
+    _replace_on_slide(slide, "R$ [XX] MM", _fmt_brl(data["ebitda"]) if data["ebitda"] else "—")
+    _replace_on_slide(slide, "[XXX]", str(data["colaboradores"]))
+    _replace_on_slide(slide, "[XX.XXX ha / m² / ton]", str(data["capacidade"]))
+    _replace_on_slide(slide, "[X] unidades em [UFs]", str(data["unidades"]))
+    _replace_on_slide(slide, "[Cliente A, B, C]", str(data["clientes"]))
 
 
 # ---------------------------------------------------------------------------
 # Slide 4 — Estrutura da Operacao & Indicadores Financeiros
 # ---------------------------------------------------------------------------
 def _fill_estrutura(slide, analise: dict, parametros: dict):
+    data = _extract_company_data(analise, parametros)
     data_pt = _current_date_pt()
     _replace_on_slide(slide, "Março 2026", data_pt)
     _replace_on_slide(slide, "Marco 2026", data_pt)
 
     # --- Flow boxes ---
-    tomador = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default="TOMADOR"))
-    tipo = parametros.get("tipo_operacao", _safe_get(analise, "operacao", "instrumento", default=""))
-    tipo_upper = str(tipo).upper()
+    tomador = str(data["nome"])
+    tipo_upper = str(data["instrumento"]).upper()
 
     # Determine veiculo com base no tipo
     veiculos_map = {
@@ -354,12 +424,15 @@ def _fill_estrutura(slide, analise: dict, parametros: dict):
 
     # --- Indicadores Financeiros table (9 rows x 4 cols) ---
     if financeiros_table:
-        kpis = analise.get("kpis", {})
-        if not isinstance(kpis, dict):
-            kpis = {}
-        historico = analise.get("historico_financeiro", {})
-        if not isinstance(historico, dict):
-            historico = {}
+        a = _safe_dict(analise.get("analise"))
+        kpis = _safe_dict(a.get("kpis")) if a else _safe_dict(analise.get("kpis"))
+        cap = _safe_dict(a.get("capital"))
+        cap_ind = _safe_dict(cap.get("indicadores"))
+        cap_end = _safe_dict(cap.get("endividamento"))
+        pat = _safe_dict(a.get("patrimonio"))
+        pat_ativos = _safe_dict(pat.get("ativos_reais"))
+        pag = _safe_dict(a.get("pagamento"))
+
         now = datetime.now()
         anos = [str(now.year - 2), str(now.year - 1), str(now.year)]
 
@@ -367,7 +440,21 @@ def _fill_estrutura(slide, analise: dict, parametros: dict):
         for ci, ano in enumerate(anos):
             _replace_in_table_cell(financeiros_table, 0, ci + 1, ano)
 
-        # Mapping: row -> kpi key, formatter
+        # Build latest year data from all sources
+        latest = {
+            "receita_liquida": data["receita"],
+            "ebitda": data["ebitda"],
+            "margem_ebitda": data["margem_ebitda"],
+            "divida_liquida": data["divida_liquida"],
+            "div_liq_ebitda": data["div_liq_ebitda"],
+            "dscr": data["dscr"],
+            "ltv": data["ltv"],
+            "pl": data["pl"],
+        }
+
+        # Try to get historical data
+        historico = _safe_dict(analise.get("historico_financeiro"))
+
         row_map = [
             ("receita_liquida", _fmt_brl),
             ("ebitda", _fmt_brl),
@@ -381,15 +468,16 @@ def _fill_estrutura(slide, analise: dict, parametros: dict):
 
         for row_idx, (key, fmt) in enumerate(row_map):
             for col_idx, ano in enumerate(anos):
-                # Tenta historico primeiro, depois kpi geral (apenas para ano corrente)
                 val = "—"
+                # Try historico first
                 if historico:
-                    val_raw = _safe_get(historico, ano, key, default="—")
-                    if val_raw != "—":
+                    val_raw = _safe_get(historico, ano, key, default=None)
+                    if val_raw not in (None, "", 0, 0.0, "—"):
                         val = fmt(val_raw)
-                if val == "—" and col_idx == 2:  # Ano corrente: tenta kpis direto
-                    val_raw = kpis.get(key, "—")
-                    if val_raw and val_raw != "—":
+                # Last column: use latest data
+                if val == "—" and col_idx == 2:
+                    val_raw = latest.get(key, 0)
+                    if val_raw and val_raw not in (0, 0.0, "—"):
                         val = fmt(val_raw)
                 _replace_in_table_cell(financeiros_table, row_idx + 1, col_idx + 1, val)
 
@@ -398,49 +486,75 @@ def _fill_estrutura(slide, analise: dict, parametros: dict):
 # Slide 5 — Garantias & Soundness
 # ---------------------------------------------------------------------------
 def _fill_garantias(slide, analise: dict, parametros: dict):
+    data = _extract_company_data(analise, parametros)
     data_pt = _current_date_pt()
     _replace_on_slide(slide, "Março 2026", data_pt)
     _replace_on_slide(slide, "Marco 2026", data_pt)
 
-    garantias_list = parametros.get("garantias", analise.get("garantias", []))
+    # Busca garantias detalhadas de todas as fontes
+    garantias_list = data.get("garantias_detalhadas", [])
     if not isinstance(garantias_list, list):
         garantias_list = []
+    # Fallback para garantias simples
+    if not garantias_list:
+        garantias_list = parametros.get("garantias", analise.get("garantias", []))
+        if not isinstance(garantias_list, list):
+            garantias_list = []
 
-    # Mapa de tipo de garantia -> placeholder no template
-    placeholder_map = {
-        "alienacao_fiduciaria": "[Descrição do imóvel/bem, matrícula, localização, valor de avaliação]",
-        "alienação fiduciária": "[Descrição do imóvel/bem, matrícula, localização, valor de avaliação]",
-        "alienacao fiduciaria": "[Descrição do imóvel/bem, matrícula, localização, valor de avaliação]",
-        "cessao_fiduciaria": "[Recebíveis cedidos, fluxo, prazo, valor estimado do lastro]",
-        "cessão fiduciária": "[Recebíveis cedidos, fluxo, prazo, valor estimado do lastro]",
-        "cessao fiduciaria": "[Recebíveis cedidos, fluxo, prazo, valor estimado do lastro]",
-        "aval": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
-        "fianca": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
-        "aval_fianca": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
-        "aval / fiança": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
-        "fundo_reserva": "[X] parcelas equivalentes — constituição [pré/pós] emissão",
-        "fundo de reserva": "[X] parcelas equivalentes — constituição [pré/pós] emissão",
-    }
+    # Placeholders do template
+    ph_alienacao = "[Descrição do imóvel/bem, matrícula, localização, valor de avaliação]"
+    ph_cessao = "[Recebíveis cedidos, fluxo, prazo, valor estimado do lastro]"
+    ph_aval = "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]"
+    ph_fundo = "[X] parcelas equivalentes — constituição [pré/pós] emissão"
 
-    # Tenta fazer match por tipo
+    # Classificacao por tipo
+    alienacao_descs = []
+    cessao_descs = []
+    aval_descs = []
+    fundo_descs = []
+
     for gar in garantias_list:
         if isinstance(gar, str):
-            # Garantia veio como string simples
-            _replace_on_slide(slide, list(placeholder_map.values())[0], gar)
+            tipo_lower = gar.lower()
+        elif isinstance(gar, dict):
+            tipo_lower = str(gar.get("tipo_garantia", gar.get("tipo", ""))).lower()
+        else:
             continue
-        if not isinstance(gar, dict):
-            continue
-        tipo_raw = str(gar.get("tipo", "")).lower().strip()
-        desc = str(gar.get("descricao", "—"))
-        placeholder = placeholder_map.get(tipo_raw)
-        if placeholder:
-            _replace_on_slide(slide, placeholder, desc)
+
+        # Build description
+        if isinstance(gar, dict):
+            desc = gar.get("descricao", "")
+            valor = gar.get("valor_estimado", 0)
+            if valor and valor != 0:
+                desc += f" (valor estimado: {_fmt_brl(valor)})"
+        else:
+            desc = gar
+
+        if any(k in tipo_lower for k in ["alienação", "alienacao", "fiduciária de", "fiduciaria de", "imóv", "imov"]):
+            if "cessão" not in tipo_lower and "cessao" not in tipo_lower and "recebív" not in tipo_lower:
+                alienacao_descs.append(desc)
+        if any(k in tipo_lower for k in ["cessão", "cessao", "recebív", "recebiv", "crédito", "credito"]):
+            cessao_descs.append(desc)
+        if any(k in tipo_lower for k in ["aval", "fiança", "fianca"]):
+            aval_descs.append(desc)
+        if any(k in tipo_lower for k in ["fundo", "reserva"]):
+            fundo_descs.append(desc)
+
+    if alienacao_descs:
+        _replace_on_slide(slide, ph_alienacao, "; ".join(alienacao_descs)[:300])
+    if cessao_descs:
+        _replace_on_slide(slide, ph_cessao, "; ".join(cessao_descs)[:300])
+    if aval_descs:
+        _replace_on_slide(slide, ph_aval, "; ".join(aval_descs)[:300])
+    if fundo_descs:
+        _replace_on_slide(slide, ph_fundo, "; ".join(fundo_descs)[:300])
 
     # Razao de garantia
-    ltv = _safe_get(analise, "kpis", "ltv", default="")
-    if ltv and ltv != "—":
+    ltv_val = data["ltv"]
+    if ltv_val and ltv_val not in (0, 0.0, "—"):
         try:
-            razao = 1 / float(ltv) if 0 < float(ltv) <= 1 else float(ltv)
+            ltv_f = float(ltv_val)
+            razao = 1 / ltv_f if 0 < ltv_f <= 1 else ltv_f
             razao_str = _fmt_mult(razao)
         except (TypeError, ValueError, ZeroDivisionError):
             razao_str = "—"
@@ -448,14 +562,12 @@ def _fill_garantias(slide, analise: dict, parametros: dict):
         razao_str = "—"
     _replace_on_slide(slide, "[X,Xx]x", razao_str)
 
-    # Nota de soundness
-    parecer = _safe_get(analise, "rating_final", "parecer", default="")
-    justificativa = _safe_get(analise, "rating_final", "justificativa", default="")
-    soundness_text = str(parecer) if parecer != "—" else str(justificativa) if justificativa != "—" else "—"
+    # Nota de soundness — usar justificativa completa do rating
+    soundness = str(data["justificativa"])[:300] if data["justificativa"] != "—" else str(data["parecer"])
     _replace_on_slide(
         slide,
         "[Resumo da tese de crédito: por que os riscos estão mitigados. 2-3 linhas.]",
-        soundness_text[:300],
+        soundness,
     )
 
 
