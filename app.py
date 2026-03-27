@@ -525,6 +525,25 @@ def _list_history() -> list[dict]:
     return items
 
 
+def _load_operacoes_from_history():
+    """Populate operacoes from history files if list is empty."""
+    if st.session_state.operacoes:
+        return
+    for item in _list_history():
+        op = item.get("operacao", {})
+        if op:
+            rating_final = item.get("analise", {}).get("rating_final", {})
+            if rating_final:
+                op["rating"] = rating_final.get("nota", op.get("rating", "—"))
+                op["parecer"] = rating_final.get("parecer", op.get("parecer", "—"))
+            if "status" not in op or op["status"] == "Em Andamento":
+                op["status"] = "Concluída"
+            st.session_state.operacoes.append(op)
+
+
+_load_operacoes_from_history()
+
+
 def _load_from_history(filename: str) -> dict | None:
     """Load a specific analysis from history."""
     path = HISTORY_DIR / filename
@@ -1189,6 +1208,7 @@ def page_nova_analise():
                     "data_criacao": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 }
                 st.session_state.current_op = op
+                st.session_state.operacoes.append(op)
                 _save_cache()
             else:
                 garantias_list = [g.strip() for g in garantias_text.strip().split("\n") if g.strip()]
@@ -1211,6 +1231,7 @@ def page_nova_analise():
                     "data_criacao": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 }
                 st.session_state.current_op = op
+                st.session_state.operacoes.append(op)
                 _save_cache()
                 st.success("Parâmetros salvos com sucesso.")
 
@@ -1495,6 +1516,7 @@ def page_nova_analise():
                             rating_final = analise.get("rating_final", {})
                             op["rating"] = rating_final.get("nota", "—")
                             op["parecer"] = rating_final.get("parecer", "—")
+                            op["status"] = "Concluída"
                             st.session_state.current_op = op
                             _save_cache()
 
@@ -2428,6 +2450,7 @@ def main():
         # Quick stats in sidebar
         total = len(st.session_state.operacoes)
         em_andamento = _count_ops_by_status("Em Andamento")
+        concluidas_sb = _count_ops_by_status("Concluída")
         st.markdown(
             f"""
             <div style="padding:4px 8px;">
@@ -2437,9 +2460,13 @@ def main():
                     <span style="color:rgba(255,255,255,0.6); font-size:0.8rem;">Operações</span>
                     <span style="color:#FFFFFF; font-weight:700; font-size:0.8rem;">{total}</span>
                 </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="color:rgba(255,255,255,0.6); font-size:0.8rem;">Concluídas</span>
+                    <span style="color:#2E7D4F; font-weight:700; font-size:0.8rem;">{concluidas_sb}</span>
+                </div>
                 <div style="display:flex; justify-content:space-between;">
                     <span style="color:rgba(255,255,255,0.6); font-size:0.8rem;">Em andamento</span>
-                    <span style="color:#FFFFFF; font-weight:700; font-size:0.8rem;">{em_andamento}</span>
+                    <span style="color:#EAB308; font-weight:700; font-size:0.8rem;">{em_andamento}</span>
                 </div>
             </div>
             """,
