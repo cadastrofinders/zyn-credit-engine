@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.dadosfazenda.com.br"
+APP_URL = "https://app.dadosfazenda.com.br"
+SUPABASE_URL = "https://touwirvweqpddxpblgip.supabase.co"
 SUPABASE_API_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"  # Supabase anon key (public)
 )
@@ -48,7 +50,7 @@ class DadosFazendaClient:
 
     def _authenticate(self) -> bool:
         """Authenticate via Supabase and cache JWT token."""
-        url = f"{BASE_URL}/auth/v1/token"
+        url = f"{SUPABASE_URL}/auth/v1/token"
         params = {"grant_type": "password"}
         payload = {"email": self.email, "password": self.password}
         headers = {
@@ -161,7 +163,195 @@ class DadosFazendaClient:
         return {}
 
     # ------------------------------------------------------------------
-    # Endpoints individuais
+    # Busca aberta — qualquer propriedade do Brasil
+    # ------------------------------------------------------------------
+
+    def search_car_by_location(self, lat: float, lon: float, radius_km: float = 5) -> list:
+        """Busca CARs na base nacional por coordenadas + raio.
+
+        Returns:
+            list of CAR codes encontrados na área.
+        """
+        data = self._request(
+            "GET",
+            "/car/search/radius",
+            params={"lat": lat, "lon": lon, "radius": radius_km},
+        )
+        results = data.get("data", data.get("features", []))
+        if isinstance(results, list):
+            return results
+        return []
+
+    def geocode(self, query: str) -> dict:
+        """Geocode de município/localização via API do app.
+
+        Returns:
+            dict com lat, lon, display_name.
+        """
+        self._ensure_auth()
+        try:
+            resp = self.session.get(
+                f"{APP_URL}/api/geocode",
+                params={"q": query},
+                headers={"Authorization": f"Bearer {self.token}"},
+                timeout=10,
+            )
+            if resp.status_code == 200:
+                return resp.json()
+        except Exception as e:
+            logger.warning(f"[DadosFazenda] Geocode falhou: {e}")
+        return {}
+
+    def consulta_car_aberta(self, car_code: str) -> dict:
+        """Consulta completa de um CAR qualquer (base nacional).
+
+        Não precisa estar cadastrado na conta — usa endpoints de consulta aberta.
+
+        Returns:
+            dict com ndvi, embargos, sobreposicoes, alertas, score_ambiental.
+        """
+        car_code = car_code.strip().upper()
+        logger.info(f"[DadosFazenda] Consulta aberta CAR: {car_code}")
+
+        resultado = {"car_code": car_code, "alertas": []}
+        endpoints = {}
+
+        # Parallel calls
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            endpoints["ndvi"] = executor.submit(self.get_ndvi, car_code)
+            endpoints["embargos"] = executor.submit(self.get_embargos, car_code)
+            # Sobreposições usam o mesmo CAR code (não apenas SIGEF)
+            endpoints["quilombolas"] = executor.submit(
+                self._request, "GET", f"/quilombolas/sigef/{car_code}"
+            )
+            endpoints["terras_indigenas"] = executor.submit(
+                self._request, "GET", f"/terras-indigenas/sigef/{car_code}"
+            )
+            endpoints["assentamentos"] = executor.submit(
+                self._request, "GET", f"/assentamentos/sigef/{car_code}"
+            )
+            endpoints["unidades_conservacao"] = executor.submit(
+                self._request, "GET", f"/unidades-conservacao/sigef/{car_code}"
+            )
+            endpoints["incra"] = executor.submit(
+                self._request, "GET", f"/incra/{car_code}/local"
+            )
+
+        alertas = []
+
+        # NDVI
+        try:
+            ndvi_raw = endpoints["ndvi"].result(timeout=15)
+            ndvi_data = ndvi_raw.get("data", ndvi_raw)
+            ts = ndvi_data.get("timeseries", [])
+            if ts:
+                latest = ts[-1] if isinstance(ts[-1], dict) else {}
+                resultado["ndvi"] = {
+                    "ndvi_mean": latest.get("ndvi_mean", 0),
+                    "ndvi_median": latest.get("ndvi_median", 0),
+                    "ndvi_min": latest.get("ndvi_min", 0),
+                    "ndvi_max": latest.get("ndvi_max", 0),
+                    "data_cena": latest.get("scene_date", ""),
+                    "pontos": len(ts),
+                }
+                # Trend: compare last 3 vs previous 3
+                if len(ts) >= 6:
+                    recent = sum(t.get("ndvi_mean", 0) for t in ts[-3:]) / 3
+                    prev = sum(t.get("ndvi_mean", 0) for t in ts[-6:-3]) / 3
+                    diff = recent - prev
+                    if diff > 0.05:
+                        resultado["ndvi"]["tendencia"] = "Melhora"
+                    elif diff < -0.05:
+                        resultado["ndvi"]["tendencia"] = "Degradação"
+                        alertas.append("⚠ NDVI em degradação nos últimos meses")
+                    else:
+                        resultado["ndvi"]["tendencia"] = "Estável"
+                else:
+                    resultado["ndvi"]["tendencia"] = "Dados insuficientes"
+
+                veg_pct = latest.get("distribution", {})
+                resultado["ndvi"]["cobertura_vegetal_pct"] = (
+                    veg_pct.get("dense_vegetation", 0)
+                    + veg_pct.get("moderate_vegetation", 0)
+                ) * 100 if isinstance(veg_pct, dict) else 0
+        except Exception as e:
+            logger.warning(f"[DadosFazenda] NDVI falhou: {e}")
+            resultado["ndvi"] = {}
+
+        # Embargos
+        try:
+            emb_raw = endpoints["embargos"].result(timeout=15)
+            emb_data = emb_raw.get("data", emb_raw)
+            tem_embargo = False
+            detalhes = ""
+            if isinstance(emb_data, dict):
+                mb = emb_data.get("mapbiomas", {})
+                ibama = emb_data.get("ibama", [])
+                if ibama and isinstance(ibama, list) and len(ibama) > 0:
+                    tem_embargo = True
+                    detalhes = f"IBAMA: {len(ibama)} embargo(s)"
+                if isinstance(mb, dict) and mb.get("has_alerts"):
+                    tem_embargo = True
+                    detalhes += " | MapBiomas: alertas ativos"
+            resultado["embargos"] = {
+                "tem_embargo": tem_embargo,
+                "detalhes": detalhes or "Sem embargos",
+            }
+            if tem_embargo:
+                alertas.append(f"🔴 Embargo ativo: {detalhes}")
+            else:
+                alertas.append("✅ Sem embargos IBAMA/MapBiomas")
+        except Exception as e:
+            logger.warning(f"[DadosFazenda] Embargos falhou: {e}")
+            resultado["embargos"] = {}
+
+        # Sobreposições
+        sobrep = {}
+        for key in ("quilombolas", "terras_indigenas", "assentamentos", "unidades_conservacao"):
+            try:
+                raw = endpoints[key].result(timeout=15)
+                data = raw.get("data", raw)
+                tem = False
+                if isinstance(data, dict):
+                    tem = data.get("has_overlap", data.get("tem_sobreposicao", False))
+                elif isinstance(data, list) and len(data) > 0:
+                    tem = True
+                label = key.replace("_", " ").title()
+                sobrep[key] = {"tem_sobreposicao": tem, "dados": data}
+                if tem:
+                    alertas.append(f"🔴 Sobreposição com {label} detectada")
+                else:
+                    alertas.append(f"✅ {label}: Livre")
+            except Exception as e:
+                logger.warning(f"[DadosFazenda] {key} falhou: {e}")
+                sobrep[key] = {"tem_sobreposicao": False, "dados": {}}
+        resultado["sobreposicoes"] = sobrep
+
+        # INCRA
+        try:
+            incra_raw = endpoints["incra"].result(timeout=15)
+            resultado["incra"] = incra_raw.get("data", incra_raw)
+        except Exception:
+            resultado["incra"] = {}
+
+        # Score ambiental
+        tem_embargo = resultado.get("embargos", {}).get("tem_embargo", False)
+        tem_ti = sobrep.get("terras_indigenas", {}).get("tem_sobreposicao", False)
+        tem_quilombo = sobrep.get("quilombolas", {}).get("tem_sobreposicao", False)
+        ndvi_deg = resultado.get("ndvi", {}).get("tendencia") == "Degradação"
+
+        if tem_embargo or tem_ti or tem_quilombo:
+            resultado["score_ambiental"] = "Vermelho"
+        elif ndvi_deg or sobrep.get("assentamentos", {}).get("tem_sobreposicao"):
+            resultado["score_ambiental"] = "Amarelo"
+        else:
+            resultado["score_ambiental"] = "Verde"
+
+        resultado["alertas"] = alertas
+        return resultado
+
+    # ------------------------------------------------------------------
+    # Endpoints individuais (propriedades monitoradas)
     # ------------------------------------------------------------------
 
     def get_properties(self) -> list:

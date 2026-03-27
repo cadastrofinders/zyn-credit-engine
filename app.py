@@ -2746,30 +2746,65 @@ def page_consulta_agro():
             progress.progress(0.15, text="🔄 Buscando propriedades...")
 
             if tipo_busca == "CAR":
-                # Direct CAR lookup
-                car_codes = [valor.upper().strip()]
-                progress.progress(0.20, text=f"🌱 Consultando CAR: {car_codes[0][:30]}...")
+                # Direct CAR lookup — base nacional completa
+                car_code = valor.upper().strip()
+                progress.progress(0.25, text=f"🌱 Consultando CAR na base nacional: {car_code[:40]}...")
+                prop_result = df_client.consulta_car_aberta(car_code)
+                resultado = {
+                    "total_propriedades": 1,
+                    "area_total_ha": 0,
+                    "propriedades": [prop_result],
+                    "alertas_consolidados": prop_result.get("alertas", []),
+                    "score_ambiental_grupo": prop_result.get("score_ambiental", "N/D"),
+                    "resumo": f"Consulta CAR {car_code}: Score {prop_result.get('score_ambiental', 'N/D')}",
+                }
+                cruzamento = {}
+                progress.progress(1.0, text="✅ Consulta concluída!")
             else:
-                # CPF/CNPJ — search all properties and filter
+                # CPF/CNPJ — busca todas propriedades monitoradas na conta
                 progress.progress(0.20, text=f"🔍 Buscando propriedades vinculadas ao {tipo_busca}...")
                 all_props = df_client.get_properties()
-                # For now, use all properties (API doesn't filter by CPF/CNPJ directly)
                 car_codes = [p.get("car_code", "") for p in all_props if p.get("car_code")]
-                status.info(f"📋 {len(car_codes)} propriedade(s) encontrada(s) na conta Dados Fazenda")
+                status.info(f"📋 {len(car_codes)} propriedade(s) na base Dados Fazenda. Consultando todas...")
 
-            if not car_codes:
-                progress.empty()
-                st.warning("Nenhuma propriedade encontrada.")
-                return
+                if not car_codes:
+                    progress.empty()
+                    st.warning("Nenhuma propriedade encontrada na conta.")
+                    return
 
-            # Step 2: Consult each property
-            progress.progress(0.30, text=f"🌱 Consultando {len(car_codes)} propriedade(s)...")
-            resultado = df_client.consulta_grupo(car_codes)
-            progress.progress(0.85, text="📊 Gerando relatório...")
+                # Consulta aberta para cada CAR
+                propriedades = []
+                alertas_todos = []
+                for i, car in enumerate(car_codes):
+                    pct = 0.25 + (0.65 * (i + 1) / len(car_codes))
+                    progress.progress(pct, text=f"🌱 {i+1}/{len(car_codes)} — {car[:35]}...")
+                    prop_result = df_client.consulta_car_aberta(car)
+                    propriedades.append(prop_result)
+                    alertas_todos.extend(prop_result.get("alertas", []))
 
-            # Step 3: Cross-reference SIGEF
-            cruzamento = df_client.cruzar_grupo_sigef(car_codes)
-            progress.progress(1.0, text="✅ Consulta concluída!")
+                # Score consolidado
+                scores = [p.get("score_ambiental", "Verde") for p in propriedades]
+                if "Vermelho" in scores:
+                    score_grupo = "Vermelho"
+                elif "Amarelo" in scores:
+                    score_grupo = "Amarelo"
+                else:
+                    score_grupo = "Verde"
+
+                area_total = sum(
+                    p.get("ndvi", {}).get("area_ha", 0) for p in propriedades
+                )
+
+                resultado = {
+                    "total_propriedades": len(propriedades),
+                    "area_total_ha": area_total,
+                    "propriedades": propriedades,
+                    "alertas_consolidados": alertas_todos,
+                    "score_ambiental_grupo": score_grupo,
+                    "resumo": f"Grupo com {len(propriedades)} propriedade(s) — Score: {score_grupo}",
+                }
+                cruzamento = df_client.cruzar_grupo_sigef(car_codes)
+                progress.progress(1.0, text="✅ Consulta concluída!")
             status.empty()
 
             # Save to session for potential use in analysis
