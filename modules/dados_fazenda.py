@@ -1,0 +1,878 @@
+"""
+Dados Fazenda — Integração com API para análise de crédito agro
+Consulta automatizada de CAR, NDVI, embargos e sobreposições ambientais
+
+API: https://api.dadosfazenda.com.br
+Auth: Supabase JWT (email/password)
+"""
+
+import requests
+import logging
+import time
+from typing import Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
+
+BASE_URL = "https://api.dadosfazenda.com.br"
+SUPABASE_API_KEY = (
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"  # Supabase anon key (public)
+)
+
+
+class DadosFazendaError(Exception):
+    """Erro genérico da integração Dados Fazenda."""
+    pass
+
+
+class DadosFazendaAuthError(DadosFazendaError):
+    """Falha de autenticação."""
+    pass
+
+
+class DadosFazendaClient:
+    """Client para a API Dados Fazenda."""
+
+    def __init__(self, email: str, password: str):
+        self.email = email
+        self.password = password
+        self.token: Optional[str] = None
+        self.token_expires: float = 0
+        self.session = requests.Session()
+        self.session.headers.update({"Content-Type": "application/json"})
+
+    # ------------------------------------------------------------------
+    # Auth
+    # ------------------------------------------------------------------
+
+    def _authenticate(self) -> bool:
+        """Authenticate via Supabase and cache JWT token."""
+        url = f"{BASE_URL}/auth/v1/token"
+        params = {"grant_type": "password"}
+        payload = {"email": self.email, "password": self.password}
+        headers = {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_API_KEY,
+        }
+
+        t0 = time.monotonic()
+        try:
+            resp = self.session.post(
+                url, params=params, json=payload, headers=headers, timeout=15
+            )
+            elapsed = time.monotonic() - t0
+            logger.info(f"[DadosFazenda] AUTH {resp.status_code} em {elapsed:.2f}s")
+
+            if resp.status_code == 200:
+                data = resp.json()
+                self.token = data.get("access_token")
+                expires_in = data.get("expires_in", 3600)
+                # Renew 60s before actual expiry
+                self.token_expires = time.time() + expires_in - 60
+                return True
+
+            logger.error(f"[DadosFazenda] Auth falhou: {resp.status_code} {resp.text}")
+            raise DadosFazendaAuthError(
+                f"Autenticação falhou ({resp.status_code}): {resp.text}"
+            )
+        except requests.RequestException as e:
+            logger.error(f"[DadosFazenda] Auth erro de rede: {e}")
+            raise DadosFazendaAuthError(f"Erro de rede na autenticação: {e}") from e
+
+    def _ensure_auth(self) -> None:
+        """Authenticate if token is missing or expired."""
+        if not self.token or time.time() >= self.token_expires:
+            self._authenticate()
+
+    # ------------------------------------------------------------------
+    # HTTP helper
+    # ------------------------------------------------------------------
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        max_retries: int = 3,
+        **kwargs,
+    ) -> dict:
+        """Make authenticated request with auto-retry on 401 and rate-limit."""
+        self._ensure_auth()
+
+        url = f"{BASE_URL}{path}"
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_API_KEY,
+        }
+
+        for attempt in range(1, max_retries + 1):
+            t0 = time.monotonic()
+            try:
+                resp = self.session.request(
+                    method, url, headers=headers, timeout=30, **kwargs
+                )
+                elapsed = time.monotonic() - t0
+                logger.info(
+                    f"[DadosFazenda] {method} {path} → {resp.status_code} "
+                    f"em {elapsed:.2f}s (tentativa {attempt})"
+                )
+
+                # Success
+                if resp.status_code == 200:
+                    return resp.json()
+
+                # Empty result (204 / 404 without body)
+                if resp.status_code in (204, 404):
+                    return {}
+
+                # Token expired — re-auth and retry
+                if resp.status_code == 401 and attempt < max_retries:
+                    logger.warning("[DadosFazenda] Token expirado, re-autenticando...")
+                    self._authenticate()
+                    headers["Authorization"] = f"Bearer {self.token}"
+                    continue
+
+                # Rate limit — wait and retry
+                if resp.status_code == 429 and attempt < max_retries:
+                    wait = float(resp.headers.get("Retry-After", 2))
+                    logger.warning(
+                        f"[DadosFazenda] Rate limit, aguardando {wait}s..."
+                    )
+                    time.sleep(wait)
+                    continue
+
+                # Other errors
+                logger.error(
+                    f"[DadosFazenda] Erro {resp.status_code}: {resp.text[:500]}"
+                )
+                return {}
+
+            except requests.RequestException as e:
+                elapsed = time.monotonic() - t0
+                logger.error(
+                    f"[DadosFazenda] {method} {path} erro de rede "
+                    f"({elapsed:.2f}s, tentativa {attempt}): {e}"
+                )
+                if attempt == max_retries:
+                    return {}
+                time.sleep(1)
+
+        return {}
+
+    # ------------------------------------------------------------------
+    # Endpoints individuais
+    # ------------------------------------------------------------------
+
+    def get_properties(self) -> list:
+        """Lista todas as propriedades monitoradas.
+
+        Returns:
+            list of dict com id, car_code, farm_name, municipio, estado,
+            area_ha, latitude, longitude, source_type.
+        """
+        data = self._request("GET", "/api/properties")
+        if isinstance(data, list):
+            return data
+        return data.get("data", data.get("properties", []))
+
+    def get_ndvi(self, car_code: str) -> dict:
+        """Série temporal de NDVI (saúde vegetativa) para um código CAR.
+
+        Returns:
+            dict com timeseries de ndvi_mean, ndvi_median, ndvi_min,
+            ndvi_max, distribution.
+        """
+        return self._request("GET", f"/api/ndvi/car/{car_code}")
+
+    def get_embargos(self, car_code: str) -> dict:
+        """Embargos IBAMA e MapBiomas para um código CAR.
+
+        Returns:
+            dict com source, mapbiomas: {...}, ibama: [...].
+        """
+        return self._request("GET", f"/api/embargo/car/{car_code}")
+
+    def get_quilombolas(self, sigef_id: str) -> dict:
+        """Sobreposição com áreas quilombolas."""
+        return self._request("GET", f"/quilombolas/sigef/{sigef_id}")
+
+    def get_terras_indigenas(self, sigef_id: str) -> dict:
+        """Sobreposição com terras indígenas."""
+        return self._request("GET", f"/terras-indigenas/sigef/{sigef_id}")
+
+    def get_assentamentos(self, sigef_id: str) -> dict:
+        """Sobreposição com assentamentos."""
+        return self._request("GET", f"/assentamentos/sigef/{sigef_id}")
+
+    def get_unidades_conservacao(self, sigef_id: str) -> dict:
+        """Sobreposição com unidades de conservação."""
+        return self._request("GET", f"/unidades-conservacao/sigef/{sigef_id}")
+
+    def get_sobreposicoes(self, sigef_id: str) -> dict:
+        """Consulta todas as sobreposições ambientais em paralelo.
+
+        Returns:
+            dict com quilombolas, terras_indigenas, assentamentos,
+            unidades_conservacao.
+        """
+        resultados = {
+            "quilombolas": {},
+            "terras_indigenas": {},
+            "assentamentos": {},
+            "unidades_conservacao": {},
+        }
+
+        calls = {
+            "quilombolas": (self.get_quilombolas, sigef_id),
+            "terras_indigenas": (self.get_terras_indigenas, sigef_id),
+            "assentamentos": (self.get_assentamentos, sigef_id),
+            "unidades_conservacao": (self.get_unidades_conservacao, sigef_id),
+        }
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {
+                executor.submit(fn, arg): key for key, (fn, arg) in calls.items()
+            }
+            for future in as_completed(futures):
+                key = futures[future]
+                try:
+                    resultados[key] = future.result()
+                except Exception as e:
+                    logger.error(f"[DadosFazenda] Erro em {key}: {e}")
+                    resultados[key] = {"erro": str(e)}
+
+        return resultados
+
+    def get_incra(self, sigef_id: str) -> dict:
+        """Dados de georreferenciamento INCRA."""
+        return self._request("GET", f"/incra/{sigef_id}/local")
+
+    # ------------------------------------------------------------------
+    # Análise NDVI
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _analisar_ndvi(ndvi_data: dict) -> dict:
+        """Calcula tendência NDVI e classifica saúde vegetativa.
+
+        Compara média dos últimos 3 meses vs 3 meses anteriores.
+        Retorna dict com ultimo_ndvi, tendencia, variacao_pct.
+        """
+        resultado = {
+            "ultimo_ndvi": None,
+            "tendencia": "Indeterminado",
+            "variacao_pct": 0.0,
+            "dados_disponiveis": False,
+        }
+
+        # Extrair série temporal — aceita vários formatos de resposta
+        timeseries = (
+            ndvi_data.get("timeseries")
+            or ndvi_data.get("data")
+            or ndvi_data.get("ndvi")
+        )
+        if not timeseries or not isinstance(timeseries, list):
+            return resultado
+
+        # Ordenar por data (campo date ou period)
+        def _get_date(entry: dict) -> str:
+            return entry.get("date") or entry.get("period") or ""
+
+        try:
+            sorted_ts = sorted(timeseries, key=_get_date)
+        except (TypeError, KeyError):
+            sorted_ts = timeseries
+
+        if len(sorted_ts) < 2:
+            if sorted_ts:
+                resultado["ultimo_ndvi"] = sorted_ts[-1].get("ndvi_mean")
+                resultado["dados_disponiveis"] = True
+            return resultado
+
+        resultado["dados_disponiveis"] = True
+        resultado["ultimo_ndvi"] = sorted_ts[-1].get("ndvi_mean")
+
+        # Últimos 3 períodos vs 3 anteriores
+        recentes = sorted_ts[-3:]
+        anteriores = sorted_ts[-6:-3] if len(sorted_ts) >= 6 else sorted_ts[:-3]
+
+        if not anteriores:
+            return resultado
+
+        def _media_ndvi(entries: list) -> Optional[float]:
+            vals = [
+                e.get("ndvi_mean")
+                for e in entries
+                if e.get("ndvi_mean") is not None
+            ]
+            return sum(vals) / len(vals) if vals else None
+
+        media_recente = _media_ndvi(recentes)
+        media_anterior = _media_ndvi(anteriores)
+
+        if media_recente is None or media_anterior is None or media_anterior == 0:
+            return resultado
+
+        variacao = ((media_recente - media_anterior) / abs(media_anterior)) * 100
+        resultado["variacao_pct"] = round(variacao, 2)
+
+        if variacao <= -15:
+            resultado["tendencia"] = "Degradação"
+        elif variacao >= 5:
+            resultado["tendencia"] = "Melhora"
+        else:
+            resultado["tendencia"] = "Estável"
+
+        return resultado
+
+    # ------------------------------------------------------------------
+    # Análise de embargos
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _analisar_embargos(embargo_data: dict) -> dict:
+        """Analisa se há embargos ativos."""
+        resultado = {
+            "tem_embargo": False,
+            "total_embargos": 0,
+            "fontes": [],
+            "detalhes": [],
+        }
+
+        if not embargo_data:
+            return resultado
+
+        # IBAMA
+        ibama = embargo_data.get("ibama", [])
+        if isinstance(ibama, list) and ibama:
+            resultado["tem_embargo"] = True
+            resultado["total_embargos"] += len(ibama)
+            resultado["fontes"].append("IBAMA")
+            for e in ibama:
+                resultado["detalhes"].append({
+                    "fonte": "IBAMA",
+                    "numero": e.get("numero") or e.get("id"),
+                    "data": e.get("data") or e.get("date"),
+                    "motivo": e.get("motivo") or e.get("descricao") or "N/I",
+                    "status": e.get("status") or "Ativo",
+                })
+
+        # MapBiomas
+        mapbiomas = embargo_data.get("mapbiomas", {})
+        if isinstance(mapbiomas, dict):
+            alertas = mapbiomas.get("alertas") or mapbiomas.get("alerts") or []
+            if isinstance(alertas, list) and alertas:
+                resultado["tem_embargo"] = True
+                resultado["total_embargos"] += len(alertas)
+                if "MapBiomas" not in resultado["fontes"]:
+                    resultado["fontes"].append("MapBiomas")
+                for a in alertas:
+                    resultado["detalhes"].append({
+                        "fonte": "MapBiomas",
+                        "numero": a.get("id"),
+                        "data": a.get("date") or a.get("data"),
+                        "motivo": a.get("type") or a.get("tipo") or "Desmatamento",
+                        "status": a.get("status") or "Ativo",
+                    })
+            # Pode vir como flag direto
+            elif mapbiomas.get("embargo") or mapbiomas.get("embargado"):
+                resultado["tem_embargo"] = True
+                resultado["total_embargos"] += 1
+                resultado["fontes"].append("MapBiomas")
+
+        return resultado
+
+    # ------------------------------------------------------------------
+    # Análise de sobreposições
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _analisar_sobreposicoes(sobreposicoes: dict) -> dict:
+        """Classifica severidade das sobreposições encontradas."""
+        resultado = {
+            "tem_sobreposicao": False,
+            "criticas": [],  # Terra indígena, quilombola
+            "moderadas": [],  # Unidades de conservação
+            "baixas": [],  # Assentamentos
+        }
+
+        def _has_overlap(data: dict) -> bool:
+            """Verifica se o retorno indica sobreposição."""
+            if not data or data.get("erro"):
+                return False
+            # Checagens comuns
+            if data.get("sobrepoe") or data.get("overlap"):
+                return True
+            if data.get("features") and len(data["features"]) > 0:
+                return True
+            if data.get("data") and isinstance(data["data"], list) and len(data["data"]) > 0:
+                return True
+            if data.get("results") and isinstance(data["results"], list) and len(data["results"]) > 0:
+                return True
+            return False
+
+        # Quilombolas — crítico
+        quilombolas = sobreposicoes.get("quilombolas", {})
+        if _has_overlap(quilombolas):
+            resultado["tem_sobreposicao"] = True
+            resultado["criticas"].append({
+                "tipo": "Área Quilombola",
+                "dados": quilombolas,
+            })
+
+        # Terras indígenas — crítico
+        ti = sobreposicoes.get("terras_indigenas", {})
+        if _has_overlap(ti):
+            resultado["tem_sobreposicao"] = True
+            resultado["criticas"].append({
+                "tipo": "Terra Indígena",
+                "dados": ti,
+            })
+
+        # Unidades de conservação — moderado
+        uc = sobreposicoes.get("unidades_conservacao", {})
+        if _has_overlap(uc):
+            resultado["tem_sobreposicao"] = True
+            resultado["moderadas"].append({
+                "tipo": "Unidade de Conservação",
+                "dados": uc,
+            })
+
+        # Assentamentos — baixo
+        assent = sobreposicoes.get("assentamentos", {})
+        if _has_overlap(assent):
+            resultado["tem_sobreposicao"] = True
+            resultado["baixas"].append({
+                "tipo": "Assentamento",
+                "dados": assent,
+            })
+
+        return resultado
+
+    # ------------------------------------------------------------------
+    # Score ambiental
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _calcular_score(
+        analise_ndvi: dict,
+        analise_embargos: dict,
+        analise_sobreposicoes: dict,
+    ) -> str:
+        """Calcula score ambiental consolidado.
+
+        Vermelho: embargo ativo OU sobreposição crítica OU NDVI em degradação severa
+        Amarelo: NDVI degradando OU sobreposições moderadas/baixas
+        Verde: sem restrições
+        """
+        # Vermelho
+        if analise_embargos.get("tem_embargo"):
+            return "Vermelho"
+        if analise_sobreposicoes.get("criticas"):
+            return "Vermelho"
+        if (
+            analise_ndvi.get("tendencia") == "Degradação"
+            and analise_ndvi.get("variacao_pct", 0) <= -30
+        ):
+            return "Vermelho"
+
+        # Amarelo
+        if analise_ndvi.get("tendencia") == "Degradação":
+            return "Amarelo"
+        if analise_sobreposicoes.get("moderadas") or analise_sobreposicoes.get("baixas"):
+            return "Amarelo"
+
+        return "Verde"
+
+    # ------------------------------------------------------------------
+    # Geração de alertas
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _gerar_alertas(
+        car_code: str,
+        analise_ndvi: dict,
+        analise_embargos: dict,
+        analise_sobreposicoes: dict,
+    ) -> list:
+        """Gera lista de alertas em texto para o relatório."""
+        alertas = []
+
+        # Embargos
+        if analise_embargos.get("tem_embargo"):
+            fontes = ", ".join(analise_embargos.get("fontes", []))
+            total = analise_embargos.get("total_embargos", 0)
+            alertas.append(
+                f"\u26a0 Embargo ativo ({fontes}) na propriedade {car_code} "
+                f"({total} registro(s))"
+            )
+
+        # Sobreposições críticas
+        for item in analise_sobreposicoes.get("criticas", []):
+            alertas.append(
+                f"\U0001f534 Sobreposição com {item['tipo']} detectada "
+                f"na propriedade {car_code}"
+            )
+
+        # Sobreposições moderadas
+        for item in analise_sobreposicoes.get("moderadas", []):
+            alertas.append(
+                f"\u26a0 Sobreposição com {item['tipo']} detectada "
+                f"na propriedade {car_code}"
+            )
+
+        # Sobreposições baixas
+        for item in analise_sobreposicoes.get("baixas", []):
+            alertas.append(
+                f"\u26a0 Proximidade com {item['tipo']} detectada "
+                f"na propriedade {car_code}"
+            )
+
+        # NDVI
+        if analise_ndvi.get("tendencia") == "Degradação":
+            var = analise_ndvi.get("variacao_pct", 0)
+            alertas.append(
+                f"\u26a0 NDVI em degradação nos últimos 6 meses "
+                f"({var:+.1f}%) na propriedade {car_code}"
+            )
+
+        # Sem restrições
+        if not alertas:
+            alertas.append(
+                f"\u2705 Sem restrições ambientais detectadas "
+                f"na propriedade {car_code}"
+            )
+
+        return alertas
+
+    # ------------------------------------------------------------------
+    # Consulta completa (propriedade individual)
+    # ------------------------------------------------------------------
+
+    def cruzar_grupo_sigef(self, car_codes_documentos: list) -> dict:
+        """
+        Cross-reference CAR codes found in client documents with
+        properties registered in Dados Fazenda account.
+
+        Returns:
+        {
+            "propriedades_cadastradas": int,
+            "propriedades_documentos": int,
+            "matches": [{"car_code": str, "farm_name": str, "area_ha": float, "status": "Encontrada"}],
+            "nao_cadastradas": [{"car_code": str, "status": "Não encontrada no monitoramento"}],
+            "extras_monitoramento": [{"car_code": str, "farm_name": str, "area_ha": float, "status": "Cadastrada mas não citada em documentos"}],
+            "cobertura_pct": float,  # % of document CARs found in monitoring
+            "alertas": [str]
+        }
+        """
+        props = self.get_properties()
+        prop_cars = {p.get("car_code", "").upper(): p for p in props}
+        doc_cars = set(c.upper() for c in car_codes_documentos)
+
+        matches = []
+        nao_cadastradas = []
+        extras = []
+        alertas = []
+
+        for car in doc_cars:
+            if car in prop_cars:
+                p = prop_cars[car]
+                matches.append({
+                    "car_code": car,
+                    "farm_name": p.get("farm_name", ""),
+                    "area_ha": p.get("area_ha", 0),
+                    "status": "Encontrada"
+                })
+            else:
+                nao_cadastradas.append({
+                    "car_code": car,
+                    "status": "Não encontrada no monitoramento"
+                })
+                alertas.append(f"⚠ CAR {car} citado em documentos mas NÃO está no monitoramento Dados Fazenda")
+
+        for car, p in prop_cars.items():
+            if car not in doc_cars:
+                extras.append({
+                    "car_code": car,
+                    "farm_name": p.get("farm_name", ""),
+                    "area_ha": p.get("area_ha", 0),
+                    "status": "Cadastrada mas não citada em documentos"
+                })
+
+        cobertura = (len(matches) / len(doc_cars) * 100) if doc_cars else 0
+
+        if cobertura < 50:
+            alertas.append(f"🔴 Apenas {cobertura:.0f}% dos CARs dos documentos estão monitorados")
+        elif cobertura < 100:
+            alertas.append(f"⚠ {cobertura:.0f}% dos CARs monitorados — {len(nao_cadastradas)} faltante(s)")
+        else:
+            alertas.append("✅ 100% dos CARs dos documentos estão monitorados no Dados Fazenda")
+
+        if extras:
+            alertas.append(f"ℹ {len(extras)} propriedade(s) monitorada(s) não citada(s) nos documentos do cliente")
+
+        return {
+            "propriedades_cadastradas": len(prop_cars),
+            "propriedades_documentos": len(doc_cars),
+            "matches": matches,
+            "nao_cadastradas": nao_cadastradas,
+            "extras_monitoramento": extras,
+            "cobertura_pct": cobertura,
+            "alertas": alertas
+        }
+
+    def consulta_completa(self, car_code: str, sigef_id: str = None) -> dict:
+        """Consulta completa de uma propriedade rural para análise de crédito.
+
+        Args:
+            car_code: Código CAR da propriedade.
+            sigef_id: Código SIGEF (opcional, necessário para sobreposições e INCRA).
+
+        Returns:
+            dict consolidado com ndvi, embargos, sobreposições, incra,
+            alertas e score_ambiental.
+        """
+        resultado = {
+            "car_code": car_code,
+            "sigef_id": sigef_id,
+            "ndvi": {},
+            "embargos": {},
+            "sobreposicoes": {},
+            "incra": {},
+            "alertas": [],
+            "score_ambiental": "Indeterminado",
+            "consultado_em": datetime.now(timezone.utc).isoformat(),
+        }
+
+        # Parallel calls: NDVI + embargos (por CAR) e sobreposições + INCRA (por SIGEF)
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            future_ndvi = executor.submit(self.get_ndvi, car_code)
+            time.sleep(0.5)
+            future_embargo = executor.submit(self.get_embargos, car_code)
+
+            future_sobr = None
+            future_incra = None
+            if sigef_id:
+                time.sleep(0.5)
+                future_sobr = executor.submit(self.get_sobreposicoes, sigef_id)
+                time.sleep(0.5)
+                future_incra = executor.submit(self.get_incra, sigef_id)
+
+            # Coletar resultados
+            try:
+                ndvi_raw = future_ndvi.result(timeout=60)
+            except Exception as e:
+                logger.error(f"[DadosFazenda] NDVI falhou para {car_code}: {e}")
+                ndvi_raw = {}
+
+            try:
+                embargo_raw = future_embargo.result(timeout=60)
+            except Exception as e:
+                logger.error(f"[DadosFazenda] Embargo falhou para {car_code}: {e}")
+                embargo_raw = {}
+
+            sobreposicoes_raw = {}
+            incra_raw = {}
+            if future_sobr:
+                try:
+                    sobreposicoes_raw = future_sobr.result(timeout=60)
+                except Exception as e:
+                    logger.error(
+                        f"[DadosFazenda] Sobreposições falharam para {sigef_id}: {e}"
+                    )
+            if future_incra:
+                try:
+                    incra_raw = future_incra.result(timeout=60)
+                except Exception as e:
+                    logger.error(
+                        f"[DadosFazenda] INCRA falhou para {sigef_id}: {e}"
+                    )
+
+        # Análise
+        analise_ndvi = self._analisar_ndvi(ndvi_raw)
+        analise_embargos = self._analisar_embargos(embargo_raw)
+        analise_sobreposicoes = self._analisar_sobreposicoes(sobreposicoes_raw)
+
+        resultado["ndvi"] = {
+            "raw": ndvi_raw,
+            "analise": analise_ndvi,
+        }
+        resultado["embargos"] = {
+            "raw": embargo_raw,
+            "analise": analise_embargos,
+        }
+        resultado["sobreposicoes"] = {
+            "raw": sobreposicoes_raw,
+            "analise": analise_sobreposicoes,
+        }
+        resultado["incra"] = incra_raw
+
+        # Score e alertas
+        resultado["score_ambiental"] = self._calcular_score(
+            analise_ndvi, analise_embargos, analise_sobreposicoes
+        )
+        resultado["alertas"] = self._gerar_alertas(
+            car_code, analise_ndvi, analise_embargos, analise_sobreposicoes
+        )
+
+        logger.info(
+            f"[DadosFazenda] Consulta completa {car_code}: "
+            f"score={resultado['score_ambiental']}, "
+            f"{len(resultado['alertas'])} alerta(s)"
+        )
+
+        return resultado
+
+    # ------------------------------------------------------------------
+    # Consulta em grupo
+    # ------------------------------------------------------------------
+
+    def consulta_grupo(
+        self, car_codes: list, sigef_ids: list = None
+    ) -> dict:
+        """Consulta múltiplas propriedades (grupo econômico agro).
+
+        Args:
+            car_codes: Lista de códigos CAR.
+            sigef_ids: Lista de códigos SIGEF (mesma ordem de car_codes).
+                       Pode ser None ou conter None para propriedades sem SIGEF.
+
+        Returns:
+            dict consolidado com total_propriedades, area_total_ha,
+            propriedades, alertas_consolidados, score_ambiental_grupo, resumo.
+        """
+        if sigef_ids is None:
+            sigef_ids = [None] * len(car_codes)
+
+        # Pad sigef_ids se menor que car_codes
+        while len(sigef_ids) < len(car_codes):
+            sigef_ids.append(None)
+
+        propriedades = []
+        alertas_consolidados = []
+
+        # Processar propriedades com delay entre elas
+        for i, (car, sigef) in enumerate(zip(car_codes, sigef_ids)):
+            if i > 0:
+                time.sleep(0.5)  # Rate limit entre propriedades
+            try:
+                resultado = self.consulta_completa(car, sigef)
+                propriedades.append(resultado)
+                alertas_consolidados.extend(resultado.get("alertas", []))
+            except Exception as e:
+                logger.error(f"[DadosFazenda] Falha na consulta de {car}: {e}")
+                propriedades.append({
+                    "car_code": car,
+                    "sigef_id": sigef,
+                    "erro": str(e),
+                    "score_ambiental": "Indeterminado",
+                    "alertas": [f"\u26a0 Consulta falhou para {car}: {e}"],
+                })
+                alertas_consolidados.append(
+                    f"\u26a0 Consulta falhou para {car}: {e}"
+                )
+
+        # Score consolidado do grupo
+        scores = [p.get("score_ambiental", "Indeterminado") for p in propriedades]
+        if "Vermelho" in scores:
+            score_grupo = "Vermelho"
+        elif "Amarelo" in scores:
+            score_grupo = "Amarelo"
+        elif all(s == "Verde" for s in scores):
+            score_grupo = "Verde"
+        else:
+            score_grupo = "Amarelo"
+
+        # Área total (se disponível nos dados INCRA)
+        area_total = 0.0
+        for p in propriedades:
+            incra = p.get("incra", {})
+            area = (
+                incra.get("area_ha")
+                or incra.get("area")
+                or incra.get("areaHa")
+                or 0
+            )
+            try:
+                area_total += float(area)
+            except (ValueError, TypeError):
+                pass
+
+        # Resumo textual para MAC
+        resumo = _gerar_resumo_grupo(
+            len(propriedades), area_total, score_grupo, alertas_consolidados
+        )
+
+        return {
+            "total_propriedades": len(propriedades),
+            "area_total_ha": round(area_total, 2),
+            "propriedades": propriedades,
+            "alertas_consolidados": alertas_consolidados,
+            "score_ambiental_grupo": score_grupo,
+            "resumo": resumo,
+            "consultado_em": datetime.now(timezone.utc).isoformat(),
+        }
+
+
+# ------------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------------
+
+
+def _gerar_resumo_grupo(
+    total: int, area_ha: float, score: str, alertas: list
+) -> str:
+    """Gera texto-resumo do grupo para inclusão no MAC."""
+    area_str = f"{area_ha:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    if score == "Verde":
+        status = (
+            "Todas as propriedades analisadas apresentam situação ambiental "
+            "regular, sem embargos, sobreposições ou degradação vegetativa "
+            "identificados."
+        )
+    elif score == "Amarelo":
+        pontos = [a for a in alertas if "\u26a0" in a]
+        status = (
+            f"Foram identificados {len(pontos)} ponto(s) de atenção nas "
+            f"propriedades analisadas que requerem análise complementar."
+        )
+    else:
+        criticos = [a for a in alertas if "\U0001f534" in a or "Embargo" in a]
+        status = (
+            f"ATENÇÃO: Foram identificadas {len(criticos)} restrição(ões) "
+            f"crítica(s) nas propriedades analisadas. Recomenda-se análise "
+            f"aprofundada antes de prosseguir com a operação."
+        )
+
+    return (
+        f"Análise ambiental de {total} propriedade(s) totalizando "
+        f"{area_str} ha. Score ambiental do grupo: {score}. {status}"
+    )
+
+
+def get_client() -> Optional[DadosFazendaClient]:
+    """Retorna client autenticado a partir dos secrets do Streamlit.
+
+    Secrets necessários:
+        - DADOS_FAZENDA_EMAIL
+        - DADOS_FAZENDA_PASSWORD
+    """
+    try:
+        import streamlit as st
+
+        email = st.secrets.get("DADOS_FAZENDA_EMAIL")
+        password = st.secrets.get("DADOS_FAZENDA_PASSWORD")
+        if not email or not password:
+            logger.warning(
+                "[DadosFazenda] Credenciais não configuradas em st.secrets"
+            )
+            return None
+        return DadosFazendaClient(email, password)
+    except ImportError:
+        logger.warning("[DadosFazenda] Streamlit não instalado")
+        return None
+    except Exception as e:
+        logger.warning(f"[DadosFazenda] Não configurado: {e}")
+        return None

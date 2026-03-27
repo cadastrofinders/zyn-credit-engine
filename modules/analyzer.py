@@ -234,6 +234,15 @@ ALL_DOC_TYPES = [
 ]
 
 
+def extract_car_codes(extractions: dict) -> list:
+    """Extract CAR codes from all extracted document text.
+    Returns list of unique CAR codes found."""
+    car_pattern = re.compile(r'[A-Z]{2}-\d{7}-[A-F0-9]{32}', re.IGNORECASE)
+    all_text = ' '.join(str(v) for v in extractions.values() if v)
+    codes = list(set(car_pattern.findall(all_text.upper())))
+    return codes
+
+
 def _get_client() -> anthropic.Anthropic:
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:

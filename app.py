@@ -165,6 +165,8 @@ try:
         match_investors, get_sector_benchmarks, _detect_sector,
         PRODUCT_DD_EXTRAS, GUARANTEE_TYPES,
     )
+    from modules.analyzer import extract_car_codes
+    from modules.dados_fazenda import DadosFazendaClient, get_client as get_df_client
 
     MODULES_AVAILABLE = True
 except ImportError as _imp_err:
@@ -1668,6 +1670,31 @@ def page_nova_analise():
                             if cnpj and cnpj != "N/I":
                                 dados_para_analise = dict(dados_para_analise)  # copy
                                 enrich_analysis_data(cnpj, dados_para_analise, status_callback=_update_status)
+
+                            # Dados Fazenda — consulta ambiental agro (CAR, NDVI, embargos)
+                            tipo_op = op.get("tipo_operacao", "")
+                            is_agro = tipo_op in ("CRA", "CPR-F", "SLB", "Fiagro") or any(
+                                kw in str(dados_para_analise).lower()
+                                for kw in ("rural", "safra", "hectare", "soja", "milho", "agro", "car ")
+                            )
+                            if is_agro:
+                                try:
+                                    _update_status("🌱 Detectando CARs nos documentos...")
+                                    car_codes = extract_car_codes(st.session_state.extracted_data)
+                                    df_client = get_df_client()
+                                    if car_codes and df_client:
+                                        _update_status(f"🌱 Consultando Dados Fazenda — {len(car_codes)} CAR(s)...")
+                                        df_resultado = df_client.consulta_grupo(car_codes)
+                                        dados_para_analise["dados_fazenda"] = df_resultado
+                                        # Cruzamento SIGEF
+                                        cruzamento = df_client.cruzar_grupo_sigef(car_codes)
+                                        dados_para_analise["cruzamento_sigef"] = cruzamento
+                                        _update_status(f"🌱 Dados Fazenda: {df_resultado.get('total_propriedades', 0)} prop. · Score: {df_resultado.get('score_ambiental_grupo', 'N/D')}")
+                                    elif car_codes:
+                                        dados_para_analise["car_codes_detectados"] = car_codes
+                                        _update_status(f"⚠ {len(car_codes)} CAR(s) detectado(s) mas Dados Fazenda não configurado")
+                                except Exception as e:
+                                    _update_status(f"⚠ Dados Fazenda: {str(e)[:50]}")
 
                             analise = analyze_credit(dados_para_analise, op, status_callback=_update_status)
                             st.session_state.analysis = analise
