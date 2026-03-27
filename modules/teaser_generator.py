@@ -1,65 +1,29 @@
 """
-ZYN Capital — Gerador de Teaser Premium (.pptx) — 8-10 slides
-Baseado na analise de 8 teasers reais ZYN (SNOW FIDC, Ivanoff SLB, Baroon55 CRI,
-Grupo Roca, Goulart, Edificatto, Frigomarca, Fibra Cotton).
+ZYN Capital — Gerador de Teaser (.pptx) baseado em template oficial.
 
-Padrao visual institucional:
-- Fundo navy escuro (#1B2838) com paineis de conteudo navy medio (#223040)
-- KPI cards com valores grandes em branco, labels em cinza
-- Tabelas com header navy, linhas alternadas
-- Barra lateral verde accent, footer institucional
-- Watermark CONFIDENCIAL
+Abre o template Teaser_Template_ZYN.pptx (5 slides, 10x5.62 in, 16:9) e
+substitui os placeholders pelo conteudo real da operacao, preservando toda
+a formatacao visual (fontes, cores, tamanhos, posicoes).
 
-Suporta todos os produtos: CRI, CRA, CPR-F, SLB, NC/CCB, FIDC, Fiagro, Debenture.
+Template:
+    Slide 1 — Cover
+    Slide 2 — Resumo Executivo & Termos Indicativos (KPI cards + tabela)
+    Slide 3 — Overview da Empresa (info + KPI cards)
+    Slide 4 — Estrutura da Operacao & Indicadores Financeiros (flow + tabelas)
+    Slide 5 — Garantias & Soundness (6 cards + disclaimer)
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any
 
 from pptx import Presentation
-from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-from pptx.util import Emu, Inches, Pt
+from pptx.util import Inches
 
 # ---------------------------------------------------------------------------
-# Paleta ZYN — extraida dos 8 teasers reais
+# Constantes
 # ---------------------------------------------------------------------------
-NAVY_DARK = RGBColor(0x1B, 0x28, 0x38)        # fundo principal dos slides
-NAVY = RGBColor(0x22, 0x30, 0x40)             # paineis, headers de tabela
-NAVY_LIGHT = RGBColor(0x2C, 0x3E, 0x50)       # paineis secundarios
-TITLE_COLOR = RGBColor(0xFF, 0xFF, 0xFF)       # titulos sobre fundo escuro
-TITLE_DARK = RGBColor(0x22, 0x30, 0x40)        # titulos sobre fundo claro
-SUBTITLE_COLOR = RGBColor(0x8B, 0x91, 0x97)   # subtitulos e labels
-BODY_COLOR = RGBColor(0x34, 0x40, 0x50)        # texto corpo (fundo claro)
-BODY_LIGHT = RGBColor(0xD1, 0xD5, 0xDB)       # texto corpo (fundo escuro)
-LABEL_COLOR = RGBColor(0x9C, 0xA3, 0xAF)      # labels de KPI
-GREEN = RGBColor(0x2E, 0x7D, 0x4F)            # accent verde, badges positivos
-GREEN_LIGHT = RGBColor(0x05, 0x96, 0x69)       # indicadores positivos
-BLUE_ACCENT = RGBColor(0x60, 0xA5, 0xFA)      # destaques, badges
-BLUE_LIGHT = RGBColor(0xBF, 0xDB, 0xFE)       # texto accent claro
-WHITE = RGBColor(0xFF, 0xFF, 0xFF)
-GOLD = RGBColor(0xEA, 0xB3, 0x08)             # atencao
-RED = RGBColor(0xEF, 0x44, 0x44)              # critico
-ROW_ODD = RGBColor(0xF9, 0xFA, 0xFB)          # linhas alternadas tabela (claro)
-ROW_EVEN = RGBColor(0xF2, 0xF3, 0xF5)
-ROW_DARK_ODD = RGBColor(0x1E, 0x2D, 0x3D)     # linhas alternadas (escuro)
-ROW_DARK_EVEN = RGBColor(0x24, 0x34, 0x47)
-WATERMARK_COLOR = RGBColor(0x1F, 0x2C, 0x3C)  # watermark quase invisivel
-PANEL_BG = RGBColor(0xF3, 0xF4, 0xF6)         # paineis brancos
-DARK_OVERLAY = RGBColor(0x0F, 0x17, 0x2A)     # overlay escuro para cover
-
-# Slide dimensions — 16:9 widescreen (padrao dos teasers mais recentes)
-SW = 12192000  # EMU
-SH = 6858000
-
-# Margens e medidas recorrentes (EMU)
-LEFT_MARGIN = Emu(457200)       # ~0.5 inch
-RIGHT_MARGIN = Emu(457200)
-TOP_MARGIN = Emu(457200)
-CONTENT_W = SW - 2 * LEFT_MARGIN.emu if hasattr(LEFT_MARGIN, 'emu') else SW - 2 * 457200
-HEADER_H = Emu(800100)          # altura da barra de header
-FOOTER_H = Emu(365760)          # altura do footer
-GREEN_BAR_W = Emu(54864)        # barra vertical verde accent
+TEMPLATE_PATH = Path(__file__).parent.parent / "templates" / "Teaser_Template_ZYN.pptx"
 
 MESES_PT = {
     1: "Janeiro", 2: "Fevereiro", 3: "Marco", 4: "Abril",
@@ -69,7 +33,7 @@ MESES_PT = {
 
 
 # ---------------------------------------------------------------------------
-# Helpers — Formatacao BR
+# Helpers — Formatacao BR (mantidos para compatibilidade)
 # ---------------------------------------------------------------------------
 def _fmt_brl(value, suffix: str = "") -> str:
     """Formata valor em Reais no padrao brasileiro."""
@@ -108,11 +72,6 @@ def _fmt_mult(value) -> str:
         return str(value) if value else "—"
 
 
-def _trunc(text: str, limit: int = 120) -> str:
-    text = str(text) if text else ""
-    return text[:limit] + "..." if len(text) > limit else text
-
-
 def _safe_get(d: dict, *keys, default="—"):
     """Navegacao segura em dicts aninhados."""
     current = d
@@ -124,1334 +83,415 @@ def _safe_get(d: dict, *keys, default="—"):
     return current if current not in (None, "", 0, 0.0) else default
 
 
-def _rating_color(nota: str) -> RGBColor:
-    nota_upper = str(nota).upper().strip()
-    if nota_upper in ("A", "AA", "AAA", "A+", "A-"):
-        return GREEN
-    if nota_upper in ("B", "BB", "BBB", "B+", "B-"):
-        return GREEN_LIGHT
-    if nota_upper in ("C", "CC", "CCC", "C+", "C-"):
-        return GOLD
-    return RED
+def _current_date_pt() -> str:
+    """Retorna 'Marco 2026' no formato portugues."""
+    now = datetime.now()
+    return f"{MESES_PT.get(now.month, '')} {now.year}"
 
 
 # ---------------------------------------------------------------------------
-# Primitivos de desenho
+# Core: substituicao de texto preservando formatacao
 # ---------------------------------------------------------------------------
-def _add_rect(slide, left, top, width, height, fill_color, border=False):
-    """Adiciona retangulo preenchido."""
-    shape = slide.shapes.add_shape(1, left, top, width, height)
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = fill_color
-    if not border:
-        shape.line.fill.background()
-    return shape
+def _replace_text_in_runs(text_frame, old_text: str, new_text: str) -> bool:
+    """
+    Substitui texto em runs de um text_frame, preservando formatacao.
+    Tenta primeiro run-a-run; se nao encontrar, tenta concatenar runs
+    de cada paragrafo para lidar com texto dividido entre runs.
+    """
+    replaced = False
+    for para in text_frame.paragraphs:
+        # Tentativa 1: substituicao direta em cada run
+        for run in para.runs:
+            if old_text in run.text:
+                run.text = run.text.replace(old_text, new_text)
+                replaced = True
+        # Tentativa 2: texto dividido entre runs adjacentes
+        if not replaced:
+            full_text = "".join(r.text for r in para.runs)
+            if old_text in full_text:
+                new_full = full_text.replace(old_text, new_text)
+                # Coloca todo o texto no primeiro run, limpa os demais
+                if para.runs:
+                    para.runs[0].text = new_full
+                    for run in para.runs[1:]:
+                        run.text = ""
+                    replaced = True
+    return replaced
 
 
-def _add_rounded_rect(slide, left, top, width, height, fill_color):
-    """Adiciona retangulo com cantos arredondados."""
-    # AutoShape type 5 = Rounded Rectangle
-    shape = slide.shapes.add_shape(5, left, top, width, height)
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = fill_color
-    shape.line.fill.background()
-    return shape
+def _replace_in_shape(shape, old_text: str, new_text: str) -> bool:
+    """Substitui texto em shape (text_frame), preservando formatacao."""
+    if not shape.has_text_frame:
+        return False
+    return _replace_text_in_runs(shape.text_frame, old_text, new_text)
 
 
-def _txt(slide, left, top, width, height, text, size=12, bold=False,
-         color=WHITE, align=PP_ALIGN.LEFT, font_name="Calibri",
-         word_wrap=True, v_anchor=None):
-    """Adiciona textbox com configuracoes consistentes."""
-    box = slide.shapes.add_textbox(left, top, width, height)
-    tf = box.text_frame
-    tf.word_wrap = word_wrap
-    if v_anchor:
-        tf.paragraphs[0].space_before = Pt(0)
-        tf.paragraphs[0].space_after = Pt(0)
-    p = tf.paragraphs[0]
-    p.text = str(text) if text else ""
-    run = p.runs[0] if p.runs else p.add_run()
-    run.font.size = Pt(size)
-    run.font.bold = bold
-    run.font.color.rgb = color
-    run.font.name = font_name
-    p.alignment = align
-    return box
+def _replace_in_table_cell(table, row: int, col: int, new_text: str):
+    """Substitui todo o conteudo de uma celula de tabela, preservando formatacao do primeiro run."""
+    try:
+        cell = table.cell(row, col)
+        if cell.text_frame.paragraphs and cell.text_frame.paragraphs[0].runs:
+            cell.text_frame.paragraphs[0].runs[0].text = str(new_text)
+            for run in cell.text_frame.paragraphs[0].runs[1:]:
+                run.text = ""
+        else:
+            cell.text = str(new_text)
+    except (IndexError, AttributeError):
+        pass
 
 
-def _txt_multi(slide, left, top, width, height, lines: list,
-               default_size=10, default_color=BODY_LIGHT, font_name="Calibri"):
-    """Textbox com multiplos paragrafos (cada item: dict ou string)."""
-    box = slide.shapes.add_textbox(left, top, width, height)
-    tf = box.text_frame
+def _replace_in_table(table, old_text: str, new_text: str) -> bool:
+    """Busca e substitui texto em qualquer celula da tabela."""
+    replaced = False
+    for row_idx in range(len(table.rows)):
+        for col_idx in range(len(table.columns)):
+            cell = table.cell(row_idx, col_idx)
+            try:
+                if _replace_text_in_runs(cell.text_frame, old_text, new_text):
+                    replaced = True
+            except Exception:
+                pass
+    return replaced
+
+
+def _replace_on_slide(slide, old_text: str, new_text: str) -> bool:
+    """Substitui texto em todas as shapes (incluindo tabelas) de um slide."""
+    replaced = False
+    for shape in slide.shapes:
+        if shape.has_text_frame:
+            if _replace_in_shape(shape, old_text, new_text):
+                replaced = True
+        if shape.has_table:
+            if _replace_in_table(shape.table, old_text, new_text):
+                replaced = True
+    return replaced
+
+
+# ---------------------------------------------------------------------------
+# Slide 1 — Cover
+# ---------------------------------------------------------------------------
+def _fill_cover(slide, analise: dict, parametros: dict):
+    tipo = parametros.get("tipo_operacao", _safe_get(analise, "operacao", "instrumento", default="NC/CCB"))
+    tomador = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default=""))
+    data_pt = _current_date_pt()
+
+    _replace_on_slide(slide, "[TIPO DE INSTRUMENTO]", str(tipo).upper())
+    _replace_on_slide(slide, "[Nome da Operação / Tomador]", str(tomador))
+    # Atualiza data (template tem "Março 2026")
+    _replace_on_slide(slide, "Março 2026", data_pt)
+    _replace_on_slide(slide, "Marco 2026", data_pt)
+
+
+# ---------------------------------------------------------------------------
+# Slide 2 — Resumo Executivo & Termos Indicativos
+# ---------------------------------------------------------------------------
+def _fill_resumo(slide, analise: dict, parametros: dict):
+    data_pt = _current_date_pt()
+    _replace_on_slide(slide, "Março 2026", data_pt)
+    _replace_on_slide(slide, "Marco 2026", data_pt)
+
+    # --- KPI cards ---
+    volume_raw = parametros.get("volume", _safe_get(analise, "operacao", "volume", default=0))
+    taxa_raw = parametros.get("taxa", _safe_get(analise, "operacao", "taxa", default=""))
+    prazo_raw = parametros.get("prazo_meses", _safe_get(analise, "operacao", "prazo", default=""))
+    ltv_raw = _safe_get(analise, "kpis", "ltv", default="")
+
+    volume_str = _fmt_brl(volume_raw) if volume_raw and volume_raw != "—" else "—"
+    taxa_str = str(taxa_raw) if taxa_raw and taxa_raw != "—" else "—"
+    prazo_str = f"{prazo_raw} meses" if prazo_raw and prazo_raw != "—" else "—"
+    ltv_str = _fmt_pct(ltv_raw) if ltv_raw and ltv_raw != "—" else "—"
+
+    _replace_on_slide(slide, "R$ [XX] MM", volume_str)
+    _replace_on_slide(slide, "CDI + [X]%", taxa_str)
+    _replace_on_slide(slide, "[XX] meses", prazo_str)
+    _replace_on_slide(slide, "[XX]%", ltv_str)
+
+    # --- Tabela de termos (11 rows x 2 cols, header em row 0) ---
+    table = None
+    for shape in slide.shapes:
+        if shape.has_table:
+            table = shape.table
+            break
+    if table is None:
+        return
+
+    tomador = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default="—"))
+    instrumento = parametros.get("tipo_operacao", _safe_get(analise, "operacao", "instrumento", default="—"))
+    volume_full = _fmt_brl(volume_raw) if volume_raw and volume_raw != "—" else "—"
+    taxa = str(taxa_raw) if taxa_raw and taxa_raw != "—" else "—"
+    prazo = str(prazo_raw) + " meses" if prazo_raw and prazo_raw != "—" else "—"
+    amort = parametros.get("amortizacao", _safe_get(analise, "operacao", "amortizacao", default="—"))
+    carencia = parametros.get("carencia", _safe_get(analise, "operacao", "carencia", default="—"))
+    garantias = parametros.get("garantias_text", _safe_get(analise, "operacao", "garantias", default="—"))
+    finalidade = parametros.get("finalidade", _safe_get(analise, "operacao", "finalidade", default="—"))
+    rating = _safe_get(analise, "rating_final", "nota", default="—")
+
+    termos = [tomador, instrumento, volume_full, taxa, prazo, amort, carencia, garantias, finalidade, rating]
+    for i, val in enumerate(termos):
+        _replace_in_table_cell(table, i + 1, 1, str(val))
+
+
+# ---------------------------------------------------------------------------
+# Slide 3 — Overview da Empresa
+# ---------------------------------------------------------------------------
+def _fill_overview(slide, analise: dict, parametros: dict):
+    data_pt = _current_date_pt()
+    _replace_on_slide(slide, "Março 2026", data_pt)
+    _replace_on_slide(slide, "Marco 2026", data_pt)
+
+    # --- Left panel: company info ---
+    nome = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default="[NOME]"))
+    fundacao = _safe_get(analise, "tomador", "fundacao", default="[Ano]")
+    sede = parametros.get("localidade", _safe_get(analise, "tomador", "sede", default="[Cidade/UF]"))
+    segmento = parametros.get("setor", _safe_get(analise, "tomador", "segmento", default="[Segmento]"))
+    socios = _safe_get(analise, "tomador", "socios", default="[Sócios / Gestão]")
+    descricao = _safe_get(analise, "tomador", "descricao", default="[Descrição da empresa]")
+
+    _replace_on_slide(slide, "[NOME DO GRUPO / EMPRESA]", str(nome))
+    # Fundacao, Sede, Segmento sao parte do text block no shape 9
+    _replace_on_slide(slide, "[Ano]", str(fundacao))
+    _replace_on_slide(slide, "[Cidade/UF]", str(sede))
+    _replace_on_slide(slide, "[Agronegócio / Imobiliário / Industrial / etc.]", str(segmento))
+
+    # Socios e descricao
+    _replace_on_slide(slide, "[Nomes e cargos principais]", str(socios))
+    _replace_on_slide(
+        slide,
+        "[Breve histórico da empresa, atividades principais, diferenciais competitivos, principais clientes/offtakers, e posicionamento de mercado. 3-4 linhas.]",
+        str(descricao),
+    )
+
+    # --- Right panel: KPI cards ---
+    receita = _safe_get(analise, "kpis", "receita_liquida", default=0)
+    ebitda = _safe_get(analise, "kpis", "ebitda", default=0)
+    colaboradores = _safe_get(analise, "tomador", "colaboradores", default="—")
+    capacidade = _safe_get(analise, "tomador", "capacidade", default="—")
+    unidades = _safe_get(analise, "tomador", "unidades", default="—")
+    clientes = _safe_get(analise, "tomador", "principais_clientes", default="—")
+
+    _replace_on_slide(slide, "R$ [XXX] MM", _fmt_brl(receita) if receita != "—" else "—")
+    _replace_on_slide(slide, "R$ [XX] MM", _fmt_brl(ebitda) if ebitda != "—" else "—")
+    _replace_on_slide(slide, "[XXX]", str(colaboradores))
+    _replace_on_slide(slide, "[XX.XXX ha / m² / ton]", str(capacidade))
+    _replace_on_slide(slide, "[X] unidades em [UFs]", str(unidades))
+    _replace_on_slide(slide, "[Cliente A, B, C]", str(clientes))
+
+
+# ---------------------------------------------------------------------------
+# Slide 4 — Estrutura da Operacao & Indicadores Financeiros
+# ---------------------------------------------------------------------------
+def _fill_estrutura(slide, analise: dict, parametros: dict):
+    data_pt = _current_date_pt()
+    _replace_on_slide(slide, "Março 2026", data_pt)
+    _replace_on_slide(slide, "Marco 2026", data_pt)
+
+    # --- Flow boxes ---
+    tomador = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default="TOMADOR"))
+    tipo = parametros.get("tipo_operacao", _safe_get(analise, "operacao", "instrumento", default=""))
+    tipo_upper = str(tipo).upper()
+
+    # Determine veiculo com base no tipo
+    veiculos_map = {
+        "CRA": "SECURITIZADORA", "CRI": "SECURITIZADORA",
+        "FIDC": "FIDC", "FIAGRO": "FIAGRO",
+        "DEBENTURE": "EMISSORA", "NC": "BANCO EMISSOR", "CCB": "BANCO EMISSOR",
+        "NC/CCB": "BANCO EMISSOR", "SLB": "OPERADOR S&LB",
+    }
+    veiculo = veiculos_map.get(tipo_upper, "VEÍCULO")
+
+    _replace_on_slide(slide, "[TOMADOR / CEDENTE]", str(tomador).upper())
+    _replace_on_slide(slide, "[SECURITIZADORA / VEÍCULO]", veiculo)
+    _replace_on_slide(slide, "[INVESTIDOR]", "INVESTIDOR")
+
+    # --- Destinacao table (shape 19 in template: 4 rows x 3 cols) ---
+    destinacao_table = None
+    financeiros_table = None
+    for shape in slide.shapes:
+        if shape.has_table:
+            tbl = shape.table
+            ncols = len(tbl.columns)
+            if ncols == 3:
+                destinacao_table = tbl
+            elif ncols == 4:
+                financeiros_table = tbl
+
+    # Destinacao: tentamos preencher com dados de parametros ou analise
+    if destinacao_table:
+        destinacao = parametros.get("destinacao", [])
+        if not destinacao:
+            finalidade = parametros.get("finalidade", _safe_get(analise, "operacao", "finalidade", default=""))
+            volume_raw = parametros.get("volume", _safe_get(analise, "operacao", "volume", default=0))
+            if finalidade and finalidade != "—":
+                destinacao = [{"destino": str(finalidade), "valor": volume_raw, "pct": "100%"}]
+
+        for i, item in enumerate(destinacao[:3]):  # max 3 data rows
+            row_idx = i + 1
+            _replace_in_table_cell(destinacao_table, row_idx, 0, str(item.get("destino", "—")))
+            val = item.get("valor", "—")
+            try:
+                val_mm = f"{float(val) / 1_000_000:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            except (TypeError, ValueError):
+                val_mm = str(val)
+            _replace_in_table_cell(destinacao_table, row_idx, 1, val_mm)
+            _replace_in_table_cell(destinacao_table, row_idx, 2, str(item.get("pct", "—")))
+
+        # Limpa linhas nao usadas
+        for i in range(len(destinacao), 3):
+            row_idx = i + 1
+            _replace_in_table_cell(destinacao_table, row_idx, 0, "—")
+            _replace_in_table_cell(destinacao_table, row_idx, 1, "—")
+            _replace_in_table_cell(destinacao_table, row_idx, 2, "—")
+
+    # --- Indicadores Financeiros table (9 rows x 4 cols) ---
+    if financeiros_table:
+        kpis = analise.get("kpis", {})
+        historico = analise.get("historico_financeiro", {})
+        now = datetime.now()
+        anos = [str(now.year - 2), str(now.year - 1), str(now.year)]
+
+        # Headers: anos
+        for ci, ano in enumerate(anos):
+            _replace_in_table_cell(financeiros_table, 0, ci + 1, ano)
+
+        # Mapping: row -> kpi key, formatter
+        row_map = [
+            ("receita_liquida", _fmt_brl),
+            ("ebitda", _fmt_brl),
+            ("margem_ebitda", _fmt_pct),
+            ("divida_liquida", _fmt_brl),
+            ("div_liq_ebitda", _fmt_mult),
+            ("dscr", _fmt_mult),
+            ("ltv", _fmt_pct),
+            ("pl", _fmt_brl),
+        ]
+
+        for row_idx, (key, fmt) in enumerate(row_map):
+            for col_idx, ano in enumerate(anos):
+                # Tenta historico primeiro, depois kpi geral (apenas para ano corrente)
+                val = "—"
+                if historico:
+                    val_raw = _safe_get(historico, ano, key, default="—")
+                    if val_raw != "—":
+                        val = fmt(val_raw)
+                if val == "—" and col_idx == 2:  # Ano corrente: tenta kpis direto
+                    val_raw = kpis.get(key, "—")
+                    if val_raw and val_raw != "—":
+                        val = fmt(val_raw)
+                _replace_in_table_cell(financeiros_table, row_idx + 1, col_idx + 1, val)
+
+
+# ---------------------------------------------------------------------------
+# Slide 5 — Garantias & Soundness
+# ---------------------------------------------------------------------------
+def _fill_garantias(slide, analise: dict, parametros: dict):
+    data_pt = _current_date_pt()
+    _replace_on_slide(slide, "Março 2026", data_pt)
+    _replace_on_slide(slide, "Marco 2026", data_pt)
+
+    garantias_list = parametros.get("garantias", analise.get("garantias", []))
+    if not isinstance(garantias_list, list):
+        garantias_list = []
+
+    # Mapa de tipo de garantia -> placeholder no template
+    placeholder_map = {
+        "alienacao_fiduciaria": "[Descrição do imóvel/bem, matrícula, localização, valor de avaliação]",
+        "alienação fiduciária": "[Descrição do imóvel/bem, matrícula, localização, valor de avaliação]",
+        "alienacao fiduciaria": "[Descrição do imóvel/bem, matrícula, localização, valor de avaliação]",
+        "cessao_fiduciaria": "[Recebíveis cedidos, fluxo, prazo, valor estimado do lastro]",
+        "cessão fiduciária": "[Recebíveis cedidos, fluxo, prazo, valor estimado do lastro]",
+        "cessao fiduciaria": "[Recebíveis cedidos, fluxo, prazo, valor estimado do lastro]",
+        "aval": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
+        "fianca": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
+        "aval_fianca": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
+        "aval / fiança": "[Avalistas PF/PJ, patrimônio declarado, vínculos com o tomador]",
+        "fundo_reserva": "[X] parcelas equivalentes — constituição [pré/pós] emissão",
+        "fundo de reserva": "[X] parcelas equivalentes — constituição [pré/pós] emissão",
+    }
+
+    # Tenta fazer match por tipo
+    for gar in garantias_list:
+        tipo_raw = str(gar.get("tipo", "")).lower().strip()
+        desc = str(gar.get("descricao", "—"))
+        placeholder = placeholder_map.get(tipo_raw)
+        if placeholder:
+            _replace_on_slide(slide, placeholder, desc)
+
+    # Razao de garantia
+    ltv = _safe_get(analise, "kpis", "ltv", default="")
+    if ltv and ltv != "—":
+        try:
+            razao = 1 / float(ltv) if 0 < float(ltv) <= 1 else float(ltv)
+            razao_str = _fmt_mult(razao)
+        except (TypeError, ValueError, ZeroDivisionError):
+            razao_str = "—"
+    else:
+        razao_str = "—"
+    _replace_on_slide(slide, "[X,Xx]x", razao_str)
+
+    # Nota de soundness
+    parecer = _safe_get(analise, "rating_final", "parecer", default="")
+    justificativa = _safe_get(analise, "rating_final", "justificativa", default="")
+    soundness_text = str(parecer) if parecer != "—" else str(justificativa) if justificativa != "—" else "—"
+    _replace_on_slide(
+        slide,
+        "[Resumo da tese de crédito: por que os riscos estão mitigados. 2-3 linhas.]",
+        soundness_text[:300],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Fallback: gera apresentacao minima se template nao existir
+# ---------------------------------------------------------------------------
+def _generate_fallback(analise: dict, parametros: dict, output_path: str) -> str:
+    """Gera apresentacao minimalista quando o template nao esta disponivel."""
+    prs = Presentation()
+    prs.slide_width = 9144000  # 10in
+    prs.slide_height = 5143500  # 5.625in
+
+    layout = prs.slide_layouts[6]  # blank
+
+    # Slide unico com dados basicos
+    slide = prs.slides.add_slide(layout)
+    from pptx.util import Pt
+    from pptx.dml.color import RGBColor
+
+    txBox = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9), Inches(4.5))
+    tf = txBox.text_frame
     tf.word_wrap = True
-    for i, line in enumerate(lines):
-        if i == 0:
-            p = tf.paragraphs[0]
-        else:
-            p = tf.add_paragraph()
-        if isinstance(line, dict):
-            p.text = str(line.get("text", ""))
-            run = p.runs[0] if p.runs else p.add_run()
-            run.font.size = Pt(line.get("size", default_size))
-            run.font.bold = line.get("bold", False)
-            run.font.color.rgb = line.get("color", default_color)
-            run.font.name = font_name
-            if "align" in line:
-                p.alignment = line["align"]
-        else:
-            p.text = str(line)
-            run = p.runs[0] if p.runs else p.add_run()
-            run.font.size = Pt(default_size)
-            run.font.color.rgb = default_color
-            run.font.name = font_name
-    return box
 
+    tomador = parametros.get("tomador", _safe_get(analise, "tomador", "nome", default="N/A"))
+    tipo = parametros.get("tipo_operacao", "N/A")
+    volume = _fmt_brl(parametros.get("volume", 0))
+    nota = _safe_get(analise, "rating_final", "nota", default="N/A")
 
-def _hline(slide, left, top, width, color=None):
-    """Linha horizontal fina."""
-    fill = color or RGBColor(0x33, 0x41, 0x55)
-    shape = slide.shapes.add_shape(1, left, top, width, Emu(12700))
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = fill
-    shape.line.fill.background()
-    return shape
+    p = tf.paragraphs[0]
+    run = p.add_run()
+    run.text = "ZYN CAPITAL — TEASER"
+    run.font.size = Pt(28)
+    run.font.bold = True
+    run.font.color.rgb = RGBColor(0x22, 0x30, 0x40)
 
+    for line in [
+        f"\n\nTomador: {tomador}",
+        f"Instrumento: {tipo}",
+        f"Volume: {volume}",
+        f"Rating: {nota}",
+        f"\n{_current_date_pt()}",
+        "\n\nCONFIDENCIAL — DISTRIBUIÇÃO RESTRITA",
+        "\n⚠ Template oficial nao encontrado. Reinstale o template em templates/Teaser_Template_ZYN.pptx",
+    ]:
+        p2 = tf.add_paragraph()
+        run2 = p2.add_run()
+        run2.text = line
+        run2.font.size = Pt(12)
+        run2.font.color.rgb = RGBColor(0x34, 0x40, 0x50)
 
-def _kpi_card(slide, x, y, w, label, value, subtitle="",
-              label_color=LABEL_COLOR, value_color=WHITE,
-              subtitle_color=SUBTITLE_COLOR, value_size=27,
-              label_size=9, subtitle_size=9, bg_color=None):
-    """Card de KPI padrao ZYN: label pequeno, valor grande, subtitulo."""
-    card_h = Emu(1143000)
-    if bg_color:
-        _add_rounded_rect(slide, x, y, w, card_h, bg_color)
-    _txt(slide, x + Emu(91440), y + Emu(91440), w - Emu(182880), Emu(182880),
-         str(label).upper(), size=label_size, bold=True, color=label_color)
-    _txt(slide, x + Emu(91440), y + Emu(320040), w - Emu(182880), Emu(457200),
-         str(value), size=value_size, bold=True, color=value_color)
-    if subtitle:
-        _txt(slide, x + Emu(91440), y + Emu(822960), w - Emu(182880), Emu(228600),
-             str(subtitle), size=subtitle_size, color=subtitle_color)
-
-
-def _data_now() -> str:
-    """Retorna data formatada: 'Marco 2026'."""
-    now = datetime.now()
-    mes = MESES_PT.get(now.month, now.strftime("%B"))
-    return f"{mes} {now.year}"
-
-
-def _data_now_upper() -> str:
-    """Retorna data formatada maiuscula: 'MARCO / 2026'."""
-    now = datetime.now()
-    mes = MESES_PT.get(now.month, now.strftime("%B")).upper()
-    return f"{mes} / {now.year}"
+    prs.save(output_path)
+    return output_path
 
 
 # ---------------------------------------------------------------------------
-# Base slide — elementos comuns a todos os slides (exceto cover)
-# ---------------------------------------------------------------------------
-def _base_slide(prs, title: str = "", subtitle: str = "",
-                slide_number: int = 0, total_slides: int = 0,
-                show_header=True, dark_bg=True):
-    """Cria slide com elementos ZYN padrao."""
-    slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank layout
-
-    # Background
-    bg_color = NAVY_DARK if dark_bg else PANEL_BG
-    _add_rect(slide, 0, 0, SW, SH, bg_color)
-
-    if show_header:
-        # Header bar
-        _add_rect(slide, 0, 0, SW, Emu(731520), NAVY)
-
-        # Green accent line under header
-        _add_rect(slide, 0, Emu(731520), SW, Emu(27432), GREEN)
-
-        # ZYN CAPITAL logo (header)
-        _txt(slide, Emu(365760), Emu(182880), Emu(2286000), Emu(365760),
-             "ZYN CAPITAL", size=13, bold=True, color=WHITE)
-
-        # Slide title (header right area)
-        if title:
-            _txt(slide, Emu(365760), Emu(365760), Emu(8229600), Emu(320040),
-                 title.upper(), size=13, bold=True, color=WHITE,
-                 align=PP_ALIGN.LEFT)
-
-        # Data no canto direito do header
-        _txt(slide, SW - Emu(3200400), Emu(228600), Emu(2834640), Emu(320040),
-             _data_now(), size=10, color=SUBTITLE_COLOR,
-             align=PP_ALIGN.RIGHT)
-
-    # Footer
-    footer_y = SH - Emu(320040)
-    _add_rect(slide, 0, footer_y, SW, Emu(320040), NAVY)
-
-    footer_text = "ZYN Capital  |  CONFIDENCIAL  |  " + _data_now()
-    _txt(slide, Emu(365760), footer_y + Emu(54864), Emu(6858000), Emu(228600),
-         footer_text, size=8, color=SUBTITLE_COLOR)
-
-    if slide_number and total_slides:
-        _txt(slide, SW - Emu(1371600), footer_y + Emu(54864),
-             Emu(1005840), Emu(228600),
-             f"{slide_number} / {total_slides}", size=8,
-             color=SUBTITLE_COLOR, align=PP_ALIGN.RIGHT)
-
-    return slide
-
-
-# ---------------------------------------------------------------------------
-# Slide 1 — Capa Premium
-# ---------------------------------------------------------------------------
-def _slide_cover(prs, op: dict, analise: dict):
-    slide = prs.slides.add_slide(prs.slide_layouts[6])
-
-    # Background navy escuro
-    _add_rect(slide, 0, 0, SW, SH, DARK_OVERLAY)
-
-    # Barra lateral verde accent (esquerda)
-    _add_rect(slide, 0, 0, Emu(54864), SH, GREEN)
-
-    # Watermark
-    _txt(slide, Emu(2743200), Emu(2514600), Emu(7315200), Emu(1828800),
-         "CONFIDENCIAL", size=72, bold=True, color=WATERMARK_COLOR,
-         align=PP_ALIGN.CENTER)
-
-    # ZYN CAPITAL (top left)
-    _txt(slide, Emu(457200), Emu(365760), Emu(3657600), Emu(457200),
-         "ZYN  CAPITAL", size=28, bold=True, color=WHITE)
-
-    # Badge CONFIDENCIAL
-    _add_rounded_rect(slide, SW - Emu(2286000), Emu(365760),
-                      Emu(1828800), Emu(320040), NAVY)
-    _txt(slide, SW - Emu(2286000), Emu(392430), Emu(1828800), Emu(274320),
-         "CONFIDENCIAL", size=9, bold=True, color=GOLD,
-         align=PP_ALIGN.CENTER)
-
-    # Tipo de operacao (badge)
-    tipo = op.get("tipo_operacao", "Credito Estruturado")
-    _txt(slide, Emu(457200), Emu(1371600), Emu(5486400), Emu(320040),
-         tipo.upper(), size=10, bold=True, color=BLUE_ACCENT)
-
-    # Nome do tomador (titulo grande)
-    tomador = op.get("tomador", "Operacao")
-    _txt(slide, Emu(457200), Emu(1737360), Emu(9601200), Emu(914400),
-         tomador, size=52, bold=True, color=WHITE)
-
-    # Subtitulo descritivo
-    setor = op.get("setor", "")
-    localidade = op.get("localidade", "")
-    sub_parts = [s for s in [setor, localidade] if s]
-    if sub_parts:
-        _txt(slide, Emu(457200), Emu(2651760), Emu(9601200), Emu(365760),
-             "  |  ".join(sub_parts), size=13, color=SUBTITLE_COLOR)
-
-    # Linha divisoria
-    _hline(slide, Emu(457200), Emu(3200400), Emu(11277600))
-
-    # KPI cards na capa (4 cards)
-    volume = _fmt_brl(op.get("volume", 0))
-    taxa = op.get("taxa", "—")
-    prazo = op.get("prazo_meses", "—")
-    prazo_str = f"{prazo} Meses" if prazo and prazo != "—" else "—"
-
-    # Determinar 4o KPI baseado no tipo de operacao
-    tipo_lower = str(tipo).lower()
-    if "fidc" in tipo_lower:
-        kpi4_label = "Subordinacao"
-        kpi4_value = op.get("subordinacao", _safe_get(analise, "estrutura", "subordinacao"))
-        kpi4_sub = "Cota Subordinada"
-    elif "slb" in tipo_lower or "leaseback" in tipo_lower:
-        kpi4_label = "LTV (VM)"
-        ltv_val = _safe_get(analise, "kpis", "ltv", default=0)
-        kpi4_value = _fmt_pct(ltv_val) if ltv_val and ltv_val != "—" else "—"
-        kpi4_sub = "Loan-to-Value"
-    elif "cri" in tipo_lower:
-        kpi4_label = "LTV"
-        ltv_val = _safe_get(analise, "kpis", "ltv", default=0)
-        kpi4_value = _fmt_pct(ltv_val) if ltv_val and ltv_val != "—" else "—"
-        kpi4_sub = "s/ Garantias Totais"
-    else:
-        kpi4_label = "DSCR"
-        dscr_val = _safe_get(analise, "kpis", "dscr", default=0)
-        kpi4_value = _fmt_mult(dscr_val) if dscr_val and dscr_val != "—" else "—"
-        kpi4_sub = "Cobertura do Servico"
-
-    cards = [
-        ("Volume", volume, "Montante Principal"),
-        ("Remuneracao", str(taxa), "Taxa Indicativa"),
-        ("Prazo", prazo_str, "Prazo Total"),
-        (kpi4_label, str(kpi4_value), kpi4_sub),
-    ]
-
-    card_w = Emu(2651760)
-    card_gap = Emu(182880)
-    cards_x_start = Emu(457200)
-    cards_y = Emu(3383280)
-
-    for idx, (label, value, sub) in enumerate(cards):
-        x = cards_x_start + idx * (card_w + card_gap)
-        _kpi_card(slide, x, cards_y, card_w, label, value, sub,
-                  bg_color=NAVY, value_size=26)
-
-    # Resumo executivo (se disponivel)
-    resumo = op.get("resumo_executivo", "")
-    if not resumo:
-        # Montar resumo basico
-        parts = []
-        if tipo:
-            parts.append(f"Operacao de {tipo}")
-        if op.get("finalidade"):
-            parts.append(f"Finalidade: {op['finalidade']}")
-        if op.get("garantias_text"):
-            parts.append(f"Garantias: {_trunc(op['garantias_text'], 80)}")
-        resumo = ". ".join(parts) + "." if parts else ""
-
-    if resumo:
-        _add_rounded_rect(slide, Emu(457200), Emu(4754880),
-                          Emu(11277600), Emu(914400), NAVY)
-        _txt(slide, Emu(640080), Emu(4800600), Emu(1371600), Emu(228600),
-             "RESUMO EXECUTIVO", size=10, bold=True, color=SUBTITLE_COLOR)
-        _txt(slide, Emu(640080), Emu(5029200), Emu(10972800), Emu(548640),
-             _trunc(resumo, 400), size=9.5, color=BODY_LIGHT)
-
-    # Footer da capa
-    _add_rect(slide, 0, SH - Emu(365760), SW, Emu(365760), NAVY)
-    _txt(slide, Emu(457200), SH - Emu(310896),
-         Emu(5486400), Emu(274320),
-         f"ZYN CAPITAL  (C)  {datetime.now().year}  |  Confidencial",
-         size=6.5, color=SUBTITLE_COLOR)
-
-    cnpj = op.get("cnpj", "")
-    if cnpj:
-        _txt(slide, SW - Emu(4572000), SH - Emu(310896),
-             Emu(4114800), Emu(274320),
-             f"CNPJ: {cnpj}", size=6.5, color=SUBTITLE_COLOR,
-             align=PP_ALIGN.RIGHT)
-
-
-# ---------------------------------------------------------------------------
-# Slide 2 — Resumo Executivo
-# ---------------------------------------------------------------------------
-def _slide_resumo(prs, op: dict, analise: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="Resumo Executivo",
-                        slide_number=sn, total_slides=total)
-    y_start = Emu(914400)
-
-    # Painel esquerdo: Termos da operacao
-    panel_w = Emu(5486400)
-    panel_h = Emu(4572000)
-    _add_rounded_rect(slide, Emu(365760), y_start, panel_w, panel_h, NAVY)
-
-    _txt(slide, Emu(548640), y_start + Emu(137160), panel_w - Emu(365760), Emu(320040),
-         "TERMOS DA OPERACAO", size=12, bold=True, color=WHITE)
-
-    # Linha verde accent
-    _add_rect(slide, Emu(548640), y_start + Emu(457200),
-              Emu(2743200), Emu(27432), GREEN)
-
-    # Dados da operacao (key-value pairs)
-    items = [
-        ("Tomador", op.get("tomador", "—")),
-        ("CNPJ", op.get("cnpj", "—")),
-        ("Instrumento", op.get("tipo_operacao", "—")),
-        ("Volume", _fmt_brl(op.get("volume", 0))),
-        ("Remuneracao", op.get("taxa", "—")),
-        ("Prazo", f"{op.get('prazo_meses', '—')} meses" if op.get("prazo_meses") else "—"),
-        ("Amortizacao", op.get("amortizacao", "—")),
-        ("Carencia", op.get("carencia", "—")),
-        ("Garantias", _trunc(op.get("garantias_text", "—") or "—", 60)),
-        ("Finalidade", _trunc(op.get("finalidade", "—") or "—", 60)),
-        ("Perfil Investidor", op.get("perfil_investidor", "Qualificado (CVM 30)")),
-    ]
-
-    row_y = y_start + Emu(594360)
-    for label, valor in items:
-        if valor and valor != "—":
-            _txt(slide, Emu(548640), row_y,
-                 Emu(1828800), Emu(274320),
-                 label, size=8.5, bold=True, color=SUBTITLE_COLOR)
-            _txt(slide, Emu(2468880), row_y,
-                 Emu(3200400), Emu(274320),
-                 str(valor), size=8.5, color=WHITE)
-            row_y += Emu(320040)
-
-    # Painel direito: KPIs financeiros
-    right_x = Emu(6126480)
-    right_w = Emu(5669280)
-    _add_rounded_rect(slide, right_x, y_start, right_w, panel_h, NAVY)
-
-    _txt(slide, right_x + Emu(182880), y_start + Emu(137160),
-         right_w - Emu(365760), Emu(320040),
-         "INDICADORES-CHAVE", size=12, bold=True, color=WHITE)
-
-    _add_rect(slide, right_x + Emu(182880), y_start + Emu(457200),
-              Emu(2743200), Emu(27432), GREEN)
-
-    # KPI cards (2x3 grid)
-    kpis = analise.get("kpis", {})
-    rating = analise.get("rating_final", {})
-
-    kpi_items = [
-        ("Receita Liquida", _fmt_brl(kpis.get("receita_liquida", 0))),
-        ("EBITDA", _fmt_brl(kpis.get("ebitda", 0))),
-        ("Margem EBITDA", _fmt_pct(kpis.get("margem_ebitda", 0))),
-        ("DSCR", _fmt_mult(kpis.get("dscr", 0))),
-        ("LTV", _fmt_pct(kpis.get("ltv", 0))),
-        ("Rating", rating.get("nota", "—")),
-    ]
-
-    mini_w = Emu(2468880)
-    mini_h = Emu(640080)
-    col = 0
-    row = 0
-    kpi_y_start = y_start + Emu(594360)
-
-    for label, value in kpi_items:
-        kx = right_x + Emu(182880) + col * (mini_w + Emu(182880))
-        ky = kpi_y_start + row * (mini_h + Emu(91440))
-
-        _add_rounded_rect(slide, kx, ky, mini_w, mini_h, NAVY_LIGHT)
-        _txt(slide, kx + Emu(91440), ky + Emu(54864),
-             mini_w - Emu(182880), Emu(182880),
-             label.upper(), size=7.5, bold=True, color=LABEL_COLOR)
-
-        # Cor do valor baseada no contexto
-        v_color = WHITE
-        if label == "Rating":
-            v_color = _rating_color(str(value))
-        _txt(slide, kx + Emu(91440), ky + Emu(274320),
-             mini_w - Emu(182880), Emu(320040),
-             str(value), size=18, bold=True, color=v_color)
-
-        col += 1
-        if col >= 2:
-            col = 0
-            row += 1
-
-    # Parecer do rating (abaixo dos KPIs)
-    parecer = rating.get("parecer", "")
-    if parecer:
-        parecer_y = kpi_y_start + 3 * (mini_h + Emu(91440)) + Emu(91440)
-        _add_rounded_rect(slide, right_x + Emu(182880), parecer_y,
-                          right_w - Emu(365760), Emu(548640), GREEN)
-        _txt(slide, right_x + Emu(365760), parecer_y + Emu(54864),
-             right_w - Emu(731520), Emu(182880),
-             "PARECER", size=8, bold=True, color=WHITE)
-        _txt(slide, right_x + Emu(365760), parecer_y + Emu(274320),
-             right_w - Emu(731520), Emu(228600),
-             parecer, size=10, bold=True, color=WHITE)
-
-
-# ---------------------------------------------------------------------------
-# Slide 3 — Perfil do Tomador / Cedente
-# ---------------------------------------------------------------------------
-def _slide_tomador(prs, op: dict, analise: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="Perfil do Tomador",
-                        slide_number=sn, total_slides=total)
-    y_start = Emu(914400)
-
-    tomador_data = analise.get("tomador", {})
-
-    # Titulo com nome do tomador
-    _txt(slide, Emu(365760), y_start, Emu(11277600), Emu(457200),
-         op.get("tomador", "—"), size=22, bold=True, color=WHITE)
-
-    tipo_lower = str(op.get("tipo_operacao", "")).lower()
-    if "fidc" in tipo_lower:
-        label_tomador = "Cedente / Originador"
-    elif "slb" in tipo_lower:
-        label_tomador = "Arrendatario"
-    else:
-        label_tomador = "Tomador"
-
-    # Descricao
-    descricao = (tomador_data.get("descricao", "") or
-                 tomador_data.get("historico", "") or
-                 op.get("descricao_tomador", ""))
-    if descricao:
-        _txt(slide, Emu(365760), y_start + Emu(457200),
-             Emu(11277600), Emu(457200),
-             _trunc(descricao, 250), size=10.5, color=SUBTITLE_COLOR)
-
-    # Linha divisoria
-    _hline(slide, Emu(365760), y_start + Emu(914400), Emu(11277600))
-
-    # KPI cards do tomador (4 em linha)
-    kpis = analise.get("kpis", {})
-    receita = _fmt_brl(kpis.get("receita_bruta", kpis.get("receita_liquida", 0)))
-    lucro_bruto = _fmt_brl(kpis.get("lucro_bruto", kpis.get("lucro_liquido", 0)))
-    pl = _fmt_brl(kpis.get("patrimonio_liquido", 0))
-    ebitda = _fmt_brl(kpis.get("ebitda", 0))
-
-    # Crescimentos (se disponiveis)
-    cresc_receita = kpis.get("crescimento_receita", "")
-    cresc_receita_str = f"+{_fmt_pct(cresc_receita)} vs anterior" if cresc_receita else ""
-    margem_str = f"Margem {_fmt_pct(kpis.get('margem_ebitda', 0))}" if kpis.get("margem_ebitda") else ""
-
-    tomador_cards = [
-        ("Receita Bruta", receita, cresc_receita_str, GREEN_LIGHT if cresc_receita_str else SUBTITLE_COLOR),
-        ("EBITDA", ebitda, margem_str, GREEN_LIGHT if margem_str else SUBTITLE_COLOR),
-        ("Lucro Bruto/Liquido", lucro_bruto, "", SUBTITLE_COLOR),
-        ("Patrimonio Liquido", pl, "", SUBTITLE_COLOR),
-    ]
-
-    card_w = Emu(2651760)
-    card_gap = Emu(182880)
-    cards_y = y_start + Emu(1005840)
-
-    for idx, (label, value, sub, sub_color) in enumerate(tomador_cards):
-        x = Emu(365760) + idx * (card_w + card_gap)
-        _add_rounded_rect(slide, x, cards_y, card_w, Emu(914400), NAVY)
-        _txt(slide, x + Emu(137160), cards_y + Emu(91440),
-             card_w - Emu(274320), Emu(182880),
-             label.upper(), size=9, bold=True, color=LABEL_COLOR)
-        _txt(slide, x + Emu(137160), cards_y + Emu(320040),
-             card_w - Emu(274320), Emu(365760),
-             str(value), size=16, bold=True, color=TITLE_DARK if value == "—" else WHITE)
-        if sub:
-            _txt(slide, x + Emu(137160), cards_y + Emu(685800),
-                 card_w - Emu(274320), Emu(182880),
-                 sub, size=8.5, bold=True, color=sub_color)
-
-    # Painel inferior: Destaques e dados adicionais
-    bottom_y = cards_y + Emu(1097280)
-
-    # Esquerda: Dados societarios
-    _add_rounded_rect(slide, Emu(365760), bottom_y,
-                      Emu(5486400), Emu(2743200), NAVY)
-    _txt(slide, Emu(548640), bottom_y + Emu(137160),
-         Emu(5120640), Emu(274320),
-         label_tomador.upper(), size=9, bold=True, color=SUBTITLE_COLOR)
-    _add_rect(slide, Emu(548640), bottom_y + Emu(411480),
-              Emu(1828800), Emu(18288), GREEN)
-
-    soc_items = [
-        ("Grupo / Razao Social", tomador_data.get("grupo_economico", op.get("tomador", "—"))),
-        ("CNPJ", op.get("cnpj", "—")),
-        ("Atividade", tomador_data.get("atividade_principal", op.get("setor", "—"))),
-        ("Localizacao", op.get("localidade", "—")),
-        ("Regime", tomador_data.get("regime", "—")),
-        ("Fundacao", tomador_data.get("fundacao", "—")),
-    ]
-
-    soc_y = bottom_y + Emu(502920)
-    for label, valor in soc_items:
-        if valor and valor != "—":
-            _txt(slide, Emu(548640), soc_y, Emu(2057400), Emu(228600),
-                 label, size=8, bold=True, color=SUBTITLE_COLOR)
-            _txt(slide, Emu(2651760), soc_y, Emu(3017520), Emu(228600),
-                 str(valor), size=8, color=WHITE)
-            soc_y += Emu(274320)
-
-    # Direita: Destaques
-    right_x = Emu(6126480)
-    right_w = Emu(5669280)
-    _add_rounded_rect(slide, right_x, bottom_y, right_w, Emu(2743200), NAVY)
-    _txt(slide, right_x + Emu(182880), bottom_y + Emu(137160),
-         right_w - Emu(365760), Emu(274320),
-         "DESTAQUES", size=9, bold=True, color=SUBTITLE_COLOR)
-    _add_rect(slide, right_x + Emu(182880), bottom_y + Emu(411480),
-              Emu(1828800), Emu(18288), GREEN)
-
-    # Coletar destaques de varias fontes
-    destaques = op.get("destaques", [])
-    if not destaques:
-        # Gerar destaques a partir da analise
-        if tomador_data.get("historico"):
-            destaques.append(_trunc(tomador_data["historico"], 80))
-        if kpis.get("receita_liquida"):
-            destaques.append(f"Receita de {_fmt_brl(kpis['receita_liquida'])}")
-        prod = analise.get("producao", {})
-        if prod.get("analise"):
-            destaques.append(_trunc(prod["analise"], 80))
-        if kpis.get("dscr"):
-            destaques.append(f"DSCR de {_fmt_mult(kpis['dscr'])} — capacidade de pagamento adequada")
-
-    dest_y = bottom_y + Emu(502920)
-    for dest in destaques[:6]:
-        _txt(slide, right_x + Emu(182880), dest_y,
-             right_w - Emu(365760), Emu(320040),
-             f"  {_trunc(str(dest), 90)}", size=9, color=BODY_LIGHT)
-        dest_y += Emu(320040)
-
-
-# ---------------------------------------------------------------------------
-# Slide 4 — Indicadores Financeiros
-# ---------------------------------------------------------------------------
-def _slide_financeiros(prs, analise: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="Indicadores Financeiros",
-                        slide_number=sn, total_slides=total)
-    y_start = Emu(914400)
-
-    kpis = analise.get("kpis", {})
-    capital = analise.get("capital", {})
-    indicadores = capital.get("indicadores", {})
-
-    # Titulo da secao
-    _txt(slide, Emu(365760), y_start, Emu(11277600), Emu(365760),
-         "Desempenho & Solidez", size=22, bold=True, color=WHITE)
-    _txt(slide, Emu(365760), y_start + Emu(365760), Emu(11277600), Emu(228600),
-         "Indicadores financeiros consolidados do ultimo exercicio", size=10,
-         color=SUBTITLE_COLOR)
-
-    _hline(slide, Emu(365760), y_start + Emu(640080), Emu(11277600))
-
-    # 6 KPI cards (3 x 2)
-    big_kpis = [
-        ("Receita Liquida", _fmt_brl(kpis.get("receita_liquida", 0)), "Ultimo Exercicio"),
-        ("EBITDA", _fmt_brl(kpis.get("ebitda", 0)),
-         f"Margem: {_fmt_pct(kpis.get('margem_ebitda', 0))}" if kpis.get("margem_ebitda") else ""),
-        ("Lucro Liquido", _fmt_brl(kpis.get("lucro_liquido", 0)),
-         f"Margem: {_fmt_pct(kpis.get('margem_liquida', 0))}" if kpis.get("margem_liquida") else ""),
-        ("DSCR", _fmt_mult(kpis.get("dscr", 0)), "Cobertura do Servico da Divida"),
-        ("Div. Liq./EBITDA", _fmt_mult(kpis.get("divida_liquida_ebitda", 0)), "Alavancagem"),
-        ("Patrimonio Liquido", _fmt_brl(kpis.get("patrimonio_liquido", 0)), "Base de Capital"),
-    ]
-
-    card_w = Emu(3566160)
-    card_h = Emu(914400)
-    card_gap_x = Emu(182880)
-    card_gap_y = Emu(137160)
-    cards_y = y_start + Emu(731520)
-
-    for idx, (label, value, sub) in enumerate(big_kpis):
-        col = idx % 3
-        row = idx // 3
-        x = Emu(365760) + col * (card_w + card_gap_x)
-        y = cards_y + row * (card_h + card_gap_y)
-
-        _add_rounded_rect(slide, x, y, card_w, card_h, NAVY)
-        _txt(slide, x + Emu(137160), y + Emu(91440),
-             card_w - Emu(274320), Emu(182880),
-             label.upper(), size=9, bold=True, color=LABEL_COLOR)
-        _txt(slide, x + Emu(137160), y + Emu(320040),
-             card_w - Emu(274320), Emu(365760),
-             str(value), size=22, bold=True, color=WHITE)
-        if sub:
-            _txt(slide, x + Emu(137160), y + Emu(685800),
-                 card_w - Emu(274320), Emu(182880),
-                 sub, size=8.5, color=SUBTITLE_COLOR)
-
-    # Painel inferior: Indicadores adicionais + Capacidade de Pagamento
-    bottom_y = cards_y + 2 * (card_h + card_gap_y) + Emu(182880)
-
-    # Esquerda: Indicadores de Capital
-    _add_rounded_rect(slide, Emu(365760), bottom_y,
-                      Emu(5486400), Emu(2194560), NAVY)
-    _txt(slide, Emu(548640), bottom_y + Emu(137160),
-         Emu(5120640), Emu(274320),
-         "INDICADORES DE CAPITAL", size=10, bold=True, color=WHITE)
-    _add_rect(slide, Emu(548640), bottom_y + Emu(411480),
-              Emu(2286000), Emu(18288), GREEN)
-
-    ind_items = [
-        ("Divida / PL", _fmt_mult(indicadores.get("divida_pl", kpis.get("divida_pl", 0)))),
-        ("Liquidez Corrente", _fmt_mult(indicadores.get("liquidez_corrente", kpis.get("liquidez_corrente", 0)))),
-        ("ROE", _fmt_pct(indicadores.get("roe", kpis.get("roe", 0)))),
-        ("LTV Efetivo", _fmt_pct(kpis.get("ltv", 0))),
-        ("Cobertura de Juros", _fmt_mult(indicadores.get("cobertura_juros", kpis.get("cobertura_juros", 0)))),
-    ]
-
-    ind_y = bottom_y + Emu(502920)
-    for label, valor in ind_items:
-        if valor and valor not in ("—", "0,00x", "0,0%"):
-            _txt(slide, Emu(548640), ind_y, Emu(2286000), Emu(228600),
-                 label, size=9, bold=True, color=SUBTITLE_COLOR)
-            _txt(slide, Emu(2926080), ind_y, Emu(2560320), Emu(228600),
-                 str(valor), size=9, bold=True, color=WHITE)
-            ind_y += Emu(274320)
-
-    # Direita: Capacidade de Pagamento
-    right_x = Emu(6126480)
-    right_w = Emu(5669280)
-    _add_rounded_rect(slide, right_x, bottom_y, right_w, Emu(2194560), NAVY)
-    _txt(slide, right_x + Emu(182880), bottom_y + Emu(137160),
-         right_w - Emu(365760), Emu(274320),
-         "CAPACIDADE DE PAGAMENTO", size=10, bold=True, color=WHITE)
-    _add_rect(slide, right_x + Emu(182880), bottom_y + Emu(411480),
-              Emu(2286000), Emu(18288), GREEN)
-
-    pagamento = analise.get("pagamento", {})
-    pay_text = pagamento.get("analise", "")
-    if pay_text:
-        _txt(slide, right_x + Emu(182880), bottom_y + Emu(502920),
-             right_w - Emu(365760), Emu(1554480),
-             _trunc(pay_text, 600), size=9, color=BODY_LIGHT)
-    else:
-        # Mostrar KPIs de capacidade
-        cap_items = [
-            f"DSCR: {_fmt_mult(kpis.get('dscr', 0))}",
-            f"Comprometimento da Receita: {_fmt_pct(kpis.get('comprometimento_receita', 0))}",
-            f"EBITDA / Servico Divida: {_fmt_mult(kpis.get('ebitda_servico_divida', 0))}",
-        ]
-        cap_y = bottom_y + Emu(502920)
-        for item in cap_items:
-            _txt(slide, right_x + Emu(182880), cap_y,
-                 right_w - Emu(365760), Emu(274320),
-                 item, size=9.5, color=BODY_LIGHT)
-            cap_y += Emu(320040)
-
-
-# ---------------------------------------------------------------------------
-# Slide 5 — Estrutura da Operacao
-# ---------------------------------------------------------------------------
-def _slide_estrutura(prs, op: dict, analise: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="Estrutura da Operacao",
-                        slide_number=sn, total_slides=total)
-    y_start = Emu(914400)
-
-    tipo = op.get("tipo_operacao", "Credito Estruturado")
-    taxa = op.get("taxa", "—")
-
-    _txt(slide, Emu(365760), y_start, Emu(11277600), Emu(365760),
-         f"Estrutura & Termos  |  {tipo}", size=22, bold=True, color=WHITE)
-
-    _hline(slide, Emu(365760), y_start + Emu(457200), Emu(11277600))
-
-    # 6 KPI cards da estrutura (em linha)
-    struct_kpis = [
-        ("Modalidade", tipo, ""),
-        ("Volume", _fmt_brl(op.get("volume", 0)), ""),
-        ("Taxa All-In", str(taxa), ""),
-        ("Prazo Total", f"{op.get('prazo_meses', '—')} meses", ""),
-        ("Carencia", op.get("carencia", "—"), ""),
-        ("Amortizacao", op.get("amortizacao", "—"), ""),
-    ]
-
-    card_w = Emu(1828800)
-    card_h = Emu(914400)
-    cards_y = y_start + Emu(548640)
-    card_gap = Emu(91440)
-
-    for idx, (label, value, sub) in enumerate(struct_kpis):
-        if not value or value == "—":
-            continue
-        x = Emu(365760) + idx * (card_w + card_gap)
-        _add_rounded_rect(slide, x, cards_y, card_w, card_h, NAVY)
-        _txt(slide, x + Emu(91440), cards_y + Emu(91440),
-             card_w - Emu(182880), Emu(182880),
-             label.upper(), size=7, bold=True, color=LABEL_COLOR)
-        _txt(slide, x + Emu(91440), cards_y + Emu(320040),
-             card_w - Emu(182880), Emu(457200),
-             _trunc(str(value), 25), size=11, bold=True, color=WHITE)
-
-    # Painel: Cronograma / Fluxo (se disponivel)
-    cronograma = analise.get("cronograma", {})
-    fluxo = op.get("fluxo_caixa", []) or cronograma.get("fluxo", [])
-
-    mid_y = cards_y + card_h + Emu(274320)
-
-    if fluxo:
-        # Tabela de fluxo de caixa
-        _add_rounded_rect(slide, Emu(365760), mid_y,
-                          Emu(11277600), Emu(3200400), NAVY)
-        _txt(slide, Emu(548640), mid_y + Emu(137160),
-             Emu(10972800), Emu(274320),
-             "FLUXO DE CAIXA — DESEMBOLSO ANUAL", size=10, bold=True, color=WHITE)
-        _add_rect(slide, Emu(548640), mid_y + Emu(411480),
-                  Emu(2743200), Emu(18288), GREEN)
-
-        # Header da tabela
-        cols = ["Ano / Fase", "Saldo Devedor", "Juros", "Amortizacao", "Desembolso", "DSCR"]
-        col_widths = [Emu(1828800), Emu(1828800), Emu(1828800),
-                      Emu(1828800), Emu(1828800), Emu(1371600)]
-        header_y = mid_y + Emu(502920)
-        _add_rect(slide, Emu(548640), header_y, Emu(10515600), Emu(274320), GREEN)
-
-        col_x = Emu(548640)
-        for ci, col_name in enumerate(cols):
-            _txt(slide, col_x + Emu(45720), header_y + Emu(36576),
-                 col_widths[ci], Emu(228600),
-                 col_name, size=7, bold=True, color=WHITE)
-            col_x += col_widths[ci]
-
-        # Linhas de dados
-        row_y = header_y + Emu(274320)
-        for ri, row_data in enumerate(fluxo[:8]):
-            bg = ROW_DARK_ODD if ri % 2 == 0 else ROW_DARK_EVEN
-            _add_rect(slide, Emu(548640), row_y, Emu(10515600), Emu(228600), bg)
-
-            vals = [
-                row_data.get("ano", "—"),
-                row_data.get("saldo", "—"),
-                row_data.get("juros", "—"),
-                row_data.get("amortizacao", "—"),
-                row_data.get("desembolso", "—"),
-                row_data.get("dscr", "—"),
-            ]
-
-            col_x = Emu(548640)
-            for ci, val in enumerate(vals):
-                v_color = GREEN_LIGHT if ci == 5 and str(val) not in ("—", "") else BODY_LIGHT
-                is_bold = ci == 0
-                _txt(slide, col_x + Emu(45720), row_y + Emu(27432),
-                     col_widths[ci], Emu(182880),
-                     str(val), size=7, bold=is_bold, color=v_color)
-                col_x += col_widths[ci]
-            row_y += Emu(228600)
-    else:
-        # Sem fluxo: mostrar uso dos recursos e dados complementares
-        _add_rounded_rect(slide, Emu(365760), mid_y,
-                          Emu(5486400), Emu(3200400), NAVY)
-        _txt(slide, Emu(548640), mid_y + Emu(137160),
-             Emu(5120640), Emu(274320),
-             "USO DOS RECURSOS", size=10, bold=True, color=WHITE)
-        _add_rect(slide, Emu(548640), mid_y + Emu(411480),
-                  Emu(2286000), Emu(18288), GREEN)
-
-        finalidade = op.get("finalidade", "—")
-        uso_recursos = op.get("uso_recursos", [])
-        if uso_recursos:
-            uso_y = mid_y + Emu(502920)
-            for item in uso_recursos[:8]:
-                if isinstance(item, dict):
-                    _txt(slide, Emu(548640), uso_y, Emu(3200400), Emu(228600),
-                         item.get("descricao", "—"), size=8.5, color=BODY_LIGHT)
-                    _txt(slide, Emu(3840480), uso_y, Emu(1554480), Emu(228600),
-                         _fmt_brl(item.get("valor", 0)), size=8.5, bold=True,
-                         color=WHITE, align=PP_ALIGN.RIGHT)
-                else:
-                    _txt(slide, Emu(548640), uso_y, Emu(4937760), Emu(228600),
-                         f"  {str(item)}", size=8.5, color=BODY_LIGHT)
-                uso_y += Emu(274320)
-        elif finalidade and finalidade != "—":
-            _txt(slide, Emu(548640), mid_y + Emu(502920),
-                 Emu(5120640), Emu(2286000),
-                 finalidade, size=9.5, color=BODY_LIGHT)
-
-        # Direita: Dados complementares da operacao
-        right_x = Emu(6126480)
-        _add_rounded_rect(slide, right_x, mid_y,
-                          Emu(5669280), Emu(3200400), NAVY)
-        _txt(slide, right_x + Emu(182880), mid_y + Emu(137160),
-             Emu(5303520), Emu(274320),
-             "DADOS COMPLEMENTARES", size=10, bold=True, color=WHITE)
-        _add_rect(slide, right_x + Emu(182880), mid_y + Emu(411480),
-                  Emu(2286000), Emu(18288), GREEN)
-
-        comp_items = [
-            ("Securitizadora", op.get("securitizadora", "")),
-            ("Administrador", op.get("administrador", "")),
-            ("Custodiante", op.get("custodiante", "")),
-            ("Agente Fiduciario", op.get("agente_fiduciario", "")),
-            ("Fundo de Reserva", op.get("fundo_reserva", "")),
-            ("Covenants", _trunc(op.get("covenants_text", "") or "", 80)),
-            ("Regime Liberacao", op.get("regime_liberacao", "")),
-        ]
-
-        comp_y = mid_y + Emu(502920)
-        for label, valor in comp_items:
-            if valor and valor != "—":
-                _txt(slide, right_x + Emu(182880), comp_y,
-                     Emu(2286000), Emu(228600),
-                     label, size=8, bold=True, color=SUBTITLE_COLOR)
-                _txt(slide, right_x + Emu(2560320), comp_y,
-                     Emu(2651760), Emu(228600),
-                     str(valor), size=8, color=WHITE)
-                comp_y += Emu(274320)
-
-
-# ---------------------------------------------------------------------------
-# Slide 6 — Garantias & Colateral
-# ---------------------------------------------------------------------------
-def _slide_garantias(prs, op: dict, analise: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="Garantias & Colateral",
-                        slide_number=sn, total_slides=total)
-    y_start = Emu(914400)
-
-    kpis = analise.get("kpis", {})
-    patrimonio = analise.get("patrimonio", {})
-    garantias_list = op.get("garantias", []) or patrimonio.get("garantias", [])
-
-    # Titulo
-    ltv = kpis.get("ltv", 0)
-    cobertura = kpis.get("cobertura_total", 0)
-    title_parts = ["Garantias & Solidez Patrimonial"]
-    if cobertura:
-        title_parts.append(f"Cobertura {_fmt_mult(cobertura)}")
-    if ltv:
-        title_parts.append(f"LTV {_fmt_pct(ltv)}")
-
-    _txt(slide, Emu(365760), y_start, Emu(11277600), Emu(365760),
-         "  |  ".join(title_parts), size=22, bold=True, color=WHITE)
-
-    _hline(slide, Emu(365760), y_start + Emu(457200), Emu(11277600))
-
-    # KPI cards de garantia (ate 6)
-    vol = op.get("volume", 0)
-    vm_total = patrimonio.get("valor_mercado", kpis.get("valor_mercado_garantias", 0))
-    vlf_total = patrimonio.get("valor_liquidacao", kpis.get("valor_liquidacao_garantias", 0))
-
-    gar_kpis = []
-    if vm_total:
-        gar_kpis.append(("VM Total", _fmt_brl(vm_total), "Valor de Mercado"))
-    if vlf_total:
-        gar_kpis.append(("VLF Total", _fmt_brl(vlf_total), "Liquidacao Forcada"))
-    if ltv:
-        gar_kpis.append(("LTV", _fmt_pct(ltv), "Loan-to-Value"))
-    if cobertura:
-        gar_kpis.append(("Cobertura", _fmt_mult(cobertura), "VM / Operacao"))
-
-    # Preencher ate 4 com dados extras
-    ltv_vlf = patrimonio.get("ltv_vlf", kpis.get("ltv_vlf", 0))
-    cobertura_vlf = patrimonio.get("cobertura_vlf", kpis.get("cobertura_vlf", 0))
-    if ltv_vlf and len(gar_kpis) < 5:
-        gar_kpis.append(("LTV (VLF)", _fmt_pct(ltv_vlf), "s/ Liquidacao Forcada"))
-    if cobertura_vlf and len(gar_kpis) < 6:
-        gar_kpis.append(("Cob. VLF", _fmt_mult(cobertura_vlf), "VLF / Operacao"))
-
-    if gar_kpis:
-        card_w = Emu(11277600 // min(len(gar_kpis), 6) - 91440)
-        cards_y = y_start + Emu(548640)
-        for idx, (label, value, sub) in enumerate(gar_kpis[:6]):
-            x = Emu(365760) + idx * (card_w + Emu(91440))
-            _add_rounded_rect(slide, x, cards_y, card_w, Emu(731520), NAVY)
-            _txt(slide, x + Emu(91440), cards_y + Emu(54864),
-                 card_w - Emu(182880), Emu(182880),
-                 label.upper(), size=7, bold=True, color=LABEL_COLOR)
-            _txt(slide, x + Emu(91440), cards_y + Emu(274320),
-                 card_w - Emu(182880), Emu(320040),
-                 str(value), size=14, bold=True, color=WHITE)
-            _txt(slide, x + Emu(91440), cards_y + Emu(548640),
-                 card_w - Emu(182880), Emu(137160),
-                 sub, size=7, color=SUBTITLE_COLOR)
-
-    # Tabela de garantias (se disponivel)
-    table_y = y_start + Emu(1371600)
-
-    if garantias_list and isinstance(garantias_list, list) and len(garantias_list) > 0:
-        _add_rounded_rect(slide, Emu(365760), table_y,
-                          Emu(11277600), Emu(3657600), NAVY)
-        _txt(slide, Emu(548640), table_y + Emu(137160),
-             Emu(10972800), Emu(274320),
-             "DETALHAMENTO DAS GARANTIAS", size=10, bold=True, color=WHITE)
-        _add_rect(slide, Emu(548640), table_y + Emu(411480),
-                  Emu(2743200), Emu(18288), GREEN)
-
-        # Determinar colunas baseado nos dados
-        has_area = any(g.get("area") for g in garantias_list if isinstance(g, dict))
-
-        if has_area:
-            cols = ["Garantia", "Area", "VM (R$)", "VLF (R$)", "Status"]
-            col_ws = [Emu(3200400), Emu(1371600), Emu(2286000), Emu(2286000), Emu(1371600)]
-        else:
-            cols = ["Garantia", "Detalhe", "Valor (R$)", "Cobertura"]
-            col_ws = [Emu(3200400), Emu(3200400), Emu(2560320), Emu(1554480)]
-
-        # Header
-        header_y = table_y + Emu(502920)
-        _add_rect(slide, Emu(548640), header_y, Emu(10515600), Emu(274320), GREEN)
-        col_x = Emu(548640)
-        for ci, col_name in enumerate(cols):
-            _txt(slide, col_x + Emu(45720), header_y + Emu(36576),
-                 col_ws[ci], Emu(228600),
-                 col_name, size=7, bold=True, color=WHITE)
-            col_x += col_ws[ci]
-
-        # Dados
-        row_y = header_y + Emu(274320)
-        for ri, gar in enumerate(garantias_list[:10]):
-            bg = ROW_DARK_ODD if ri % 2 == 0 else ROW_DARK_EVEN
-            _add_rect(slide, Emu(548640), row_y, Emu(10515600), Emu(228600), bg)
-
-            if isinstance(gar, dict):
-                if has_area:
-                    vals = [
-                        gar.get("descricao", gar.get("nome", "—")),
-                        str(gar.get("area", "—")),
-                        _fmt_brl(gar.get("valor_mercado", gar.get("vm", 0))),
-                        _fmt_brl(gar.get("valor_liquidacao", gar.get("vlf", 0))),
-                        gar.get("status", "—"),
-                    ]
-                else:
-                    vals = [
-                        gar.get("descricao", gar.get("tipo", "—")),
-                        gar.get("detalhe", "—"),
-                        _fmt_brl(gar.get("valor", 0)),
-                        _fmt_pct(gar.get("cobertura", 0)),
-                    ]
-            else:
-                vals = [str(gar)] + ["—"] * (len(cols) - 1)
-
-            col_x = Emu(548640)
-            for ci, val in enumerate(vals):
-                is_bold = ci == 0
-                v_color = GREEN_LIGHT if "ok" in str(val).lower() or "principal" in str(val).lower() else BODY_LIGHT
-                if ci == 0:
-                    v_color = WHITE
-                _txt(slide, col_x + Emu(45720), row_y + Emu(27432),
-                     col_ws[ci], Emu(182880),
-                     str(val), size=7.5, bold=is_bold, color=v_color)
-                col_x += col_ws[ci]
-            row_y += Emu(228600)
-
-        # Linha de total (se tiver VM e VLF)
-        if vm_total or vlf_total:
-            _add_rect(slide, Emu(548640), row_y, Emu(10515600), Emu(274320), GREEN)
-            _txt(slide, Emu(594360), row_y + Emu(36576),
-                 Emu(3200400), Emu(228600),
-                 "TOTAL", size=7.5, bold=True, color=WHITE)
-            if has_area and vm_total:
-                _txt(slide, Emu(548640) + col_ws[0] + col_ws[1] + Emu(45720),
-                     row_y + Emu(36576), Emu(2286000), Emu(228600),
-                     _fmt_brl(vm_total), size=7.5, bold=True, color=WHITE)
-            if has_area and vlf_total:
-                _txt(slide, Emu(548640) + col_ws[0] + col_ws[1] + col_ws[2] + Emu(45720),
-                     row_y + Emu(36576), Emu(2286000), Emu(228600),
-                     _fmt_brl(vlf_total), size=7.5, bold=True, color=WHITE)
-    else:
-        # Sem lista detalhada: mostrar texto das garantias
-        _add_rounded_rect(slide, Emu(365760), table_y,
-                          Emu(11277600), Emu(3657600), NAVY)
-        _txt(slide, Emu(548640), table_y + Emu(137160),
-             Emu(10972800), Emu(274320),
-             "GARANTIAS DA OPERACAO", size=10, bold=True, color=WHITE)
-        _add_rect(slide, Emu(548640), table_y + Emu(411480),
-                  Emu(2743200), Emu(18288), GREEN)
-
-        gar_text = op.get("garantias_text", "")
-        if gar_text:
-            _txt(slide, Emu(548640), table_y + Emu(502920),
-                 Emu(10972800), Emu(2743200),
-                 _trunc(gar_text, 800), size=10, color=BODY_LIGHT)
-
-
-# ---------------------------------------------------------------------------
-# Slide 7 — Riscos & Mitigantes
-# ---------------------------------------------------------------------------
-def _slide_riscos(prs, analise: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="Riscos & Mitigantes",
-                        slide_number=sn, total_slides=total)
-    y_start = Emu(914400)
-
-    riscos = analise.get("riscos", {})
-    matriz = riscos.get("matriz_riscos", [])
-
-    _txt(slide, Emu(365760), y_start, Emu(11277600), Emu(365760),
-         "Analise de Riscos & Mitigantes", size=22, bold=True, color=WHITE)
-
-    _hline(slide, Emu(365760), y_start + Emu(457200), Emu(11277600))
-
-    if matriz:
-        # Tabela de riscos
-        _add_rounded_rect(slide, Emu(365760), y_start + Emu(548640),
-                          Emu(11277600), Emu(4572000), NAVY)
-        _txt(slide, Emu(548640), y_start + Emu(685800),
-             Emu(10972800), Emu(274320),
-             "MATRIZ DE RISCOS", size=10, bold=True, color=WHITE)
-        _add_rect(slide, Emu(548640), y_start + Emu(960120),
-                  Emu(2743200), Emu(18288), GREEN)
-
-        cols = ["Risco", "Mitigante ZYN"]
-        col_ws = [Emu(4572000), Emu(5943600)]
-
-        header_y = y_start + Emu(1051560)
-        _add_rect(slide, Emu(548640), header_y, Emu(10515600), Emu(320040), GREEN)
-        col_x = Emu(548640)
-        for ci, col_name in enumerate(cols):
-            _txt(slide, col_x + Emu(91440), header_y + Emu(54864),
-                 col_ws[ci], Emu(228600),
-                 col_name, size=8, bold=True, color=WHITE)
-            col_x += col_ws[ci]
-
-        row_y = header_y + Emu(320040)
-        for ri, risco in enumerate(matriz[:8]):
-            bg = ROW_DARK_ODD if ri % 2 == 0 else ROW_DARK_EVEN
-            row_h = Emu(365760)
-            _add_rect(slide, Emu(548640), row_y, Emu(10515600), row_h, bg)
-
-            nome = risco.get("risco", "—")
-            mitigante = risco.get("mitigante", "—")
-
-            _txt(slide, Emu(640080), row_y + Emu(54864),
-                 col_ws[0] - Emu(91440), Emu(274320),
-                 _trunc(nome, 60), size=8, bold=True, color=WHITE)
-            _txt(slide, Emu(548640) + col_ws[0] + Emu(91440), row_y + Emu(54864),
-                 col_ws[1] - Emu(91440), Emu(274320),
-                 _trunc(mitigante, 80), size=8, color=BODY_LIGHT)
-
-            row_y += row_h
-    else:
-        # Sem matriz: mostrar analise de risco geral
-        _add_rounded_rect(slide, Emu(365760), y_start + Emu(548640),
-                          Emu(11277600), Emu(4572000), NAVY)
-        _txt(slide, Emu(548640), y_start + Emu(685800),
-             Emu(10972800), Emu(274320),
-             "ANALISE DE RISCO", size=10, bold=True, color=WHITE)
-        _add_rect(slide, Emu(548640), y_start + Emu(960120),
-                  Emu(2743200), Emu(18288), GREEN)
-
-        risco_text = riscos.get("analise", riscos.get("parecer", ""))
-        if risco_text:
-            _txt(slide, Emu(548640), y_start + Emu(1051560),
-                 Emu(10972800), Emu(3657600),
-                 _trunc(risco_text, 1000), size=10, color=BODY_LIGHT)
-
-        # Flags como pontos de atencao
-        all_flags = []
-        for secao in ["tomador", "patrimonio", "producao", "capital", "operacao",
-                       "pagamento", "onus", "riscos", "covenants", "cronograma"]:
-            dados = analise.get(secao, {})
-            flags = dados.get("flags", [])
-            for f in flags:
-                if isinstance(f, dict):
-                    all_flags.append(f.get("descricao", str(f)))
-                else:
-                    all_flags.append(str(f))
-
-        if all_flags:
-            flag_y = y_start + Emu(1371600 if risco_text else 1051560)
-            _txt(slide, Emu(548640), flag_y, Emu(10972800), Emu(274320),
-                 "PONTOS DE ATENCAO (FLAGS)", size=9, bold=True, color=GOLD)
-            flag_y += Emu(320040)
-            for flag in all_flags[:8]:
-                _txt(slide, Emu(548640), flag_y, Emu(10972800), Emu(274320),
-                     f"  {_trunc(flag, 100)}", size=9, color=BODY_LIGHT)
-                flag_y += Emu(274320)
-
-
-# ---------------------------------------------------------------------------
-# Slide 8 — Parecer Final & Rating
-# ---------------------------------------------------------------------------
-def _slide_parecer(prs, op: dict, analise: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="Parecer & Rating",
-                        slide_number=sn, total_slides=total)
-    y_start = Emu(914400)
-
-    rating = analise.get("rating_final", {})
-    nota = rating.get("nota", "—")
-    parecer = rating.get("parecer", "—")
-    justificativa = rating.get("justificativa", "")
-    kpis = analise.get("kpis", {})
-
-    # Badge de rating grande
-    _add_rounded_rect(slide, Emu(365760), y_start,
-                      Emu(11277600), Emu(1371600), NAVY)
-
-    # Nota grande
-    _txt(slide, Emu(548640), y_start + Emu(137160),
-         Emu(1371600), Emu(182880),
-         "RATING FINAL", size=9, bold=True, color=LABEL_COLOR)
-    _txt(slide, Emu(548640), y_start + Emu(365760),
-         Emu(1371600), Emu(914400),
-         str(nota), size=48, bold=True, color=_rating_color(nota))
-
-    # Parecer ao lado do rating
-    _txt(slide, Emu(2194560), y_start + Emu(137160),
-         Emu(9144000), Emu(182880),
-         "PARECER", size=9, bold=True, color=LABEL_COLOR)
-    _txt(slide, Emu(2194560), y_start + Emu(365760),
-         Emu(9144000), Emu(457200),
-         str(parecer), size=24, bold=True, color=WHITE)
-
-    if justificativa:
-        _txt(slide, Emu(2194560), y_start + Emu(822960),
-             Emu(9144000), Emu(457200),
-             _trunc(justificativa, 200), size=9, color=BODY_LIGHT)
-
-    # KPI cards resumo (4 em linha)
-    n_flags = sum(len(analise.get(s, {}).get("flags", []))
-                  for s in ["tomador", "patrimonio", "producao", "capital",
-                            "operacao", "pagamento", "onus", "riscos",
-                            "covenants", "cronograma"])
-
-    summary_cards = [
-        ("Rating Final", str(nota), parecer, _rating_color(nota)),
-        ("DSCR", _fmt_mult(kpis.get("dscr", 0)), "Cobertura do Servico", WHITE),
-        ("LTV", _fmt_pct(kpis.get("ltv", 0)), "Loan to Value", WHITE),
-        ("Flags", str(n_flags), "Pontos de Atencao", GOLD if n_flags > 3 else GREEN_LIGHT),
-    ]
-
-    card_w = Emu(2651760)
-    card_gap = Emu(182880)
-    cards_y = y_start + Emu(1554480)
-
-    for idx, (label, value, sub, v_color) in enumerate(summary_cards):
-        x = Emu(365760) + idx * (card_w + card_gap)
-        _add_rounded_rect(slide, x, cards_y, card_w, Emu(914400), NAVY)
-        _txt(slide, x + Emu(137160), cards_y + Emu(91440),
-             card_w - Emu(274320), Emu(182880),
-             label.upper(), size=9, bold=True, color=LABEL_COLOR)
-        _txt(slide, x + Emu(137160), cards_y + Emu(320040),
-             card_w - Emu(274320), Emu(365760),
-             value, size=22, bold=True, color=v_color)
-        _txt(slide, x + Emu(137160), cards_y + Emu(685800),
-             card_w - Emu(274320), Emu(182880),
-             sub, size=8.5, color=SUBTITLE_COLOR)
-
-    # Ratings por secao (tabela)
-    table_y = cards_y + Emu(1097280)
-    _add_rounded_rect(slide, Emu(365760), table_y,
-                      Emu(11277600), Emu(2743200), NAVY)
-    _txt(slide, Emu(548640), table_y + Emu(137160),
-         Emu(10972800), Emu(274320),
-         "RATINGS POR SECAO", size=10, bold=True, color=WHITE)
-    _add_rect(slide, Emu(548640), table_y + Emu(411480),
-              Emu(2743200), Emu(18288), GREEN)
-
-    secoes = [
-        ("Tomador", "tomador"), ("Patrimonio", "patrimonio"),
-        ("Producao", "producao"), ("Capital", "capital"),
-        ("Operacao", "operacao"), ("Pagamento", "pagamento"),
-        ("Onus", "onus"), ("Riscos", "riscos"),
-        ("Covenants", "covenants"), ("Cronograma", "cronograma"),
-    ]
-
-    # Layout 2 colunas para ratings
-    header_y = table_y + Emu(502920)
-    cols_per_row = 2
-    col_w = Emu(5120640)
-    items_per_col = 5
-
-    for col_idx in range(cols_per_row):
-        col_start_x = Emu(548640) + col_idx * col_w
-        start_idx = col_idx * items_per_col
-        end_idx = min(start_idx + items_per_col, len(secoes))
-
-        # Mini header
-        _add_rect(slide, col_start_x, header_y,
-                  col_w - Emu(182880), Emu(228600), GREEN)
-        _txt(slide, col_start_x + Emu(91440), header_y + Emu(27432),
-             Emu(2286000), Emu(182880),
-             "Secao", size=7, bold=True, color=WHITE)
-        _txt(slide, col_start_x + Emu(2743200), header_y + Emu(27432),
-             Emu(1371600), Emu(182880),
-             "Rating", size=7, bold=True, color=WHITE)
-        _txt(slide, col_start_x + Emu(4114800), header_y + Emu(27432),
-             Emu(822960), Emu(182880),
-             "Flags", size=7, bold=True, color=WHITE)
-
-        row_y = header_y + Emu(228600)
-        for si in range(start_idx, end_idx):
-            secao_nome, secao_key = secoes[si]
-            dados = analise.get(secao_key, {})
-            rating_s = dados.get("rating_secao", "N/A")
-            n_sec_flags = len(dados.get("flags", []))
-
-            bg = ROW_DARK_ODD if (si - start_idx) % 2 == 0 else ROW_DARK_EVEN
-            _add_rect(slide, col_start_x, row_y,
-                      col_w - Emu(182880), Emu(228600), bg)
-            _txt(slide, col_start_x + Emu(91440), row_y + Emu(27432),
-                 Emu(2651760), Emu(182880),
-                 secao_nome, size=8, bold=True, color=WHITE)
-
-            # Cor do rating
-            rating_colors = {"Forte": GREEN, "Adequado": GREEN_LIGHT,
-                             "Atencao": GOLD, "Critico": RED}
-            cor_r = rating_colors.get(rating_s, SUBTITLE_COLOR)
-            _txt(slide, col_start_x + Emu(2743200), row_y + Emu(27432),
-                 Emu(1371600), Emu(182880),
-                 str(rating_s), size=8, bold=True, color=cor_r)
-            _txt(slide, col_start_x + Emu(4114800), row_y + Emu(27432),
-                 Emu(822960), Emu(182880),
-                 f"{n_sec_flags}" if n_sec_flags > 0 else "OK",
-                 size=8, color=GOLD if n_sec_flags > 0 else GREEN_LIGHT)
-            row_y += Emu(228600)
-
-
-# ---------------------------------------------------------------------------
-# Slide 9 — Proximos Passos & Contato
-# ---------------------------------------------------------------------------
-def _slide_contato(prs, op: dict, sn: int, total: int):
-    slide = _base_slide(prs, title="", show_header=False,
-                        slide_number=sn, total_slides=total)
-
-    # Background escuro com accent
-    _add_rect(slide, 0, 0, SW, SH, DARK_OVERLAY)
-    _add_rect(slide, 0, 0, Emu(54864), SH, GREEN)
-
-    # ZYN CAPITAL (centro superior)
-    _txt(slide, 0, Emu(548640), SW, Emu(548640),
-         "ZYN  CAPITAL", size=28, bold=True, color=WHITE,
-         align=PP_ALIGN.CENTER)
-
-    # Proximos Passos
-    _txt(slide, 0, Emu(1371600), SW, Emu(365760),
-         "PROXIMOS PASSOS", size=10, bold=True, color=SUBTITLE_COLOR,
-         align=PP_ALIGN.CENTER)
-
-    steps = [
-        ("01", "Envio do Memorando Executivo completo"),
-        ("02", "Call de due diligence com equipe ZYN Capital"),
-        ("03", "Assinatura de NDA e acesso ao data room"),
-        ("04", "Formalizacao da proposta de investimento"),
-    ]
-
-    step_w = Emu(2560320)
-    step_gap = Emu(137160)
-    step_total_w = len(steps) * step_w + (len(steps) - 1) * step_gap
-    step_start_x = (SW - step_total_w) // 2
-    step_y = Emu(1828800)
-
-    for idx, (num, desc) in enumerate(steps):
-        x = step_start_x + idx * (step_w + step_gap)
-        _add_rounded_rect(slide, x, step_y, step_w, Emu(822960), NAVY)
-
-        # Numero grande
-        _txt(slide, x + Emu(91440), step_y + Emu(91440),
-             Emu(548640), Emu(457200),
-             num, size=24, bold=True, color=GREEN)
-        # Descricao
-        _txt(slide, x + Emu(91440), step_y + Emu(502920),
-             step_w - Emu(182880), Emu(274320),
-             desc, size=8.5, color=WHITE)
-
-    # Linha divisoria
-    _hline(slide, Emu(2743200), Emu(3017520), Emu(6705600),
-           color=RGBColor(0x33, 0x41, 0x55))
-
-    # Contato
-    _txt(slide, 0, Emu(3200400), SW, Emu(365760),
-         "PARA MAIORES INFORMACOES", size=10, bold=True,
-         color=SUBTITLE_COLOR, align=PP_ALIGN.CENTER)
-
-    # Nome do assessor
-    assessor = op.get("assessor", "Danilo Salasar")
-    cargo = op.get("cargo_assessor", "Socio | Credito Estruturado & M&A")
-    email = op.get("email_assessor", "danilo@zyncapital.com.br")
-    telefone = op.get("telefone_assessor", "65 9 9987-8781")
-
-    _txt(slide, 0, Emu(3566160), SW, Emu(457200),
-         assessor, size=22, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
-    _txt(slide, 0, Emu(3931920), SW, Emu(274320),
-         cargo, size=10, color=SUBTITLE_COLOR, align=PP_ALIGN.CENTER)
-
-    # Email e telefone
-    contact_y = Emu(4389120)
-    _add_rounded_rect(slide, (SW - Emu(4572000)) // 2, contact_y,
-                      Emu(4572000), Emu(548640), NAVY)
-    _txt(slide, (SW - Emu(4572000)) // 2, contact_y + Emu(91440),
-         Emu(4572000), Emu(228600),
-         f"{email}  |  {telefone}", size=10, color=WHITE,
-         align=PP_ALIGN.CENTER)
-    _txt(slide, (SW - Emu(4572000)) // 2, contact_y + Emu(320040),
-         Emu(4572000), Emu(182880),
-         "Sao Paulo — SP  |  zyncapital.com.br", size=9,
-         color=SUBTITLE_COLOR, align=PP_ALIGN.CENTER)
-
-    # Disclaimer
-    _txt(slide, Emu(548640), Emu(5303520), Emu(11097600), Emu(548640),
-         "AVISO LEGAL: Este material e de uso exclusivo do destinatario e nao "
-         "constitui oferta publica de valores mobiliarios nem solicitacao de "
-         "investimento. As informacoes foram fornecidas pela Companhia e por "
-         "fontes de mercado. A ZYN Capital nao garante a exatidao ou completude "
-         "dos dados. Investimentos envolvem riscos, incluindo risco de credito, "
-         "liquidez, mercado e operacional. Rentabilidade passada nao e garantia "
-         "de resultados futuros.",
-         size=6.5, color=RGBColor(0x64, 0x74, 0x8B))
-
-    # Footer
-    _add_rect(slide, 0, SH - Emu(365760), SW, Emu(365760), NAVY)
-    _txt(slide, Emu(365760), SH - Emu(310896),
-         Emu(6858000), Emu(274320),
-         f"ZYN CAPITAL  (C)  {datetime.now().year}  |  Confidencial  |  Credito Estruturado & M&A",
-         size=7, color=SUBTITLE_COLOR)
-
-
-# ---------------------------------------------------------------------------
-# Main entry point
+# Funcao principal
 # ---------------------------------------------------------------------------
 def generate_teaser(
     analise: dict[str, Any],
@@ -1459,63 +499,33 @@ def generate_teaser(
     output_path: str,
 ) -> str:
     """
-    Gera Teaser Premium ZYN de 8-9 slides (.pptx).
+    Gera Teaser ZYN (.pptx) a partir do template oficial.
 
-    Baseado na analise de 8 teasers reais (SNOW FIDC, Ivanoff SLB, Baroon55 CRI,
-    Grupo Roca, Goulart, Edificatto, Frigomarca, Fibra Cotton).
-
-    Slides:
-        1. Capa Premium (tomador, KPIs, resumo)
-        2. Resumo Executivo (termos + indicadores-chave)
-        3. Perfil do Tomador (dados societarios + destaques)
-        4. Indicadores Financeiros (KPIs + capacidade pagamento)
-        5. Estrutura da Operacao (termos + fluxo/uso recursos)
-        6. Garantias & Colateral (KPIs + tabela detalhada)
-        7. Riscos & Mitigantes (matriz de riscos)
-        8. Parecer & Rating (nota final + ratings por secao)
-        9. Proximos Passos & Contato
+    Abre o template de 5 slides, substitui os placeholders pelos dados reais
+    da operacao, e salva no output_path. Preserva toda a formatacao visual.
 
     Args:
-        analise: Resultado da analise de credito (MAC). Deve conter:
-            - kpis: dict com receita_liquida, ebitda, margem_ebitda, dscr, ltv, etc.
-            - rating_final: dict com nota, parecer, justificativa
-            - tomador, patrimonio, producao, capital, operacao, pagamento,
-              onus, riscos, covenants, cronograma: dicts das secoes da MAC
-        parametros: Parametros da operacao. Campos suportados:
-            - tomador (str): Nome do tomador/cedente
-            - cnpj (str): CNPJ do tomador
-            - tipo_operacao (str): CRI, CRA, CPR-F, SLB, NC/CCB, FIDC, Fiagro, Debenture
-            - volume (float): Volume em R$
-            - taxa (str): Taxa indicativa (ex: "CDI + 5,0% a.a.")
-            - prazo_meses (int): Prazo total em meses
-            - amortizacao (str): Tipo de amortizacao
-            - carencia (str): Periodo de carencia
-            - garantias_text (str): Descricao das garantias
-            - garantias (list[dict]): Lista detalhada de garantias
-            - finalidade (str): Finalidade dos recursos
-            - setor (str): Setor de atuacao
-            - localidade (str): Localizacao
-            - resumo_executivo (str): Resumo para a capa
-            - fluxo_caixa (list[dict]): Projecao de fluxo
-            - destaques (list[str]): Destaques do tomador
-            - assessor, email_assessor, telefone_assessor (str): Dados de contato
+        analise: Resultado da analise de credito (MAC).
+        parametros: Parametros da operacao (tomador, volume, taxa, etc.).
         output_path: Caminho de saida do arquivo .pptx.
 
     Returns:
         Caminho do arquivo gerado.
     """
-    prs = Presentation()
-    prs.slide_width = SW
-    prs.slide_height = SH
+    if not TEMPLATE_PATH.exists():
+        return _generate_fallback(analise, parametros, output_path)
 
-    # 5 slides principais
-    total = 5
+    prs = Presentation(str(TEMPLATE_PATH))
 
-    _slide_cover(prs, parametros, analise)              # 1. Capa
-    _slide_resumo(prs, parametros, analise, 2, total)    # 2. Resumo Executivo
-    _slide_financeiros(prs, analise, 3, total)           # 3. Indicadores Financeiros
-    _slide_estrutura(prs, parametros, analise, 4, total) # 4. Estrutura & Garantias
-    _slide_parecer(prs, parametros, analise, 5, total)   # 5. Parecer & Contato
+    slides = list(prs.slides)
+    if len(slides) < 5:
+        return _generate_fallback(analise, parametros, output_path)
+
+    _fill_cover(slides[0], analise, parametros)
+    _fill_resumo(slides[1], analise, parametros)
+    _fill_overview(slides[2], analise, parametros)
+    _fill_estrutura(slides[3], analise, parametros)
+    _fill_garantias(slides[4], analise, parametros)
 
     prs.save(output_path)
     return output_path
