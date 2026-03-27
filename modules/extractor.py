@@ -35,8 +35,8 @@ if not logger.handlers:
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
-MODEL = "claude-sonnet-4-6"
-API_DELAY_SECONDS = 1.5  # Delay entre chamadas — reduzido de 2s para melhor throughput
+MODEL = "claude-haiku-4-5-20251001"  # Haiku para extração — 3x mais rápido, suficiente para classificar e extrair texto
+API_DELAY_SECONDS = 0.5  # Delay reduzido — Haiku tem rate limits mais generosos
 
 try:
     CACHE_DIR = Path("/tmp/zyn-credit-engine/output/extraction_cache")

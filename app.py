@@ -1832,30 +1832,101 @@ def page_nova_analise():
             summary = get_analysis_summary(analise)
             st.code(summary, language=None)
 
-            col_xl, col_mac_btn = st.columns(2)
+            # --- Gerar TODOS em paralelo ---
+            if st.button("⚡ Gerar Todos os Documentos", use_container_width=True, type="primary"):
+                import concurrent.futures
+                tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                xl_name = f"AnaliseTecnica_{tomador_clean}_{timestamp}.xlsx"
+                mac_name = f"MAC_{tomador_clean}_{timestamp}.docx"
+                teaser_name = f"Teaser_{tomador_clean}_{timestamp}.pptx"
+                xl_path = str(OUTPUT_DIR / xl_name)
+                mac_path = str(OUTPUT_DIR / mac_name)
+                teaser_path = str(OUTPUT_DIR / teaser_name)
+
+                hist = _list_history()
+                results = {}
+                progress_bar = st.progress(0, text="Gerando 3 documentos em paralelo...")
+
+                def _gen_excel():
+                    generate_excel(analise, op, xl_path, hist if hist else None)
+                    return xl_path
+
+                def _gen_mac():
+                    return generate_mac(analise, op, mac_path)
+
+                def _gen_teaser():
+                    generate_teaser(analise, op, teaser_path)
+                    return teaser_path
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                    futures = {
+                        executor.submit(_gen_excel): "excel",
+                        executor.submit(_gen_mac): "mac",
+                        executor.submit(_gen_teaser): "teaser",
+                    }
+                    done_count = 0
+                    for future in concurrent.futures.as_completed(futures):
+                        name = futures[future]
+                        done_count += 1
+                        try:
+                            results[name] = future.result(timeout=120)
+                            progress_bar.progress(done_count / 3, text=f"✅ {name.upper()} concluído ({done_count}/3)")
+                        except Exception as e:
+                            results[name] = None
+                            st.error(f"Erro ao gerar {name.upper()}: {e}")
+                            progress_bar.progress(done_count / 3, text=f"❌ {name.upper()} erro ({done_count}/3)")
+
+                progress_bar.progress(1.0, text="✅ Documentos prontos!")
+
+                # Download buttons
+                col_dl1, col_dl2, col_dl3 = st.columns(3)
+
+                if results.get("excel"):
+                    with col_dl1:
+                        with open(xl_path, "rb") as f:
+                            st.download_button("📊 Baixar Excel", data=f.read(), file_name=xl_name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                use_container_width=True)
+
+                if results.get("mac"):
+                    with col_dl2:
+                        with open(mac_path, "rb") as f:
+                            st.download_button("📄 Baixar MAC", data=f.read(), file_name=mac_name,
+                                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                use_container_width=True)
+
+                if results.get("teaser"):
+                    with col_dl3:
+                        with open(teaser_path, "rb") as f:
+                            st.download_button("📑 Baixar Teaser", data=f.read(), file_name=teaser_name,
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                use_container_width=True)
+
+                op["status"] = "Concluída"
+                st.session_state.current_op = op
+
+            # --- Botões individuais ---
+            st.markdown("---")
+            col_xl, col_mac_btn, col_teaser_btn = st.columns(3)
 
             with col_xl:
-                if st.button("Análise Técnica (.xlsx)", use_container_width=True, type="primary"):
+                if st.button("Análise Técnica (.xlsx)", use_container_width=True):
                     try:
                         tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
                         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                         xl_name = f"AnaliseTecnica_{tomador_clean}_{timestamp}.xlsx"
                         xl_path = str(OUTPUT_DIR / xl_name)
 
-                        with st.spinner("Gerando Planilha de Análise Técnica..."):
+                        with st.spinner("Gerando Planilha..."):
                             hist = _list_history()
                             generate_excel(analise, op, xl_path, hist if hist else None)
 
-                        st.success(f"Planilha gerada: **{xl_name}**")
-
                         with open(xl_path, "rb") as f:
-                            st.download_button(
-                                label="Baixar Análise Técnica (.xlsx)",
-                                data=f.read(),
-                                file_name=xl_name,
+                            st.download_button("📊 Baixar Excel", data=f.read(), file_name=xl_name,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True,
-                            )
+                                use_container_width=True)
                     except Exception as e:
                         st.error(f"Erro ao gerar planilha: {e}")
 
@@ -1867,53 +1938,35 @@ def page_nova_analise():
                         filename = f"MAC_{tomador_clean}_{timestamp}.docx"
                         output_path = str(OUTPUT_DIR / filename)
 
-                        with st.spinner("Gerando documento MAC..."):
+                        with st.spinner("Gerando MAC..."):
                             generated_path = generate_mac(analise, op, output_path)
 
-                        st.success(f"MAC gerado: **{filename}**")
-
                         with open(generated_path, "rb") as f:
-                            st.download_button(
-                                label="Baixar MAC (.docx)",
-                                data=f.read(),
-                                file_name=filename,
+                            st.download_button("📄 Baixar MAC", data=f.read(), file_name=filename,
                                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                use_container_width=True,
-                            )
-
+                                use_container_width=True)
                         op["status"] = "Concluída"
                         st.session_state.current_op = op
-
                     except Exception as e:
-                        st.error(f"Erro ao gerar o MAC: {e}")
+                        st.error(f"Erro ao gerar MAC: {e}")
 
-            st.markdown("---")
+            with col_teaser_btn:
+                if st.button("Teaser (.pptx)", use_container_width=True):
+                    try:
+                        tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
+                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        teaser_name = f"Teaser_{tomador_clean}_{timestamp}.pptx"
+                        teaser_path = str(OUTPUT_DIR / teaser_name)
 
-            # Teaser button
-            if st.button("Gerar Teaser (.pptx) — 5 slides", use_container_width=True):
-                try:
-                    tomador_clean = (op.get("tomador", "operacao") or "operacao").replace(" ", "_").replace("/", "-")
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    teaser_name = f"Teaser_{tomador_clean}_{timestamp}.pptx"
-                    teaser_path = str(OUTPUT_DIR / teaser_name)
+                        with st.spinner("Gerando Teaser..."):
+                            generate_teaser(analise, op, teaser_path)
 
-                    with st.spinner("Gerando Teaser ZYN..."):
-                        generate_teaser(analise, op, teaser_path)
-
-                    st.success(f"Teaser gerado: **{teaser_name}**")
-
-                    with open(teaser_path, "rb") as f:
-                        pptx_bytes = f.read()
-
-                    st.download_button(
-                        label="Baixar Teaser .pptx",
-                        data=pptx_bytes,
-                        file_name=teaser_name,
-                        mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                        use_container_width=True,
-                    )
-                except Exception as e:
-                    st.error(f"Erro ao gerar Teaser: {e}")
+                        with open(teaser_path, "rb") as f:
+                            st.download_button("📑 Baixar Teaser", data=f.read(), file_name=teaser_name,
+                                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Erro ao gerar Teaser: {e}")
 
 
 def page_historico():
