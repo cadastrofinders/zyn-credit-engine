@@ -3049,17 +3049,50 @@ def page_consulta_agro():
                 cruzamento = {}
                 progress.progress(1.0, text="✅ Consulta concluída!")
             else:
-                # CPF/CNPJ — API Dados Fazenda NÃO suporta busca por documento
-                progress.empty()
-                st.warning(
-                    f"**Busca por {tipo_busca} não suportada pela API Dados Fazenda.**\n\n"
-                    f"Para consultar propriedades rurais:\n"
-                    f"1. Acesse o [SICAR](https://consultapublica.car.gov.br) e busque pelo {tipo_busca}\n"
-                    f"2. Copie os códigos CAR das propriedades encontradas\n"
-                    f"3. Cole aqui selecionando tipo **CAR**\n\n"
-                    f"**Dica:** separe múltiplos CARs com vírgula ou quebra de linha."
-                )
-                return
+                # CPF/CNPJ — busca CARs via /api/cpf-car/{ni}
+                digits_only = __import__("re").sub(r"[^\d]", "", valor)
+                progress.progress(0.25, text=f"🔍 Buscando CARs vinculados ao {tipo_busca} {digits_only}...")
+                car_codes_list = df_client.buscar_cars_por_documento(digits_only, tipo_busca)
+
+                if not car_codes_list:
+                    progress.empty()
+                    st.warning(
+                        f"**Nenhum CAR encontrado para o {tipo_busca} informado.**\n\n"
+                        f"Possíveis causas:\n"
+                        f"- {tipo_busca} não possui propriedades rurais cadastradas no CAR\n"
+                        f"- Propriedades podem estar registradas em outro CPF/CNPJ\n\n"
+                        f"**Alternativa:** busque diretamente pelo código CAR."
+                    )
+                    return
+
+                status.info(f"📋 {len(car_codes_list)} CAR(s) encontrado(s) para o {tipo_busca}. Consultando detalhes...")
+                propriedades = []
+                alertas_todos = []
+                for i, car in enumerate(car_codes_list):
+                    pct = 0.30 + (0.60 * (i + 1) / len(car_codes_list))
+                    progress.progress(pct, text=f"🌱 {i+1}/{len(car_codes_list)} — {car[:35]}...")
+                    prop_result = df_client.consulta_car_aberta(car)
+                    propriedades.append(prop_result)
+                    alertas_todos.extend(prop_result.get("alertas", []))
+
+                scores = [p.get("score_ambiental", "Verde") for p in propriedades]
+                if "Vermelho" in scores:
+                    score_grupo = "Vermelho"
+                elif "Amarelo" in scores:
+                    score_grupo = "Amarelo"
+                else:
+                    score_grupo = "Verde"
+                area_total = sum(p.get("areas", {}).get("area_total_ha", 0) or 0 for p in propriedades)
+                resultado = {
+                    "total_propriedades": len(propriedades),
+                    "area_total_ha": area_total,
+                    "propriedades": propriedades,
+                    "alertas_consolidados": alertas_todos,
+                    "score_ambiental_grupo": score_grupo,
+                    "resumo": f"{tipo_busca} {digits_only}: {len(propriedades)} propriedade(s) — Score: {score_grupo}",
+                }
+                cruzamento = {}
+                progress.progress(1.0, text="✅ Consulta concluída!")
             status.empty()
 
             # Save to session for potential use in analysis
