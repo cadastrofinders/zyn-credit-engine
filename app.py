@@ -2998,66 +2998,68 @@ def page_consulta_agro():
             progress.progress(0.15, text="🔄 Buscando propriedades...")
 
             if tipo_busca == "CAR":
-                # Direct CAR lookup — base nacional completa
-                car_code = valor.upper().strip()
-                progress.progress(0.25, text=f"🌱 Consultando CAR na base nacional: {car_code[:40]}...")
-                prop_result = df_client.consulta_car_aberta(car_code)
-                area_total = prop_result.get("areas", {}).get("area_total_ha", 0)
-                resultado = {
-                    "total_propriedades": 1,
-                    "area_total_ha": area_total,
-                    "propriedades": [prop_result],
-                    "alertas_consolidados": prop_result.get("alertas", []),
-                    "score_ambiental_grupo": prop_result.get("score_ambiental", "N/D"),
-                    "resumo": f"Consulta CAR {car_code}: Score {prop_result.get('score_ambiental', 'N/D')}",
-                }
+                # Direct CAR lookup — suporta múltiplos CARs separados por vírgula ou quebra
+                import re as _re
+                raw_cars = _re.split(r'[,;\n]+', valor)
+                car_codes_list = [c.strip().upper() for c in raw_cars if c.strip() and len(c.strip()) > 10]
+
+                if len(car_codes_list) == 1:
+                    # Consulta única
+                    car_code = car_codes_list[0]
+                    progress.progress(0.25, text=f"🌱 Consultando CAR na base nacional: {car_code[:40]}...")
+                    prop_result = df_client.consulta_car_aberta(car_code)
+                    area_total = prop_result.get("areas", {}).get("area_total_ha", 0)
+                    resultado = {
+                        "total_propriedades": 1,
+                        "area_total_ha": area_total,
+                        "propriedades": [prop_result],
+                        "alertas_consolidados": prop_result.get("alertas", []),
+                        "score_ambiental_grupo": prop_result.get("score_ambiental", "N/D"),
+                        "resumo": f"Consulta CAR {car_code}: Score {prop_result.get('score_ambiental', 'N/D')}",
+                    }
+                else:
+                    # Múltiplos CARs
+                    status.info(f"📋 {len(car_codes_list)} CARs identificados. Consultando...")
+                    propriedades = []
+                    alertas_todos = []
+                    for i, car in enumerate(car_codes_list):
+                        pct = 0.25 + (0.65 * (i + 1) / len(car_codes_list))
+                        progress.progress(pct, text=f"🌱 {i+1}/{len(car_codes_list)} — {car[:35]}...")
+                        prop_result = df_client.consulta_car_aberta(car)
+                        propriedades.append(prop_result)
+                        alertas_todos.extend(prop_result.get("alertas", []))
+
+                    scores = [p.get("score_ambiental", "Verde") for p in propriedades]
+                    if "Vermelho" in scores:
+                        score_grupo = "Vermelho"
+                    elif "Amarelo" in scores:
+                        score_grupo = "Amarelo"
+                    else:
+                        score_grupo = "Verde"
+                    area_total = sum(p.get("areas", {}).get("area_total_ha", 0) or 0 for p in propriedades)
+                    resultado = {
+                        "total_propriedades": len(propriedades),
+                        "area_total_ha": area_total,
+                        "propriedades": propriedades,
+                        "alertas_consolidados": alertas_todos,
+                        "score_ambiental_grupo": score_grupo,
+                        "resumo": f"Grupo com {len(propriedades)} propriedade(s) — Score: {score_grupo}",
+                    }
+
                 cruzamento = {}
                 progress.progress(1.0, text="✅ Consulta concluída!")
             else:
-                # CPF/CNPJ — busca todas propriedades monitoradas na conta
-                progress.progress(0.20, text=f"🔍 Buscando propriedades vinculadas ao {tipo_busca}...")
-                all_props = df_client.get_properties()
-                car_codes = [p.get("car_code", "") for p in all_props if p.get("car_code")]
-                status.info(f"📋 {len(car_codes)} propriedade(s) na base Dados Fazenda. Consultando todas...")
-
-                if not car_codes:
-                    progress.empty()
-                    st.warning("Nenhuma propriedade encontrada na conta.")
-                    return
-
-                # Consulta aberta para cada CAR
-                propriedades = []
-                alertas_todos = []
-                for i, car in enumerate(car_codes):
-                    pct = 0.25 + (0.65 * (i + 1) / len(car_codes))
-                    progress.progress(pct, text=f"🌱 {i+1}/{len(car_codes)} — {car[:35]}...")
-                    prop_result = df_client.consulta_car_aberta(car)
-                    propriedades.append(prop_result)
-                    alertas_todos.extend(prop_result.get("alertas", []))
-
-                # Score consolidado
-                scores = [p.get("score_ambiental", "Verde") for p in propriedades]
-                if "Vermelho" in scores:
-                    score_grupo = "Vermelho"
-                elif "Amarelo" in scores:
-                    score_grupo = "Amarelo"
-                else:
-                    score_grupo = "Verde"
-
-                area_total = sum(
-                    p.get("areas", {}).get("area_total_ha", 0) or 0 for p in propriedades
+                # CPF/CNPJ — API Dados Fazenda NÃO suporta busca por documento
+                progress.empty()
+                st.warning(
+                    f"**Busca por {tipo_busca} não suportada pela API Dados Fazenda.**\n\n"
+                    f"Para consultar propriedades rurais:\n"
+                    f"1. Acesse o [SICAR](https://consultapublica.car.gov.br) e busque pelo {tipo_busca}\n"
+                    f"2. Copie os códigos CAR das propriedades encontradas\n"
+                    f"3. Cole aqui selecionando tipo **CAR**\n\n"
+                    f"**Dica:** separe múltiplos CARs com vírgula ou quebra de linha."
                 )
-
-                resultado = {
-                    "total_propriedades": len(propriedades),
-                    "area_total_ha": area_total,
-                    "propriedades": propriedades,
-                    "alertas_consolidados": alertas_todos,
-                    "score_ambiental_grupo": score_grupo,
-                    "resumo": f"Grupo com {len(propriedades)} propriedade(s) — Score: {score_grupo}",
-                }
-                cruzamento = df_client.cruzar_grupo_sigef(car_codes)
-                progress.progress(1.0, text="✅ Consulta concluída!")
+                return
             status.empty()
 
             # Save to session for potential use in analysis

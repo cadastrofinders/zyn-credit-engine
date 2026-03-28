@@ -160,11 +160,11 @@ def _parse_indexador(taxa_str: Any) -> str | None:
 
 
 def _set_cell(ws: Worksheet, row: int, col: int, value: Any,
-              font: Font = None, fill: PatternFill = None) -> None:
+              font: Font = None, fill: PatternFill = None,
+              number_format: str = None) -> None:
     """Define valor e estilo de uma célula, tratando merged cells."""
     if value is None:
         return
-    # Safety: convert non-scalar types that openpyxl cannot write to a cell
     if isinstance(value, list):
         value = "; ".join(str(v) for v in value)
     elif isinstance(value, dict):
@@ -175,11 +175,56 @@ def _set_cell(ws: Worksheet, row: int, col: int, value: Any,
         cell.font = font
     if fill:
         cell.fill = fill
+    if number_format:
+        cell.number_format = number_format
 
 
 def _set_input(ws: Worksheet, row: int, col: int, value: Any) -> None:
     """Define valor com formatação padrão de input (azul, Montserrat 9)."""
     _set_cell(ws, row, col, value, font=FONT_INPUT)
+
+
+# Número formatado em BRL (R$ mil): #.##0,0
+FMT_BRL_MIL = '#,##0.0'
+# Número formatado em BRL inteiro: #.##0
+FMT_BRL_INT = '#,##0'
+# Percentual: 0,0%
+FMT_PCT = '0.0%'
+# Múltiplo: 0,00x
+FMT_MULT = '0.00"x"'
+
+
+def _set_input_brl(ws: Worksheet, row: int, col: int, value: Any,
+                   mil: bool = True) -> None:
+    """Define valor monetário BRL com formatação numérica.
+    Se mil=True, assume valor já em R$ mil e aplica formato #,##0.0.
+    Se mil=False, aplica formato #,##0 (inteiro).
+    """
+    v = _parse_numeric(value)
+    if v is None:
+        return
+    fmt = FMT_BRL_MIL if mil else FMT_BRL_INT
+    _set_cell(ws, row, col, v, font=FONT_INPUT, number_format=fmt)
+
+
+def _set_input_pct(ws: Worksheet, row: int, col: int, value: Any) -> None:
+    """Define valor percentual com formatação 0.0%.
+    Converte valor > 1 para decimal (ex: 34.9 -> 0.349).
+    """
+    v = _parse_numeric(value)
+    if v is None:
+        return
+    if isinstance(v, (int, float)) and abs(v) > 1:
+        v = v / 100
+    _set_cell(ws, row, col, v, font=FONT_INPUT, number_format=FMT_PCT)
+
+
+def _set_input_mult(ws: Worksheet, row: int, col: int, value: Any) -> None:
+    """Define valor de múltiplo com formatação 0.00x."""
+    v = _parse_numeric(value)
+    if v is None:
+        return
+    _set_cell(ws, row, col, v, font=FONT_INPUT, number_format=FMT_MULT)
 
 
 def _set_status(ws: Worksheet, row: int, col: int, is_ok: bool) -> None:
@@ -258,11 +303,13 @@ def _fill_cri(ws: Worksheet, analise: dict, parametros: dict) -> None:
 
     # ── Section 2: Estrutura (rows 19-28) — Série 1 = col B ──
     vol_mil = _format_volume(parametros.get("volume"))
-    _set_input(ws, 19, 2, vol_mil)
+    _set_input_brl(ws, 19, 2, vol_mil)
     _set_input(ws, 20, 2, parametros.get("taxa"))
     _set_input(ws, 21, 2, _parse_indexador(parametros.get("taxa")))
     spread = _parse_bps(parametros.get("taxa"))
     _set_input(ws, 22, 2, spread)
+    if spread is not None:
+        ws.cell(row=22, column=2).number_format = '#,##0" bps"'
     _set_input(ws, 23, 2, parametros.get("prazo_meses"))
     _set_input(ws, 24, 2, _safe_get(operacao, "amortizacao") or parametros.get("amortizacao"))
     _set_input(ws, 25, 2, _safe_get(operacao, "carencia") or parametros.get("carencia"))
@@ -272,31 +319,33 @@ def _fill_cri(ws: Worksheet, analise: dict, parametros: dict) -> None:
     # ── Section 3: Lastro e Garantias (rows 31-38) ──
     _set_input(ws, 31, 2, _safe_get(operacao, "tipo_lastro") or parametros.get("tipo_lastro"))
     _set_input(ws, 32, 2, _safe_get(operacao, "descricao_lastro"))
-    _set_input(ws, 33, 2, _format_volume(_safe_get(operacao, "valor_lastro")))
+    _set_input_brl(ws, 33, 2, _format_volume(_safe_get(operacao, "valor_lastro")))
     ltv = _parse_numeric(kpis.get("ltv"))
     if ltv is not None:
-        _set_input(ws, 34, 2, f"{ltv * 100:.1f}%" if ltv < 1 else f"{ltv:.1f}%")
+        _set_input_pct(ws, 34, 2, ltv)
     _set_input(ws, 35, 2, parametros.get("garantias"))
     _set_input(ws, 36, 2, _safe_get(operacao, "alienacao_fiduciaria"))
     _set_input(ws, 37, 2, _safe_get(operacao, "cessao_recebiveis"))
-    _set_input(ws, 38, 2, _format_volume(_safe_get(operacao, "fundo_liquidez")))
+    _set_input_brl(ws, 38, 2, _format_volume(_safe_get(operacao, "fundo_liquidez")))
 
     # ── Section 4: Financeira (rows 42-50) — col D = Ano 0 (base) ──
-    _set_input(ws, 42, 4, _parse_numeric(kpis.get("receita_liquida")))
-    _set_input(ws, 43, 4, _parse_numeric(kpis.get("ebitda")))
+    _set_input_brl(ws, 42, 4, _parse_numeric(kpis.get("receita_liquida")), mil=False)
+    _set_input_brl(ws, 43, 4, _parse_numeric(kpis.get("ebitda")), mil=False)
     # Margem EBITDA = formula
     _set_formula(ws, 44, 4, "=IF(D42=0,\"\",D43/D42)")
-    _set_input(ws, 45, 4, _parse_numeric(kpis.get("divida_liquida")))
+    ws.cell(row=44, column=4).number_format = FMT_PCT
+    _set_input_brl(ws, 45, 4, _parse_numeric(kpis.get("divida_liquida")), mil=False)
     # Dív.Líq/EBITDA = formula
     _set_formula(ws, 46, 4, "=IF(D43=0,\"\",D45/D43)")
+    ws.cell(row=46, column=4).number_format = FMT_MULT
     ebit_desp = _parse_numeric(kpis.get("ebit_desp_fin"))
-    _set_input(ws, 47, 4, ebit_desp)
-    _set_input(ws, 48, 4, _parse_numeric(kpis.get("patrimonio_liquido")))
-    _set_input(ws, 49, 4, _parse_numeric(kpis.get("fco")))
+    _set_input_brl(ws, 47, 4, ebit_desp, mil=False)
+    _set_input_brl(ws, 48, 4, _parse_numeric(kpis.get("patrimonio_liquido")), mil=False)
+    _set_input_brl(ws, 49, 4, _parse_numeric(kpis.get("fco")), mil=False)
     # FCO / Serviço Dívida — usar DSCR se disponível
     dscr = _parse_numeric(kpis.get("dscr"))
     if dscr is not None:
-        _set_input(ws, 50, 4, dscr)
+        _set_input_mult(ws, 50, 4, dscr)
 
     # Preencher dados históricos se disponíveis (col B = Ano-2, C = Ano-1)
     historico = analise.get("historico_financeiro", {})
@@ -304,15 +353,17 @@ def _fill_cri(ws: Worksheet, analise: dict, parametros: dict) -> None:
         year_key = f"ano_{year_offset}" if year_offset < 0 else f"ano_mais_{year_offset}"
         year_data = historico.get(year_key, {})
         if year_data:
-            _set_input(ws, 42, col, _parse_numeric(year_data.get("receita_liquida")))
-            _set_input(ws, 43, col, _parse_numeric(year_data.get("ebitda")))
+            _set_input_brl(ws, 42, col, _parse_numeric(year_data.get("receita_liquida")), mil=False)
+            _set_input_brl(ws, 43, col, _parse_numeric(year_data.get("ebitda")), mil=False)
             col_letter = "B" if col == 2 else "C"
             _set_formula(ws, 44, col, f"=IF({col_letter}42=0,\"\",{col_letter}43/{col_letter}42)")
-            _set_input(ws, 45, col, _parse_numeric(year_data.get("divida_liquida")))
+            ws.cell(row=44, column=col).number_format = FMT_PCT
+            _set_input_brl(ws, 45, col, _parse_numeric(year_data.get("divida_liquida")), mil=False)
             _set_formula(ws, 46, col, f"=IF({col_letter}43=0,\"\",{col_letter}45/{col_letter}43)")
-            _set_input(ws, 47, col, _parse_numeric(year_data.get("ebit_desp_fin")))
-            _set_input(ws, 48, col, _parse_numeric(year_data.get("patrimonio_liquido")))
-            _set_input(ws, 49, col, _parse_numeric(year_data.get("fco")))
+            ws.cell(row=46, column=col).number_format = FMT_MULT
+            _set_input_brl(ws, 47, col, _parse_numeric(year_data.get("ebit_desp_fin")), mil=False)
+            _set_input_brl(ws, 48, col, _parse_numeric(year_data.get("patrimonio_liquido")), mil=False)
+            _set_input_brl(ws, 49, col, _parse_numeric(year_data.get("fco")), mil=False)
 
     # ── Section 5: Covenants (rows 54-60) ──
     tabela_cov = covenants.get("tabela_covenants", [])
@@ -411,52 +462,50 @@ def _fill_cra(ws: Worksheet, analise: dict, parametros: dict) -> None:
 
     # ── Section 2: Estrutura (rows 20-52, every 4 rows, cols B=Sênior) ──
     vol_mil = _format_volume(parametros.get("volume"))
-    struct_rows = {
-        20: vol_mil,
-        24: parametros.get("taxa"),
-        28: _parse_indexador(parametros.get("taxa")),
-        32: _parse_bps(parametros.get("taxa")),
-        36: parametros.get("prazo_meses"),
-        40: _safe_get(operacao, "amortizacao") or parametros.get("amortizacao"),
-        44: _safe_get(operacao, "carencia") or parametros.get("carencia"),
-        48: _safe_get(operacao, "subordinacao") or parametros.get("subordinacao"),
-        52: rating,
-    }
-    for row, val in struct_rows.items():
-        _set_input(ws, row, 2, val)
+    _set_input_brl(ws, 20, 2, vol_mil)
+    _set_input(ws, 24, 2, parametros.get("taxa"))
+    _set_input(ws, 28, 2, _parse_indexador(parametros.get("taxa")))
+    _spread_cra = _parse_bps(parametros.get("taxa"))
+    _set_input(ws, 32, 2, _spread_cra)
+    if _spread_cra is not None:
+        ws.cell(row=32, column=2).number_format = '#,##0" bps"'
+    _set_input(ws, 36, 2, parametros.get("prazo_meses"))
+    _set_input(ws, 40, 2, _safe_get(operacao, "amortizacao") or parametros.get("amortizacao"))
+    _set_input(ws, 44, 2, _safe_get(operacao, "carencia") or parametros.get("carencia"))
+    _set_input(ws, 48, 2, _safe_get(operacao, "subordinacao") or parametros.get("subordinacao"))
+    _set_input(ws, 52, 2, rating)
 
     # ── Section 3: Lastro Agro (rows 58-67, merged B:E) ──
     _set_input(ws, 58, 2, _safe_get(operacao, "tipo_lastro") or parametros.get("tipo_lastro"))
     _set_input(ws, 59, 2, _safe_get(producao, "cultura") or parametros.get("cultura"))
     _set_input(ws, 60, 2, _safe_get(producao, "safra"))
     _set_input(ws, 61, 2, _safe_get(producao, "volume_sacas"))
-    _set_input(ws, 62, 2, _safe_get(producao, "preco_referencia"))
-    _set_input(ws, 63, 2, _format_volume(_safe_get(operacao, "valor_lastro")))
+    _set_input_brl(ws, 62, 2, _safe_get(producao, "preco_referencia"), mil=False)
+    _set_input_brl(ws, 63, 2, _format_volume(_safe_get(operacao, "valor_lastro")))
     ltv = _parse_numeric(kpis.get("ltv"))
     if ltv is not None:
-        _set_input(ws, 64, 2, f"{ltv * 100:.1f}%" if ltv < 1 else f"{ltv:.1f}%")
+        _set_input_pct(ws, 64, 2, ltv)
     _set_input(ws, 65, 2, _safe_get(operacao, "armazem"))
     _set_input(ws, 66, 2, _safe_get(operacao, "registro_cetip"))
     _set_input(ws, 67, 2, _safe_get(operacao, "seguro_rural"))
 
     # ── Section 4: Financeira (rows 71-107, every 4 rows, cols B-E) ──
     # Col D = Safra Base
-    fin_rows = {
-        71: kpis.get("receita_liquida") or kpis.get("receita_bruta"),
-        75: kpis.get("cpv") or kpis.get("custo_safra"),
-        83: kpis.get("ebitda"),
-        91: kpis.get("divida_liquida") or kpis.get("divida_total"),
-        99: kpis.get("fco"),
-        103: kpis.get("dscr"),
-        107: _safe_get(producao, "terras_proprias"),
-    }
-    for row, val in fin_rows.items():
-        _set_input(ws, row, 4, _parse_numeric(val))
+    _set_input_brl(ws, 71, 4, _parse_numeric(kpis.get("receita_liquida") or kpis.get("receita_bruta")), mil=False)
+    _set_input_brl(ws, 75, 4, _parse_numeric(kpis.get("cpv") or kpis.get("custo_safra")), mil=False)
+    _set_input_brl(ws, 83, 4, _parse_numeric(kpis.get("ebitda")), mil=False)
+    _set_input_brl(ws, 91, 4, _parse_numeric(kpis.get("divida_liquida") or kpis.get("divida_total")), mil=False)
+    _set_input_brl(ws, 99, 4, _parse_numeric(kpis.get("fco")), mil=False)
+    _set_input_mult(ws, 103, 4, _parse_numeric(kpis.get("dscr")))
+    _set_input_brl(ws, 107, 4, _parse_numeric(_safe_get(producao, "terras_proprias")), mil=False)
 
     # Formulas for calculated fields
     _set_formula(ws, 79, 4, "=IF(D71=0,\"\",(D71-D75)/D71)")    # Margem Bruta
+    ws.cell(row=79, column=4).number_format = FMT_PCT
     _set_formula(ws, 87, 4, "=IF(D71=0,\"\",D83/D71)")           # Margem EBITDA
+    ws.cell(row=87, column=4).number_format = FMT_PCT
     _set_formula(ws, 95, 4, "=IF(D83=0,\"\",D91/D83)")           # Dív Líq / EBITDA
+    ws.cell(row=95, column=4).number_format = FMT_MULT
 
     # Histórico
     historico = analise.get("historico_financeiro", {})
@@ -466,15 +515,18 @@ def _fill_cra(ws: Worksheet, analise: dict, parametros: dict) -> None:
         year_data = historico.get(year_key, historico.get(alt_key, {}))
         if year_data:
             col_letter = "B" if col == 2 else "C"
-            _set_input(ws, 71, col, _parse_numeric(year_data.get("receita_liquida") or year_data.get("receita_bruta")))
-            _set_input(ws, 75, col, _parse_numeric(year_data.get("cpv") or year_data.get("custo_safra")))
+            _set_input_brl(ws, 71, col, _parse_numeric(year_data.get("receita_liquida") or year_data.get("receita_bruta")), mil=False)
+            _set_input_brl(ws, 75, col, _parse_numeric(year_data.get("cpv") or year_data.get("custo_safra")), mil=False)
             _set_formula(ws, 79, col, f"=IF({col_letter}71=0,\"\",({col_letter}71-{col_letter}75)/{col_letter}71)")
-            _set_input(ws, 83, col, _parse_numeric(year_data.get("ebitda")))
+            ws.cell(row=79, column=col).number_format = FMT_PCT
+            _set_input_brl(ws, 83, col, _parse_numeric(year_data.get("ebitda")), mil=False)
             _set_formula(ws, 87, col, f"=IF({col_letter}71=0,\"\",{col_letter}83/{col_letter}71)")
-            _set_input(ws, 91, col, _parse_numeric(year_data.get("divida_liquida") or year_data.get("divida_total")))
+            ws.cell(row=87, column=col).number_format = FMT_PCT
+            _set_input_brl(ws, 91, col, _parse_numeric(year_data.get("divida_liquida") or year_data.get("divida_total")), mil=False)
             _set_formula(ws, 95, col, f"=IF({col_letter}83=0,\"\",{col_letter}91/{col_letter}83)")
-            _set_input(ws, 99, col, _parse_numeric(year_data.get("fco")))
-            _set_input(ws, 103, col, _parse_numeric(year_data.get("dscr")))
+            ws.cell(row=95, column=col).number_format = FMT_MULT
+            _set_input_brl(ws, 99, col, _parse_numeric(year_data.get("fco")), mil=False)
+            _set_input_mult(ws, 103, col, _parse_numeric(year_data.get("dscr")))
 
     # ── Section 5: ESG (rows 114-119) — col B = Status, col C = Observação ──
     esg = analise.get("esg", {})
@@ -537,7 +589,7 @@ def _fill_debenture(ws: Worksheet, analise: dict, parametros: dict) -> None:
     _set_input(ws, 8, 2, parametros.get("cnpj"))
     _set_input(ws, 9, 2, parametros.get("sede"))
     _set_input(ws, 10, 2, parametros.get("setor"))
-    _set_input(ws, 11, 2, _parse_numeric(kpis.get("receita_liquida")))
+    _set_input_brl(ws, 11, 2, _parse_numeric(kpis.get("receita_liquida")), mil=False)
     _set_input(ws, 12, 2, _safe_get(operacao, "acoes_listadas") or parametros.get("acoes_listadas"))
     _set_input(ws, 13, 2, _safe_get(operacao, "codigo_b3") or parametros.get("codigo_b3"))
     _set_input(ws, 14, 2, _safe_get(operacao, "rating_externo") or parametros.get("rating_externo"))
@@ -546,12 +598,15 @@ def _fill_debenture(ws: Worksheet, analise: dict, parametros: dict) -> None:
 
     # ── Section 2: Emissão (rows 20-76, every 4, col B = 1ª Série) ──
     _set_input(ws, 20, 2, _safe_get(operacao, "numero_emissao") or parametros.get("numero_emissao"))
-    _set_input(ws, 24, 2, _format_volume(parametros.get("volume")))
+    _set_input_brl(ws, 24, 2, _format_volume(parametros.get("volume")))
     _set_input(ws, 28, 2, _safe_get(operacao, "tipo_debenture") or "Simples")
     _set_input(ws, 32, 2, _safe_get(operacao, "especie") or parametros.get("especie"))
     _set_input(ws, 36, 2, parametros.get("taxa"))
     _set_input(ws, 40, 2, _parse_indexador(parametros.get("taxa")))
-    _set_input(ws, 44, 2, _parse_bps(parametros.get("taxa")))
+    _spread_deb = _parse_bps(parametros.get("taxa"))
+    _set_input(ws, 44, 2, _spread_deb)
+    if _spread_deb is not None:
+        ws.cell(row=44, column=2).number_format = '#,##0" bps"'
     _set_input(ws, 48, 2, parametros.get("prazo_meses"))
     _set_input(ws, 52, 2, _safe_get(operacao, "data_emissao") or parametros.get("data_emissao"))
     _set_input(ws, 56, 2, _safe_get(operacao, "data_vencimento") or parametros.get("data_vencimento"))
@@ -564,15 +619,19 @@ def _fill_debenture(ws: Worksheet, analise: dict, parametros: dict) -> None:
     # ── Section 3: Destinação (rows 82-87, merged B:E) ──
     dest = operacao.get("destinacao", {})
     _set_input(ws, 82, 2, dest.get("finalidade") or _safe_get(operacao, "finalidade"))
-    _set_input(ws, 83, 2, _format_volume(dest.get("capex")))
-    _set_input(ws, 84, 2, _format_volume(dest.get("capital_giro")))
-    _set_input(ws, 85, 2, _format_volume(dest.get("refinanciamento")))
-    _set_input(ws, 86, 2, _format_volume(dest.get("outros")))
-    # Total = formula
+    _set_input_brl(ws, 83, 2, _format_volume(dest.get("capex")))
+    _set_input_brl(ws, 84, 2, _format_volume(dest.get("capital_giro")))
+    _set_input_brl(ws, 85, 2, _format_volume(dest.get("refinanciamento")))
+    _set_input_brl(ws, 86, 2, _format_volume(dest.get("outros")))
     _set_formula(ws, 87, 2, "=SUM(B83:B86)")
+    ws.cell(row=87, column=2).number_format = FMT_BRL_MIL
 
     # ── Section 4: Financeira (rows 91-139, every 4, cols B-E) ──
     # Col D = Ano 0
+    # BRL rows
+    brl_rows = {91, 95, 103, 107, 111, 115, 127, 131, 139}
+    # Mult rows
+    mult_rows = {135}
     fin_map = {
         91: "receita_liquida",
         95: "ebitda",
@@ -588,12 +647,18 @@ def _fill_debenture(ws: Worksheet, analise: dict, parametros: dict) -> None:
     for row, key in fin_map.items():
         val = _parse_numeric(kpis.get(key))
         if val is not None:
-            _set_input(ws, row, 4, val)
+            if row in mult_rows:
+                _set_input_mult(ws, row, 4, val)
+            else:
+                _set_input_brl(ws, row, 4, val, mil=False)
 
     # Formulas
     _set_formula(ws, 99, 4, "=IF(D91=0,\"\",D95/D91)")     # Margem EBITDA
+    ws.cell(row=99, column=4).number_format = FMT_PCT
     _set_formula(ws, 119, 4, "=IF(D95=0,\"\",D115/D95)")   # Dív Líq / EBITDA
+    ws.cell(row=119, column=4).number_format = FMT_MULT
     _set_formula(ws, 123, 4, "=IF(D95=0,\"\",D103/D95)")   # EBIT / Desp Fin (proxy)
+    ws.cell(row=123, column=4).number_format = FMT_MULT
 
     # Histórico
     historico = analise.get("historico_financeiro", {})
@@ -605,10 +670,16 @@ def _fill_debenture(ws: Worksheet, analise: dict, parametros: dict) -> None:
             for row, key in fin_map.items():
                 val = _parse_numeric(year_data.get(key))
                 if val is not None:
-                    _set_input(ws, row, col, val)
+                    if row in mult_rows:
+                        _set_input_mult(ws, row, col, val)
+                    else:
+                        _set_input_brl(ws, row, col, val, mil=False)
             _set_formula(ws, 99, col, f"=IF({cl}91=0,\"\",{cl}95/{cl}91)")
+            ws.cell(row=99, column=col).number_format = FMT_PCT
             _set_formula(ws, 119, col, f"=IF({cl}95=0,\"\",{cl}115/{cl}95)")
+            ws.cell(row=119, column=col).number_format = FMT_MULT
             _set_formula(ws, 123, col, f"=IF({cl}95=0,\"\",{cl}103/{cl}95)")
+            ws.cell(row=123, column=col).number_format = FMT_MULT
 
     # ── Section 5: Garantias/Covenants (rows 146-153) — col B = Descrição, col C = Status ──
     tabela_cov = covenants.get("tabela_covenants", [])
@@ -673,27 +744,26 @@ def _fill_nota_comercial(ws: Worksheet, analise: dict, parametros: dict) -> None
     _set_input(ws, 8, 2, parametros.get("cnpj"))
     _set_input(ws, 9, 2, parametros.get("sede"))
     _set_input(ws, 10, 2, parametros.get("setor"))
-    _set_input(ws, 11, 2, _safe_get(operacao, "cagr_receita") or parametros.get("cagr_receita"))
-    _set_input(ws, 12, 2, _parse_numeric(kpis.get("receita_liquida")) or _format_volume(parametros.get("faturamento")))
+    _set_input_pct(ws, 11, 2, _safe_get(operacao, "cagr_receita") or parametros.get("cagr_receita"))
+    _set_input_brl(ws, 12, 2, _parse_numeric(kpis.get("receita_liquida")) or _format_volume(parametros.get("faturamento")), mil=False)
     _set_input(ws, 13, 2, rating)
     _set_input(ws, 14, 2, "ZYN Capital")
 
     # ── Section 2: Características (rows 18-54, every 4, col B = Série 1) ──
     vol_mil = _format_volume(parametros.get("volume"))
-    char_rows = {
-        18: vol_mil,
-        22: parametros.get("taxa"),
-        26: _parse_indexador(parametros.get("taxa")),
-        30: _parse_bps(parametros.get("taxa")),
-        34: parametros.get("prazo_meses"),
-        38: _safe_get(operacao, "vencimento") or parametros.get("data_vencimento"),
-        42: _safe_get(operacao, "amortizacao") or parametros.get("amortizacao"),
-        46: _safe_get(operacao, "forma_pagamento_juros") or parametros.get("forma_juros"),
-        50: _safe_get(operacao, "isin"),
-        54: _safe_get(operacao, "escriturador") or parametros.get("escriturador"),
-    }
-    for row, val in char_rows.items():
-        _set_input(ws, row, 2, val)
+    _set_input_brl(ws, 18, 2, vol_mil)
+    _set_input(ws, 22, 2, parametros.get("taxa"))
+    _set_input(ws, 26, 2, _parse_indexador(parametros.get("taxa")))
+    _spread_nc = _parse_bps(parametros.get("taxa"))
+    _set_input(ws, 30, 2, _spread_nc)
+    if _spread_nc is not None:
+        ws.cell(row=30, column=2).number_format = '#,##0" bps"'
+    _set_input(ws, 34, 2, parametros.get("prazo_meses"))
+    _set_input(ws, 38, 2, _safe_get(operacao, "vencimento") or parametros.get("data_vencimento"))
+    _set_input(ws, 42, 2, _safe_get(operacao, "amortizacao") or parametros.get("amortizacao"))
+    _set_input(ws, 46, 2, _safe_get(operacao, "forma_pagamento_juros") or parametros.get("forma_juros"))
+    _set_input(ws, 50, 2, _safe_get(operacao, "isin"))
+    _set_input(ws, 54, 2, _safe_get(operacao, "escriturador") or parametros.get("escriturador"))
 
     # ── Section 3: Crédito Short-term (rows 61-69) — col B=Atual, C=Limite, D=Status ──
     credit_map = {
@@ -708,10 +778,23 @@ def _fill_nota_comercial(ws: Worksheet, analise: dict, parametros: dict) -> None
         69: ("capital_giro", None),
     }
     tabela_cov = covenants.get("tabela_covenants", [])
+    # BRL rows: receita, ebitda, divida, capital_giro
+    nc_brl_rows = {61, 62, 64, 69}
+    # PCT rows: margem
+    nc_pct_rows = {63}
+    # MULT rows: div/ebitda, liquidez
+    nc_mult_rows = {65, 66, 67}
     for row, (key, _) in credit_map.items():
         val = _parse_numeric(kpis.get(key))
         if val is not None:
-            _set_input(ws, row, 2, val)
+            if row in nc_brl_rows:
+                _set_input_brl(ws, row, 2, val, mil=False)
+            elif row in nc_pct_rows:
+                _set_input_pct(ws, row, 2, val)
+            elif row in nc_mult_rows:
+                _set_input_mult(ws, row, 2, val)
+            else:
+                _set_input(ws, row, 2, val)
 
     # Fill covenant limits if available
     cov_names_nc = [
@@ -731,10 +814,10 @@ def _fill_nota_comercial(ws: Worksheet, analise: dict, parametros: dict) -> None
 
     # ── Section 4: Garantias (rows 72-75, merged B:E) ──
     _set_input(ws, 72, 2, parametros.get("garantias") or _safe_get(operacao, "tipo_garantia"))
-    _set_input(ws, 73, 2, _format_volume(_safe_get(operacao, "valor_garantia")))
+    _set_input_brl(ws, 73, 2, _format_volume(_safe_get(operacao, "valor_garantia")))
     ltv = _parse_numeric(kpis.get("ltv"))
     if ltv is not None:
-        _set_input(ws, 74, 2, f"{ltv * 100:.1f}%" if ltv < 1 else f"{ltv:.1f}%")
+        _set_input_pct(ws, 74, 2, ltv)
     _set_input(ws, 75, 2, _safe_get(operacao, "documentacao_garantia"))
 
     # ── Section 5: Fluxo de Caixa (rows 79-112, every 3 rows) ──
@@ -743,8 +826,8 @@ def _fill_nota_comercial(ws: Worksheet, analise: dict, parametros: dict) -> None
     for i, row in enumerate(fluxo_rows):
         if i < len(fluxo):
             f = fluxo[i]
-            _set_input(ws, row, 2, f.get("entrada"))
-            _set_input(ws, row, 3, f.get("saida"))
+            _set_input_brl(ws, row, 2, f.get("entrada"), mil=False)
+            _set_input_brl(ws, row, 3, f.get("saida"), mil=False)
             # Saldo = formula
             if i == 0:
                 _set_formula(ws, row, 4, f"=B{row}-C{row}")
@@ -788,10 +871,13 @@ def _fill_cprf(ws: Worksheet, analise: dict, parametros: dict) -> None:
     _set_input(ws, 16, 2, rating)
 
     # ── Section 2: Características CPR-F (rows 19-28, merged B:E) ──
-    _set_input(ws, 19, 2, _format_volume(parametros.get("volume")))
+    _set_input_brl(ws, 19, 2, _format_volume(parametros.get("volume")))
     _set_input(ws, 20, 2, parametros.get("taxa"))
     _set_input(ws, 21, 2, _parse_indexador(parametros.get("taxa")))
-    _set_input(ws, 22, 2, _parse_bps(parametros.get("taxa")))
+    _spread_cprf = _parse_bps(parametros.get("taxa"))
+    _set_input(ws, 22, 2, _spread_cprf)
+    if _spread_cprf is not None:
+        ws.cell(row=22, column=2).number_format = '#,##0" bps"'
     _set_input(ws, 23, 2, parametros.get("prazo_meses"))
     _set_input(ws, 24, 2, _safe_get(operacao, "data_emissao") or parametros.get("data_emissao"))
     _set_input(ws, 25, 2, _safe_get(operacao, "data_vencimento") or parametros.get("data_vencimento"))
@@ -801,6 +887,8 @@ def _fill_cprf(ws: Worksheet, analise: dict, parametros: dict) -> None:
 
     # ── Section 3: Agronômica (rows 32-64, every 4, cols B-E) ──
     # Col D = Safra Base
+    # BRL rows: receita (48), custo total (56), dívida (64)
+    # Price rows: preco_medio (44), custo_ha (52) — BRL/unit
     agro_map = {
         32: dados_fazenda.get("area_plantada") or _safe_get(producao, "area_plantada"),
         36: dados_fazenda.get("produtividade") or _safe_get(producao, "produtividade"),
@@ -811,18 +899,26 @@ def _fill_cprf(ws: Worksheet, analise: dict, parametros: dict) -> None:
         56: dados_fazenda.get("custo_total") or _safe_get(producao, "custo_total"),
         64: kpis.get("divida_liquida") or dados_fazenda.get("divida_agro"),
     }
+    cprf_brl_rows = {48, 56, 64}
+    cprf_brl_unit_rows = {44, 52}
     for row, val in agro_map.items():
-        _set_input(ws, row, 4, _parse_numeric(val))
+        v = _parse_numeric(val)
+        if v is not None:
+            if row in cprf_brl_rows:
+                _set_input_brl(ws, row, 4, v, mil=False)
+            elif row in cprf_brl_unit_rows:
+                _set_input_brl(ws, row, 4, v, mil=False)
+            else:
+                _set_input(ws, row, 4, v)
 
     # Formulas
-    # Produção Total = Área × Produtividade
     _set_formula(ws, 40, 4, "=IF(D32=0,\"\",D32*D36)")
-    # Receita Bruta = Produção × Preço
     _set_formula(ws, 48, 4, "=IF(D40=0,\"\",D40*D44/1000)")
-    # Custo Total = Custo/ha × Área
+    ws.cell(row=48, column=4).number_format = FMT_BRL_MIL
     _set_formula(ws, 56, 4, "=IF(D32=0,\"\",D52*D32/1000)")
-    # Margem Operacional
+    ws.cell(row=56, column=4).number_format = FMT_BRL_MIL
     _set_formula(ws, 60, 4, "=IF(D48=0,\"\",(D48-D56)/D48)")
+    ws.cell(row=60, column=4).number_format = FMT_PCT
 
     # Histórico
     historico = analise.get("historico_financeiro", {})
@@ -835,12 +931,15 @@ def _fill_cprf(ws: Worksheet, analise: dict, parametros: dict) -> None:
             _set_input(ws, 32, col, _parse_numeric(year_data.get("area_plantada")))
             _set_input(ws, 36, col, _parse_numeric(year_data.get("produtividade")))
             _set_formula(ws, 40, col, f"=IF({cl}32=0,\"\",{cl}32*{cl}36)")
-            _set_input(ws, 44, col, _parse_numeric(year_data.get("preco_medio")))
+            _set_input_brl(ws, 44, col, _parse_numeric(year_data.get("preco_medio")), mil=False)
             _set_formula(ws, 48, col, f"=IF({cl}40=0,\"\",{cl}40*{cl}44/1000)")
-            _set_input(ws, 52, col, _parse_numeric(year_data.get("custo_producao_ha") or year_data.get("custo_ha")))
+            ws.cell(row=48, column=col).number_format = FMT_BRL_MIL
+            _set_input_brl(ws, 52, col, _parse_numeric(year_data.get("custo_producao_ha") or year_data.get("custo_ha")), mil=False)
             _set_formula(ws, 56, col, f"=IF({cl}32=0,\"\",{cl}52*{cl}32/1000)")
+            ws.cell(row=56, column=col).number_format = FMT_BRL_MIL
             _set_formula(ws, 60, col, f"=IF({cl}48=0,\"\",({cl}48-{cl}56)/{cl}48)")
-            _set_input(ws, 64, col, _parse_numeric(year_data.get("divida_agro") or year_data.get("divida_liquida")))
+            ws.cell(row=60, column=col).number_format = FMT_PCT
+            _set_input_brl(ws, 64, col, _parse_numeric(year_data.get("divida_agro") or year_data.get("divida_liquida")), mil=False)
 
     # ── Section 4: Garantias (rows 71-86, every 3, cols B-D) ──
     garantias = operacao.get("garantias_detalhadas", [])
@@ -849,10 +948,10 @@ def _fill_cprf(ws: Worksheet, analise: dict, parametros: dict) -> None:
         if i < len(garantias):
             g = garantias[i]
             _set_input(ws, row, 2, g.get("descricao") or g.get("matricula") or str(g))
-            _set_input(ws, row, 3, _format_volume(g.get("valor")))
+            _set_input_brl(ws, row, 3, _format_volume(g.get("valor")))
             ltv_g = _parse_numeric(g.get("ltv"))
             if ltv_g is not None:
-                _set_input(ws, row, 4, f"{ltv_g * 100:.1f}%" if ltv_g < 1 else f"{ltv_g:.1f}%")
+                _set_input_pct(ws, row, 4, ltv_g)
         elif i == 0 and parametros.get("garantias"):
             _set_input(ws, row, 2, parametros.get("garantias"))
 
@@ -874,8 +973,8 @@ def _fill_cprf(ws: Worksheet, analise: dict, parametros: dict) -> None:
         if i < len(cenarios):
             c = cenarios[i]
             _set_input(ws, row, 2, _parse_numeric(c.get("produtividade")))
-            _set_input(ws, row, 3, _parse_numeric(c.get("preco")))
-            _set_input(ws, row, 4, _parse_numeric(c.get("receita")) or _format_volume(c.get("receita")))
+            _set_input_brl(ws, row, 3, _parse_numeric(c.get("preco")), mil=False)
+            _set_input_brl(ws, row, 4, _parse_numeric(c.get("receita")) or _format_volume(c.get("receita")), mil=False)
             cobre = c.get("cobre_servico")
             if cobre is not None:
                 _set_input(ws, row, 5, "S" if cobre else "N")

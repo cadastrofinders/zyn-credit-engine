@@ -413,6 +413,64 @@ class DadosFazendaClient:
             return data
         return data.get("data", data.get("properties", []))
 
+    def buscar_cars_por_documento(self, documento: str, tipo: str = "CPF") -> list:
+        """Busca CARs vinculados a um CPF ou CNPJ via SICAR público.
+
+        A API Dados Fazenda NÃO suporta filtro por CPF/CNPJ.
+        Tenta consultar o SICAR (consultapublica.car.gov.br).
+        Se falhar, retorna lista vazia.
+
+        Args:
+            documento: CPF ou CNPJ (com ou sem formatação).
+            tipo: "CPF" ou "CNPJ".
+
+        Returns:
+            list de códigos CAR encontrados.
+        """
+        import re
+        digits = re.sub(r"[^\d]", "", documento)
+        if not digits:
+            return []
+
+        logger.info(f"[DadosFazenda] Buscando CARs por {tipo}: {digits}")
+
+        # Tentativa 1: SICAR público
+        try:
+            resp = self.session.post(
+                "https://consultapublica.car.gov.br/publico/imoveis/search",
+                data={"numeroCpfCnpj": digits, "tipoConsulta": tipo.upper()},
+                headers={"User-Agent": "Mozilla/5.0", "Accept": "text/html"},
+                timeout=15,
+                verify=False,
+            )
+            if resp.status_code == 200 and "text/html" in resp.headers.get("content-type", ""):
+                # Parse CAR codes from HTML
+                car_pattern = r'[A-Z]{2}-\d{7}-[A-F0-9]{20,}'
+                cars = re.findall(car_pattern, resp.text)
+                if cars:
+                    unique_cars = list(dict.fromkeys(cars))  # Remove duplicates, keep order
+                    logger.info(f"[DadosFazenda] SICAR retornou {len(unique_cars)} CAR(s)")
+                    return unique_cars
+        except Exception as e:
+            logger.warning(f"[DadosFazenda] SICAR falhou: {e}")
+
+        # Tentativa 2: API Dados Fazenda com filtro por documento (pode não funcionar)
+        try:
+            data = self._request("GET", "/api/properties", params={"owner_cpf": digits})
+            props = data.get("data", []) if isinstance(data, dict) else data
+            if isinstance(props, list):
+                # Verificar se o filtro realmente funcionou (comparar com total)
+                all_data = self._request("GET", "/api/properties")
+                all_props = all_data.get("data", []) if isinstance(all_data, dict) else all_data
+                if isinstance(all_props, list) and len(props) < len(all_props):
+                    # Filtro funcionou — retornar CARs filtrados
+                    return [p.get("car_code") for p in props if p.get("car_code")]
+        except Exception as e:
+            logger.warning(f"[DadosFazenda] API filter falhou: {e}")
+
+        logger.warning(f"[DadosFazenda] Nenhuma fonte retornou CARs para {tipo} {digits}")
+        return []
+
     def get_ndvi(self, car_code: str) -> dict:
         """Série temporal de NDVI (saúde vegetativa) para um código CAR.
 

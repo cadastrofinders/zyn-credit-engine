@@ -189,19 +189,194 @@ def _deep_get(analise: dict, *paths, default="—"):
     return default
 
 
+def _flatten_grupo_economico(ge) -> str:
+    """Converte dict grupo_economico em texto profissional para investidores."""
+    if isinstance(ge, str):
+        return ge
+    if not isinstance(ge, dict):
+        return "—"
+    parts = []
+    # Sócios PF com nomes limpos
+    socios_pf = ge.get("socios_pf", [])
+    if isinstance(socios_pf, list) and socios_pf:
+        nomes = []
+        for s in socios_pf:
+            if isinstance(s, str):
+                # Extrai nome limpo: "MARCO AURELIO FUENTES HOLLATZ (CPF ...) - 50%..."
+                nome = s.split("(")[0].strip().title()
+                pct = ""
+                if "%" in s:
+                    import re
+                    m = re.search(r'(\d+%)', s)
+                    if m:
+                        pct = f" ({m.group(1)})"
+                nomes.append(f"{nome}{pct}")
+            elif isinstance(s, dict):
+                nomes.append(s.get("nome", str(s)))
+        if nomes:
+            parts.append(", ".join(nomes))
+    # Holding
+    holding = ge.get("holding", "")
+    if isinstance(holding, str) and holding:
+        nome_holding = holding.split("(")[0].strip()
+        if nome_holding:
+            parts.append(f"via {nome_holding}")
+    # Usufrutuários / fundadores
+    usuf = ge.get("usufrutuarios", [])
+    if isinstance(usuf, list) and usuf:
+        for u in usuf:
+            if isinstance(u, str) and "fundador" in u.lower():
+                nome_f = u.split("(")[0].strip().title()
+                parts.append(f"Fundador(a): {nome_f}")
+                break
+    return " | ".join(parts) if parts else "—"
+
+
+def _flatten_historico(hist) -> str:
+    """Converte dict historico em narrativa profissional."""
+    if isinstance(hist, str):
+        return hist
+    if not isinstance(hist, dict):
+        return "—"
+    parts = []
+    anos = hist.get("anos_operacao")
+    fund = hist.get("fundacao_grupo") or hist.get("fundacao")
+    if anos:
+        parts.append(f"{anos} anos de atuação")
+    elif fund:
+        parts.append(f"Fundado em {fund}")
+    entregues = hist.get("empreendimentos_entregues") or hist.get("projetos_entregues")
+    if entregues:
+        parts.append(f"{entregues} empreendimentos entregues")
+    unidades = hist.get("unidades_construidas") or hist.get("unidades_historicas")
+    if unidades:
+        parts.append(f"+{unidades:,} unidades".replace(",", "."))
+    m2 = hist.get("metros_quadrados_construidos")
+    if m2:
+        parts.append(f"+{m2:,} m² construídos".replace(",", "."))
+    pontualidade = hist.get("taxa_pontualidade")
+    if pontualidade:
+        parts.append(f"{pontualidade} de pontualidade")
+    satisfacao = hist.get("satisfacao_clientes")
+    if satisfacao:
+        parts.append(f"{satisfacao} satisfação dos clientes")
+    certs = hist.get("certificacoes", [])
+    if isinstance(certs, list) and certs:
+        cert_names = [c.split("(")[0].strip() if isinstance(c, str) else str(c) for c in certs[:3]]
+        parts.append(f"Certificações: {', '.join(cert_names)}")
+    obras = hist.get("obras_em_andamento")
+    vgv_obras = hist.get("vgv_obras_andamento")
+    if obras and vgv_obras:
+        parts.append(f"{obras} obras em andamento (VGV {_fmt_brl(vgv_obras)})")
+    elif obras:
+        parts.append(f"{obras} obras em andamento")
+    return ". ".join(parts) + "." if parts else "—"
+
+
+def _flatten_capacidade(cap) -> str:
+    """Converte dict capacidade em texto legível."""
+    if isinstance(cap, str):
+        return cap
+    if not isinstance(cap, dict):
+        return "—"
+    parts = []
+    obras_sim = cap.get("obras_simultaneas_atuais")
+    if obras_sim:
+        parts.append(f"{obras_sim} obras simultâneas")
+    vgv_and = cap.get("vgv_total_em_andamento")
+    if vgv_and:
+        parts.append(f"VGV em andamento: {_fmt_brl(vgv_and)}")
+    un_and = cap.get("unidades_totais_em_andamento")
+    if un_and:
+        parts.append(f"{un_and} unidades em andamento")
+    pipeline = cap.get("pipeline_futuro_vgv")
+    if pipeline:
+        parts.append(f"Pipeline futuro: {_fmt_brl(pipeline)}")
+    conc = cap.get("obras_concluidas_historicas")
+    if conc:
+        parts.append(f"{conc} obras concluídas")
+    m2_hist = cap.get("m2_historicos")
+    if m2_hist:
+        parts.append(f"{m2_hist:,} m² históricos".replace(",", "."))
+    # Agro
+    hectares = cap.get("hectares") or cap.get("area_total_ha")
+    if hectares:
+        parts.append(f"{hectares:,} ha".replace(",", "."))
+    equip = cap.get("equipamentos")
+    if equip:
+        parts.append(f"{equip} equipamentos")
+    return " | ".join(parts) if parts else "—"
+
+
+def _flatten_historico_produtivo(hp) -> str:
+    """Extrai dados do empreendimento principal do historico produtivo."""
+    if isinstance(hp, str):
+        return hp
+    if not isinstance(hp, dict):
+        return "—"
+    # Busca o primeiro empreendimento detalhado
+    for key, val in hp.items():
+        if isinstance(val, dict) and "total_unidades" in val:
+            parts = []
+            un = val.get("total_unidades")
+            vgv = val.get("vgv_total")
+            vendidas = val.get("vendidas")
+            vso = val.get("vso_atual_pct")
+            avanco = val.get("avanco_fisico_pct")
+            ticket = val.get("ticket_medio")
+            if un:
+                parts.append(f"{un} unidades")
+            if vgv:
+                parts.append(f"VGV {_fmt_brl(vgv)}")
+            if vendidas and vso:
+                parts.append(f"{vendidas} vendidas ({vso:.0f}% VSO)")
+            if ticket:
+                parts.append(f"Ticket médio {_fmt_brl(ticket)}")
+            if avanco:
+                parts.append(f"Avanço físico {avanco:.0f}%")
+            return " | ".join(parts) if parts else "—"
+    return "—"
+
+
+def _flatten_any(val) -> str:
+    """Converte qualquer valor para string legível. Último recurso."""
+    if isinstance(val, str):
+        return val
+    if isinstance(val, (int, float)):
+        return str(val)
+    if isinstance(val, list):
+        items = []
+        for item in val[:5]:
+            if isinstance(item, str):
+                items.append(item)
+            elif isinstance(item, dict):
+                items.append(str(item.get("nome", item.get("descricao", str(item)))))
+            else:
+                items.append(str(item))
+        return "; ".join(items)
+    if isinstance(val, dict):
+        # Tenta serializar campos-chave
+        parts = []
+        for k, v in list(val.items())[:6]:
+            if isinstance(v, (str, int, float)) and v:
+                parts.append(f"{k}: {v}")
+        return " | ".join(parts) if parts else str(val)
+    return str(val) if val else "—"
+
+
 def _extract_company_data(analise: dict, parametros: dict) -> dict:
     """Extrai todos os dados da empresa de todas as secoes da analise.
 
     Suporta dois formatos:
     1. Dict direto do Opus: {kpis: {}, tomador: {}, rating_final: {}, ...}
     2. Dict salvo com wrapper: {analise: {kpis: {}, ...}, operacao: {...}}
+
+    Todos os valores retornados sao strings ou numeros — nunca dicts/lists crus.
     """
     # Detecta se tem camada wrapper ou se é direto
     if isinstance(analise.get("analise"), dict) and "kpis" in analise.get("analise", {}):
-        # Formato wrapper: {analise: {...}, operacao: {...}}
         a = _safe_dict(analise.get("analise"))
     elif "kpis" in analise or "tomador" in analise or "rating_final" in analise:
-        # Formato direto do Opus
         a = _safe_dict(analise)
     else:
         a = {}
@@ -213,6 +388,7 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
     kpis_a = _safe_dict(a.get("kpis"))
     kpis_root = _safe_dict(analise.get("kpis"))
     cap = _safe_dict(a.get("capital"))
+    cap_struct = _safe_dict(cap.get("estrutura_capital"))
     cap_ind = _safe_dict(cap.get("indicadores"))
     cap_end = _safe_dict(cap.get("endividamento"))
     pat = _safe_dict(a.get("patrimonio"))
@@ -223,19 +399,174 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
     rating_root = _safe_dict(analise.get("rating_final")) if isinstance(analise.get("rating_final"), dict) else {}
     rating = rating_a if rating_a else rating_root
 
+    # --- Socios: flatten grupo_economico ---
+    socios_raw = tom_a.get("grupo_economico") or tom_a.get("socios") or tom_root.get("socios") or tom_root.get("grupo_economico")
+    if isinstance(socios_raw, dict):
+        socios = _flatten_grupo_economico(socios_raw)
+    elif isinstance(socios_raw, list):
+        socios = "; ".join(str(s).split("(")[0].strip().title() if isinstance(s, str) else str(s) for s in socios_raw[:4])
+    elif isinstance(socios_raw, str):
+        socios = socios_raw
+    else:
+        socios = "—"
+
+    # --- Descricao: flatten historico dict ---
+    desc_raw = tom_a.get("historico") or tom_root.get("descricao") or tom_root.get("historico")
+    if isinstance(desc_raw, dict):
+        descricao = _flatten_historico(desc_raw)
+    elif isinstance(desc_raw, str):
+        descricao = desc_raw
+    else:
+        # Fallback: build from capacidade + producao
+        cap_raw = prod.get("capacidade")
+        if isinstance(cap_raw, dict):
+            descricao = _flatten_capacidade(cap_raw)
+        elif isinstance(cap_raw, str):
+            descricao = cap_raw
+        else:
+            descricao = "—"
+
+    # --- Fundacao: extract from historico dict ---
+    fundacao = tom_a.get("fundacao") or tom_root.get("fundacao")
+    if not fundacao:
+        hist_raw = tom_a.get("historico")
+        if isinstance(hist_raw, dict):
+            fundacao = hist_raw.get("fundacao_grupo") or hist_raw.get("fundacao") or ""
+        elif isinstance(hist_raw, str):
+            fundacao = _extract_year_from_text(hist_raw)
+        if not fundacao:
+            hp_raw = prod.get("historico_produtivo")
+            if isinstance(hp_raw, str):
+                fundacao = _extract_year_from_text(hp_raw)
+    fundacao = str(fundacao) if fundacao else "—"
+
+    # --- Capacidade: flatten ---
+    cap_raw = tom_a.get("capacidade") or tom_root.get("capacidade") or prod.get("capacidade")
+    if isinstance(cap_raw, dict):
+        capacidade = _flatten_capacidade(cap_raw)
+    elif isinstance(cap_raw, str):
+        capacidade = cap_raw
+    else:
+        capacidade = "—"
+
+    # --- Unidades: extract from capacidade or producao ---
+    un_raw = tom_a.get("unidades") or tom_root.get("unidades")
+    if not un_raw:
+        cap_d = prod.get("capacidade") if isinstance(prod.get("capacidade"), dict) else {}
+        un_and = cap_d.get("unidades_totais_em_andamento")
+        obras = cap_d.get("obras_simultaneas_atuais")
+        if un_and and obras:
+            un_raw = f"{un_and} un. em {obras} obras"
+        elif un_and:
+            un_raw = f"{un_and} unidades"
+        elif isinstance(prod.get("capacidade"), str):
+            un_raw = _extract_number_near_keyword(prod["capacidade"], "unidade")
+    unidades = str(un_raw) if un_raw else "—"
+
+    # --- Colaboradores ---
+    colab_raw = tom_a.get("colaboradores") or tom_root.get("colaboradores")
+    if not colab_raw:
+        ge = tom_a.get("grupo_economico")
+        if isinstance(ge, dict):
+            colab_raw = ge.get("total_membros_grupo")
+            if colab_raw:
+                colab_raw = f"{colab_raw} membros no grupo"
+        if not colab_raw:
+            hist_str = tom_a.get("historico", "")
+            cap_str = prod.get("capacidade", "")
+            if isinstance(hist_str, str) and isinstance(cap_str, str):
+                colab_raw = _extract_number_near_keyword(hist_str + " " + cap_str, "colaborador")
+    colaboradores = str(colab_raw) if colab_raw else "—"
+
+    # --- Clientes ---
+    clientes_raw = tom_a.get("principais_clientes") or tom_root.get("principais_clientes")
+    if not clientes_raw:
+        prod_analise = prod.get("analise", "")
+        if isinstance(prod_analise, str):
+            clientes_raw = _extract_clients_from_text(prod_analise)
+    if isinstance(clientes_raw, list):
+        clientes_raw = ", ".join(str(c) for c in clientes_raw[:5])
+    clientes = str(clientes_raw) if clientes_raw else "—"
+
+    # --- Amortizacao: flatten from operacao.estrutura ---
+    amort_raw = parametros.get("amortizacao") or op_root.get("amortizacao")
+    if not amort_raw:
+        est = op_a.get("estrutura")
+        if isinstance(est, dict):
+            amort_raw = est.get("amortizacao", "")
+        elif isinstance(est, str):
+            amort_raw = est
+    amortizacao = str(amort_raw) if amort_raw else "—"
+
+    # --- Carencia ---
+    carencia_raw = parametros.get("carencia")
+    if not carencia_raw:
+        est = op_a.get("estrutura")
+        if isinstance(est, dict):
+            carencia_raw = est.get("carencia", "")
+        if not carencia_raw:
+            est_str = est if isinstance(est, str) else ""
+            prazo_str = op_a.get("prazo", "") if isinstance(op_a.get("prazo"), str) else ""
+            carencia_raw = _extract_from_text(est_str + " " + prazo_str, r"(?:[Cc]ar[eê]ncia\s*(?:de\s*)?)(\d+\s*meses?)")
+    carencia = str(carencia_raw) if carencia_raw else "—"
+
+    # --- Finalidade: prioriza lastro/destinacao sobre analise de risco ---
+    final_raw = parametros.get("finalidade") or parametros.get("destinacao_texto")
+    if not final_raw:
+        est = op_a.get("estrutura")
+        if isinstance(est, dict):
+            lastro = est.get("lastro", "")
+            if lastro:
+                final_raw = str(lastro)
+    if not final_raw:
+        op_analise = op_a.get("analise")
+        if isinstance(op_analise, str):
+            # Pega primeira frase relevante, evita texto de risco
+            sentences = op_analise.split(". ")
+            for s in sentences:
+                s_lower = s.lower()
+                if any(kw in s_lower for kw in ["lastro", "destin", "financ", "capta", "emissão", "operação de"]):
+                    final_raw = s.strip()[:250]
+                    break
+            if not final_raw:
+                final_raw = sentences[0][:200] if sentences else ""
+    finalidade = str(final_raw) if final_raw else "—"
+
+    # --- PL: busca em capital.estrutura_capital ---
+    pl = pat_ativos.get("patrimonio_liquido_2025") or pat_ativos.get("patrimonio_liquido") or kpis_a.get("pl") or 0
+    if not pl:
+        for entity_key, entity_val in cap_struct.items():
+            if isinstance(entity_val, dict):
+                pl_candidate = entity_val.get("patrimonio_liquido")
+                if pl_candidate and isinstance(pl_candidate, (int, float)) and pl_candidate > 0:
+                    pl = pl_candidate
+                    break
+
+    # --- Empreendimento principal (para teaser imobiliário) ---
+    hp = prod.get("historico_produtivo")
+    empreendimento_str = ""
+    if isinstance(hp, dict):
+        empreendimento_str = _flatten_historico_produtivo(hp)
+
+    # --- Garantias detalhadas ---
+    gar_det = pat.get("garantias_detalhadas", [])
+    if not isinstance(gar_det, list):
+        gar_det = []
+
     return {
         # Company info
         "nome": parametros.get("tomador") or tom_a.get("razao_social") or tom_root.get("nome") or tom_root.get("razao_social") or "—",
         "cnpj": parametros.get("cnpj") or tom_a.get("cnpj") or tom_root.get("cnpj") or "—",
-        "fundacao": tom_a.get("fundacao") or tom_root.get("fundacao") or _extract_year_from_text(tom_a.get("historico", "")) or _extract_year_from_text(prod.get("historico_produtivo", "")) or "—",
-        "sede": parametros.get("localidade") or tom_a.get("sede") or tom_root.get("sede") or _extract_city_from_text(tom_a.get("historico", "")) or "—",
+        "fundacao": fundacao,
+        "sede": parametros.get("localidade") or tom_a.get("sede") or tom_root.get("sede") or _extract_city_from_text(descricao if isinstance(descricao, str) else "") or _extract_city_from_text(str(rating.get("justificativa", ""))) or "—",
         "segmento": parametros.get("setor") or tom_a.get("setor") or tom_root.get("segmento") or tom_root.get("setor") or "—",
-        "socios": tom_a.get("grupo_economico") or tom_a.get("socios") or tom_root.get("socios") or tom_root.get("grupo_economico") or "—",
-        "descricao": tom_a.get("historico") or tom_root.get("descricao") or tom_root.get("historico") or prod.get("capacidade") or "—",
-        "colaboradores": tom_a.get("colaboradores") or tom_root.get("colaboradores") or _extract_number_near_keyword((tom_a.get("historico", "") if isinstance(tom_a.get("historico"), str) else "") + " " + (prod.get("capacidade", "") if isinstance(prod.get("capacidade"), str) else ""), "colaborador") or "—",
-        "capacidade": tom_a.get("capacidade") or tom_root.get("capacidade") or _extract_number_near_keyword(prod.get("capacidade", ""), "equipamento") or _extract_number_near_keyword(prod.get("capacidade", ""), "hectare") or _extract_number_near_keyword(prod.get("capacidade", ""), " ha") or "—",
-        "unidades": tom_a.get("unidades") or tom_root.get("unidades") or _extract_number_near_keyword(prod.get("capacidade", ""), "unidade") or "—",
-        "clientes": tom_a.get("principais_clientes") or tom_root.get("principais_clientes") or _extract_clients_from_text(prod.get("analise", "")) or "—",
+        "socios": socios,
+        "descricao": descricao,
+        "colaboradores": colaboradores,
+        "capacidade": capacidade,
+        "unidades": unidades,
+        "clientes": clientes,
+        "empreendimento": empreendimento_str,
 
         # Financials
         "receita": kpis_a.get("receita_liquida") or kpis_root.get("receita_liquida") or 0,
@@ -245,7 +576,7 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
         "div_liq_ebitda": cap_ind.get("divida_liquida_ebitda") or kpis_a.get("divida_liquida_ebitda") or kpis_root.get("divida_liquida_ebitda") or 0,
         "dscr": pag.get("dscr") or kpis_a.get("dscr") or kpis_root.get("dscr") or 0,
         "ltv": kpis_a.get("ltv") or kpis_root.get("ltv") or pat.get("ltv") or 0,
-        "pl": pat_ativos.get("patrimonio_liquido_2025") or pat_ativos.get("patrimonio_liquido") or kpis_a.get("pl") or 0,
+        "pl": pl,
         "liquidez": cap_ind.get("liquidez_corrente") or 0,
 
         # Operation
@@ -253,13 +584,13 @@ def _extract_company_data(analise: dict, parametros: dict) -> dict:
         "volume": parametros.get("volume") or op_root.get("volume") or op_a.get("volume") or 0,
         "taxa": parametros.get("taxa") or op_root.get("taxa") or op_a.get("taxa") or "—",
         "prazo": parametros.get("prazo_meses") or op_root.get("prazo_meses") or op_a.get("prazo") or "—",
-        "amortizacao": parametros.get("amortizacao") or op_root.get("amortizacao") or "—",
-        "carencia": parametros.get("carencia") or _extract_from_text((op_a.get("estrutura", "") if isinstance(op_a.get("estrutura"), str) else "") + " " + (op_a.get("prazo", "") if isinstance(op_a.get("prazo"), str) else ""), r"(?:[Cc]ar[eê]ncia\s*(?:de\s*)?)(\d+\s*meses?)") or "—",
+        "amortizacao": amortizacao,
+        "carencia": carencia,
         "garantias_text": parametros.get("garantias_text") or op_root.get("garantias_text") or "—",
-        "finalidade": parametros.get("finalidade") or op_a.get("analise", "")[:200] if isinstance(op_a.get("analise"), str) else "—",
+        "finalidade": finalidade,
 
         # Guarantees (detailed)
-        "garantias_detalhadas": pat.get("garantias_detalhadas") or [],
+        "garantias_detalhadas": gar_det,
 
         # Rating
         "rating": rating.get("nota") or op_root.get("rating") or "—",
@@ -409,20 +740,25 @@ def _fill_overview(slide, analise: dict, parametros: dict):
     _replace_on_slide(slide, "[Ano]", str(data["fundacao"]))
     _replace_on_slide(slide, "[Cidade/UF]", str(data["sede"]))
     _replace_on_slide(slide, "[Agronegócio / Imobiliário / Industrial / etc.]", str(data["segmento"]))
-    _replace_on_slide(slide, "[Nomes e cargos principais]", str(data["socios"]))
-    # Descricao: truncar para caber no box
-    desc = str(data["descricao"])[:500]
+    _replace_on_slide(slide, "[Nomes e cargos principais]", str(data["socios"])[:300])
+    # Descricao: usar narrativa rica, com empreendimento se disponível
+    desc = str(data["descricao"])[:400]
+    empreend = data.get("empreendimento", "")
+    if empreend and empreend != "—":
+        desc = f"{desc}\n\nEmpreendimento: {empreend}"
     _replace_on_slide(
         slide,
         "[Breve histórico da empresa, atividades principais, diferenciais competitivos, principais clientes/offtakers, e posicionamento de mercado. 3-4 linhas.]",
-        desc,
+        desc[:600],
     )
 
     # --- Right panel: KPI cards ---
     _replace_on_slide(slide, "R$ [XXX] MM", _fmt_brl(data["receita"]) if data["receita"] else "—")
     _replace_on_slide(slide, "R$ [XX] MM", _fmt_brl(data["ebitda"]) if data["ebitda"] else "—")
     _replace_on_slide(slide, "[XXX]", str(data["colaboradores"]))
-    _replace_on_slide(slide, "[XX.XXX ha / m² / ton]", str(data["capacidade"]))
+    # Capacidade: truncar para caber
+    cap_display = str(data["capacidade"])[:80]
+    _replace_on_slide(slide, "[XX.XXX ha / m² / ton]", cap_display)
     _replace_on_slide(slide, "[X] unidades em [UFs]", str(data["unidades"]))
     _replace_on_slide(slide, "[Cliente A, B, C]", str(data["clientes"]))
 
@@ -629,7 +965,10 @@ def _fill_garantias(slide, analise: dict, parametros: dict):
     if ltv_val and ltv_val not in (0, 0.0, "—"):
         try:
             ltv_f = float(ltv_val)
-            razao = 1 / ltv_f if 0 < ltv_f <= 1 else ltv_f
+            # LTV pode vir como decimal (0.625) ou percentual (62.5)
+            if ltv_f > 1:
+                ltv_f = ltv_f / 100  # Converte 62.5 -> 0.625
+            razao = 1 / ltv_f if 0 < ltv_f < 1 else 1.0
             razao_str = _fmt_mult(razao)
         except (TypeError, ValueError, ZeroDivisionError):
             razao_str = "—"
